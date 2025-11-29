@@ -1,0 +1,33 @@
+from celery import shared_task
+from django.core.mail import send_mail
+from django.conf import settings
+from .email_templates import get_email_template
+import logging
+
+logger = logging.getLogger(__name__)
+
+@shared_task
+def send_notification_email(template_name, recipient_email, context):
+    """
+    Async task to send notification emails
+    """
+    try:
+        template = get_email_template(template_name, context)
+        if not template:
+            logger.error(f"Template {template_name} not found")
+            return False
+            
+        send_mail(
+            subject=template['subject'],
+            message='',  # Plain text version (optional)
+            html_message=template['content'],
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient_email],
+            fail_silently=False,
+        )
+        logger.info(f"Email sent to {recipient_email} using template {template_name}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send email: {str(e)}")
+        return False
