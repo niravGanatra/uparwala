@@ -97,6 +97,9 @@ class OrderDetailView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # Allow admins to access all orders, regular users only their own
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return Order.objects.all()
         return Order.objects.filter(user=self.request.user)
 
 class AdminOrderListView(generics.ListAPIView):

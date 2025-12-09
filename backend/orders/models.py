@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from products.models import Product
 from vendors.models import VendorProfile
+from .shiprocket_models import ShiprocketConfig, ShipmentTracking, OrderTrackingStatus
 
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart')
@@ -62,6 +63,12 @@ class Order(models.Model):
     # Tracking
     tracking_number = models.CharField(max_length=100, blank=True)
     
+    # Shiprocket integration
+    shiprocket_order_id = models.CharField(max_length=100, blank=True)
+    awb_code = models.CharField(max_length=100, blank=True, help_text="Air Waybill Code")
+    courier_name = models.CharField(max_length=100, blank=True)
+    tracking_url = models.URLField(blank=True)
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -80,6 +87,12 @@ class OrderItem(models.Model):
     vendor = models.ForeignKey(VendorProfile, on_delete=models.CASCADE, related_name='order_items')
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2) # Price at time of purchase
+    
+    # Payout tracking
+    paid_to_vendor = models.BooleanField(default=False)
+    payout_date = models.DateTimeField(null=True, blank=True)
+    payout_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    commission_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} (Order #{self.order.id})"

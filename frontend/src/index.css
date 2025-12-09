@@ -3,4 +3,10 @@
 @theme {
     --color-orange-600: #ea580c;
     --color-orange-700: #c2410c;
+    --color-yellow-400: #facc15;
+    --color-yellow-500: #eab308;
+    --color-yellow-600: #ca8a04;
+    --color-yellow-700: #a16207;
+    --color-amber-500: #f59e0b;
+    --color-amber-600: #d97706;
 }

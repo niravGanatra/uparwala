@@ -5,7 +5,13 @@ from .views import (
     ProductDetailView,
     VendorProductListCreateView,
     VendorProductDetailView,
-    AdminProductDetailView
+    AdminProductDetailView,
+    product_questions,
+    answer_question,
+    recently_viewed,
+    track_product_view,
+    bulk_upload_products,
+    download_csv_template
 )
 from .review_views import (
     ProductReviewListCreateView,
@@ -30,8 +36,7 @@ from .moderation_views import (
     ApproveProductView, RejectProductView, RequestChangesView, ModerationStatsView
 )
 from .commission_views import (
-    GlobalCommissionView, VendorCommissionListView, VendorCommissionCreateView,
-    VendorCommissionUpdateView, VendorCommissionDeleteView
+    CategoryCommissionListView, CategoryCommissionUpdateView
 )
 from .recommendation_views import SimilarProductsView, RecommendedProductsView
 from .cms_views import (
@@ -71,11 +76,8 @@ urlpatterns = [
     path('admin/moderation/stats/', ModerationStatsView.as_view(), name='admin-moderation-stats'),
     
     # Commission Management (Admin)
-    path('admin/commission/global/', GlobalCommissionView.as_view(), name='admin-commission-global'),
-    path('admin/commission/vendors/', VendorCommissionListView.as_view(), name='admin-commission-vendors'),
-    path('admin/commission/vendors/create/', VendorCommissionCreateView.as_view(), name='admin-commission-create'),
-    path('admin/commission/vendors/<int:pk>/', VendorCommissionUpdateView.as_view(), name='admin-commission-update'),
-    path('admin/commission/vendors/<int:pk>/delete/', VendorCommissionDeleteView.as_view(), name='admin-commission-delete'),
+    path('admin/commission/categories/', CategoryCommissionListView.as_view(), name='admin-commission-categories'),
+    path('admin/commission/categories/<int:pk>/', CategoryCommissionUpdateView.as_view(), name='admin-commission-update'),
     
     # CMS Pages (Admin)
     path('admin/cms-pages/', CMSPageListView.as_view(), name='admin-cms-list'),
@@ -88,6 +90,18 @@ urlpatterns = [
     # Recommendations
     path('<int:pk>/similar/', SimilarProductsView.as_view(), name='product-similar'),
     path('recommendations/', RecommendedProductsView.as_view(), name='product-recommendations'),
+    
+    # Product Q&A
+    path('<int:product_id>/questions/', product_questions, name='product-questions'),
+    path('questions/<int:question_id>/answer/', answer_question, name='answer-question'),
+    
+    # Recently Viewed
+    path('recently-viewed/', recently_viewed, name='recently-viewed'),
+    path('<int:product_id>/track-view/', track_product_view, name='track-view'),
+    
+    # Bulk Upload
+    path('bulk-upload/', bulk_upload_products, name='bulk-upload'),
+    path('bulk-template/', download_csv_template, name='bulk-template'),
     
     path('<slug:slug>/', ProductDetailView.as_view(), name='product-detail'),
 ]

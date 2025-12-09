@@ -24,10 +24,19 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = ('id', 'product', 'quantity', 'price')
 
+class UserBasicSerializer(serializers.Serializer):
+    """Basic user info for order display"""
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    user = UserBasicSerializer(read_only=True)
 
     class Meta:
         model = Order
         fields = '__all__'
-        read_only_fields = ('user', 'total_amount', 'status', 'created_at')
+        read_only_fields = ('total_amount', 'created_at')

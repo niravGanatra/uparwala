@@ -136,11 +136,20 @@ const AdminProducts = () => {
                                             <td className="py-4">
                                                 <button
                                                     onClick={() => handleToggleStatus(product.id, product.is_active)}
-                                                    className={`px-2 py-1 rounded-full text-xs cursor-pointer ${product.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${product.is_active
+                                                            ? 'bg-green-500 focus:ring-green-500'
+                                                            : 'bg-gray-300 focus:ring-gray-400'
                                                         }`}
+                                                    title={product.is_active ? 'Click to deactivate' : 'Click to activate'}
                                                 >
-                                                    {product.is_active ? 'Active' : 'Inactive'}
+                                                    <span
+                                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${product.is_active ? 'translate-x-6' : 'translate-x-1'
+                                                            }`}
+                                                    />
                                                 </button>
+                                                <span className={`ml-2 text-sm ${product.is_active ? 'text-green-700' : 'text-gray-500'}`}>
+                                                    {product.is_active ? 'Active' : 'Inactive'}
+                                                </span>
                                             </td>
                                             <td className="py-4">
                                                 <div className="flex gap-2">

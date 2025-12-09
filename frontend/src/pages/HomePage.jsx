@@ -1,21 +1,48 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag, TrendingUp, Zap, Shield, Truck, Star, ArrowRight, Search } from 'lucide-react';
+import { ShoppingBag, Home, Sparkles, Lamp, Sofa, Frame, Package, Search, Clock, Tag, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
 import api from '../services/api';
+import homepageService from '../services/homepageService';
+import RecentlyViewed from '../components/RecentlyViewed';
 
 const HomePage = () => {
     const navigate = useNavigate();
     const [products, setProducts] = useState([]);
-    const [categories, setCategories] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Homepage data from API
+    const [homepageData, setHomepageData] = useState({
+        hero_banner: null,
+        promotional_banners: [],
+        featured_categories: [],
+        deals: [],
+        hosting_essentials: [],
+        premium_sections: [],
+        category_promotions: []
+    });
 
     useEffect(() => {
+        fetchHomepageData();
         fetchProducts();
-        fetchCategories();
     }, []);
+
+    const fetchHomepageData = async () => {
+        try {
+            setLoading(true);
+            const data = await homepageService.getHomepageData();
+            setHomepageData(data);
+            setError(null);
+        } catch (error) {
+            console.error('Failed to fetch homepage data:', error);
+            setError('Failed to load homepage content');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchProducts = async () => {
         try {
@@ -26,15 +53,6 @@ const HomePage = () => {
         }
     };
 
-    const fetchCategories = async () => {
-        try {
-            const response = await api.get('/products/categories/');
-            setCategories(response.data.slice(0, 6));
-        } catch (error) {
-            console.error('Failed to fetch categories:', error);
-        }
-    };
-
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
@@ -42,180 +60,272 @@ const HomePage = () => {
         }
     };
 
+    // Icon mapping for featured categories
+    const iconMap = {
+        'frame': Frame,
+        'package': Package,
+        'sparkles': Sparkles,
+        'sofa': Sofa,
+        'home': Home,
+        'lamp': Lamp
+    };
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-12 w-12 animate-spin text-yellow-600" />
+            </div>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <Button onClick={fetchHomepageData}>Retry</Button>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen">
-            {/* Hero Section - Immersive */}
-            <section className="relative bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 text-white overflow-hidden">
-                <div className="absolute inset-0 bg-black/10"></div>
-                <div className="absolute inset-0">
-                    <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="min-h-screen bg-white">
+            {/* Hero Banner - Dynamic from API */}
+            <section
+                className="relative text-slate-900 overflow-hidden"
+                style={{
+                    background: homepageData.hero_banner?.background_color || 'linear-gradient(to right, #facc15, #eab308, #f59e0b)'
+                }}
+            >
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-10 left-10 text-6xl">❄️</div>
+                    <div className="absolute top-20 right-20 text-6xl">🏠</div>
+                    <div className="absolute bottom-10 left-1/4 text-6xl">❄️</div>
+                    <div className="absolute bottom-20 right-1/3 text-6xl">🏠</div>
                 </div>
 
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
+                        transition={{ duration: 0.6 }}
                         className="text-center"
                     >
-                        <motion.h1
-                            className="text-5xl md:text-7xl font-bold mb-6"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            Discover Amazing Products
-                            <br />
-                            <span className="text-yellow-300">From Local Vendors</span>
-                        </motion.h1>
+                        <h1 className="text-5xl md:text-7xl font-black mb-4 tracking-tight">
+                            {homepageData.hero_banner?.title || 'HO HO HOME SALE'}
+                        </h1>
+                        {homepageData.hero_banner?.subtitle && (
+                            <p className="text-xl md:text-2xl font-semibold mb-6">
+                                {homepageData.hero_banner.subtitle}
+                            </p>
+                        )}
 
-                        <motion.p
-                            className="text-xl md:text-2xl mb-8 text-orange-100 max-w-3xl mx-auto"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.3, duration: 0.5 }}
-                        >
-                            Shop from thousands of products, support local businesses, and get the best deals
-                        </motion.p>
-
-                        {/* Search Bar - Interactive */}
-                        <motion.form
-                            onSubmit={handleSearch}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5, duration: 0.5 }}
-                            className="max-w-2xl mx-auto mb-8"
-                        >
-                            <div className="flex gap-2 bg-white rounded-full p-2 shadow-2xl">
+                        {/* Search Bar */}
+                        <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+                            <div className="flex gap-2 bg-white rounded-lg p-2 shadow-xl">
                                 <div className="flex-1 flex items-center px-4">
                                     <Search className="h-5 w-5 text-slate-400 mr-2" />
                                     <input
                                         type="text"
-                                        placeholder="Search for products, categories, or vendors..."
+                                        placeholder="Search for products, categories..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="flex-1 outline-none text-slate-900 placeholder-slate-400"
                                     />
                                 </div>
-                                <Button type="submit" className="rounded-full px-8 bg-orange-600 hover:bg-orange-700">
+                                <Button type="submit" className="rounded-md px-8 bg-yellow-600 hover:bg-yellow-700 text-white">
                                     Search
                                 </Button>
                             </div>
-                        </motion.form>
-
-                        {/* Stats */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.7, duration: 0.5 }}
-                            className="flex flex-wrap justify-center gap-8 text-sm"
-                        >
-                            <div className="flex items-center gap-2">
-                                <ShoppingBag className="h-5 w-5" />
-                                <span>10,000+ Products</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <TrendingUp className="h-5 w-5" />
-                                <span>500+ Vendors</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Star className="h-5 w-5" />
-                                <span>50,000+ Happy Customers</span>
-                            </div>
-                        </motion.div>
+                        </form>
                     </motion.div>
                 </div>
             </section>
 
-            {/* Features Section - Intuitive */}
-            <section className="py-16 bg-slate-50">
+            {/* Category Grid - Dynamic from API */}
+            <section className="py-12 bg-slate-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {[
-                            { icon: Zap, title: 'Fast Delivery', desc: 'Get your orders delivered quickly', color: 'orange' },
-                            { icon: Shield, title: 'Secure Payment', desc: 'Your transactions are safe', color: 'blue' },
-                            { icon: Truck, title: 'Free Shipping', desc: 'On orders above ₹500', color: 'green' }
-                        ].map((feature, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: idx * 0.1 }}
-                                whileHover={{ y: -5 }}
-                                className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all"
-                            >
-                                <div className={`w-12 h-12 bg-${feature.color}-100 rounded-xl flex items-center justify-center mb-4`}>
-                                    <feature.icon className={`h-6 w-6 text-${feature.color}-600`} />
-                                </div>
-                                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                                <p className="text-slate-600">{feature.desc}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Categories Section - Interactive */}
-            <section className="py-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        className="text-center mb-12"
-                    >
-                        <h2 className="text-4xl font-bold mb-4">Shop by Category</h2>
-                        <p className="text-slate-600 text-lg">Explore our wide range of categories</p>
-                    </motion.div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        {categories.map((category, idx) => (
-                            <motion.div
-                                key={category.id}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: idx * 0.05 }}
-                                whileHover={{ scale: 1.05, y: -5 }}
-                            >
-                                <Link
-                                    to={`/products?category=${category.id}`}
-                                    className="block bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-2xl text-center hover:shadow-xl transition-all group"
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                        {homepageData.featured_categories.map((category, idx) => {
+                            const IconComponent = iconMap[category.icon] || Package;
+                            return (
+                                <motion.div
+                                    key={category.id}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    whileHover={{ y: -5 }}
                                 >
-                                    <div className="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center group-hover:bg-orange-500 transition-colors">
-                                        <ShoppingBag className="h-8 w-8 text-orange-600 group-hover:text-white transition-colors" />
-                                    </div>
-                                    <h3 className="font-semibold text-slate-900">{category.name}</h3>
-                                </Link>
-                            </motion.div>
-                        ))}
+                                    <Link
+                                        to={category.link_url}
+                                        className="block bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all group"
+                                    >
+                                        <div className="aspect-square bg-slate-100 flex items-center justify-center p-4">
+                                            {category.image ? (
+                                                <img src={category.image} alt={category.name} className="h-16 w-16 object-contain" />
+                                            ) : (
+                                                <IconComponent className="h-16 w-16 text-yellow-600 group-hover:text-yellow-700 transition-colors" />
+                                            )}
+                                        </div>
+                                        <div className="p-3 text-center">
+                                            <h3 className="text-sm font-semibold text-slate-900">{category.name}</h3>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 </div>
             </section>
 
-            {/* Featured Products - Immersive */}
-            <section className="py-16 bg-slate-50">
+            {/* Promotional Banners - Dynamic from API */}
+            {homepageData.promotional_banners.length > 0 && (
+                <section className="py-8">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {homepageData.promotional_banners.map((banner, idx) => (
+                                <div
+                                    key={banner.id}
+                                    className={`${banner.position === 'large_left' || banner.position === 'large_right' ? 'lg:col-span-2' : ''} rounded-2xl p-8 text-white relative overflow-hidden`}
+                                    style={{ background: banner.background_color }}
+                                >
+                                    <div className="relative z-10">
+                                        <h2 className="text-4xl font-bold mb-2">{banner.title}</h2>
+                                        <p className="text-5xl font-black text-yellow-400 mb-4">{banner.discount_text}</p>
+                                        <Link to={banner.link_url}>
+                                            <Button className="bg-white text-slate-900 hover:bg-yellow-400">
+                                                Shop Now
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                    {banner.background_image && (
+                                        <img src={banner.background_image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover opacity-20" />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* Hosting Essentials - Dynamic from API */}
+            {homepageData.hosting_essentials.length > 0 && (
+                <section className="py-12 bg-white">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 className="text-4xl font-bold text-center mb-8">Hosting Essentials</h2>
+
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                            {homepageData.hosting_essentials.map((item, idx) => (
+                                <motion.div
+                                    key={item.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    whileHover={{ y: -5 }}
+                                >
+                                    <Link to={item.link_url} className="block group">
+                                        <div className="bg-amber-50 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all">
+                                            <div className="aspect-square bg-white flex items-center justify-center text-6xl">
+                                                {item.emoji || '🏠'}
+                                            </div>
+                                            <div className="bg-slate-900 text-white p-3 text-center">
+                                                <h3 className="font-semibold">{item.name}</h3>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* Deal of the Day - Dynamic from API */}
+            {homepageData.deals.length > 0 && (
+                <section className="py-12 bg-gradient-to-br from-yellow-50 to-amber-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h2 className="text-4xl font-bold mb-2 flex items-center gap-3">
+                                    <Clock className="h-10 w-10 text-yellow-600" />
+                                    Deal of the Day
+                                </h2>
+                                <p className="text-slate-600">Limited time offers - Grab them now!</p>
+                            </div>
+                            <Link to="/products">
+                                <Button variant="outline" className="gap-2 border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white">
+                                    View All <ArrowRight className="h-4 w-4" />
+                                </Button>
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {homepageData.deals.map((deal, idx) => (
+                                <motion.div
+                                    key={deal.id}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    whileHover={{ y: -5 }}
+                                >
+                                    <Link to={`/products/${deal.product.slug}`} className="block group">
+                                        <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all">
+                                            <div className="relative aspect-square bg-slate-100">
+                                                {deal.product.images && deal.product.images.length > 0 ? (
+                                                    <img
+                                                        src={deal.product.images[0].image}
+                                                        alt={deal.product.name}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <ShoppingBag className="h-16 w-16 text-slate-300" />
+                                                    </div>
+                                                )}
+                                                <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-md text-sm font-bold">
+                                                    -{deal.discount_percentage}%
+                                                </div>
+                                            </div>
+                                            <div className="p-4">
+                                                <h3 className="font-semibold text-slate-900 mb-2 line-clamp-2">
+                                                    {deal.product.name}
+                                                </h3>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className="text-2xl font-bold text-yellow-600">₹{deal.discounted_price}</span>
+                                                    <span className="text-sm text-slate-400 line-through">₹{deal.product.price}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* Trending Products */}
+            <section className="py-12 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        className="flex justify-between items-center mb-12"
-                    >
+                    <div className="flex justify-between items-center mb-8">
                         <div>
                             <h2 className="text-4xl font-bold mb-2">Trending Products</h2>
-                            <p className="text-slate-600 text-lg">Discover what's popular right now</p>
+                            <p className="text-slate-600 text-lg">Most popular items this week</p>
                         </div>
                         <Link to="/products">
                             <Button variant="outline" className="gap-2">
                                 View All <ArrowRight className="h-4 w-4" />
                             </Button>
                         </Link>
-                    </motion.div>
+                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                         {products.map((product, idx) => (
                             <motion.div
                                 key={product.id}
@@ -223,37 +333,30 @@ const HomePage = () => {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: idx * 0.05 }}
-                                whileHover={{ y: -10 }}
+                                whileHover={{ y: -8 }}
                             >
                                 <Link to={`/products/${product.slug}`} className="block group">
-                                    <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all">
-                                        <div className="relative overflow-hidden aspect-square bg-slate-100">
+                                    <div className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-yellow-400 hover:shadow-xl transition-all">
+                                        <div className="relative aspect-square bg-slate-50">
                                             {product.images && product.images.length > 0 ? (
                                                 <img
                                                     src={product.images[0].image}
                                                     alt={product.name}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
-                                                    <ShoppingBag className="h-16 w-16 text-slate-300" />
+                                                    <ShoppingBag className="h-12 w-12 text-slate-300" />
                                                 </div>
                                             )}
-                                            <div className="absolute top-3 right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                                New
-                                            </div>
                                         </div>
-                                        <div className="p-4">
-                                            <h3 className="font-semibold text-slate-900 mb-1 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                                        <div className="p-3">
+                                            <h3 className="font-medium text-slate-900 mb-1 line-clamp-2 text-sm">
                                                 {product.name}
                                             </h3>
-                                            <p className="text-sm text-slate-500 mb-2">{product.vendor_name}</p>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-2xl font-bold text-orange-600">₹{product.price}</span>
-                                                <div className="flex items-center gap-1 text-yellow-500">
-                                                    <Star className="h-4 w-4 fill-current" />
-                                                    <span className="text-sm font-semibold text-slate-700">4.5</span>
-                                                </div>
+                                                <span className="text-lg font-bold text-slate-900">₹{product.price}</span>
+                                                <Tag className="h-4 w-4 text-yellow-600" />
                                             </div>
                                         </div>
                                     </div>
@@ -264,24 +367,94 @@ const HomePage = () => {
                 </div>
             </section>
 
-            {/* CTA Section - Interactive */}
-            <section className="py-20 bg-gradient-to-r from-orange-600 to-red-600 text-white">
+            {/* Premium Quality Banners - Dynamic from API */}
+            {homepageData.premium_sections.length > 0 && (
+                <section className="py-8">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {homepageData.premium_sections.map((section, idx) => {
+                                const IconComponent = iconMap[section.icon] || Frame;
+                                return (
+                                    <div
+                                        key={section.id}
+                                        className="rounded-2xl p-8 flex items-center justify-between"
+                                        style={{ background: section.background_color }}
+                                    >
+                                        <div>
+                                            <h3 className="text-3xl font-bold mb-2">{section.title}</h3>
+                                            <p className="text-xl font-semibold">{section.subtitle}</p>
+                                            <Link to={section.link_url}>
+                                                <Button className="mt-4 bg-white text-slate-900 hover:bg-yellow-400">
+                                                    Shop Now
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                        <IconComponent className="h-24 w-24 opacity-30" />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* Bottom Category Grid - Dynamic from API */}
+            {homepageData.category_promotions.length > 0 && (
+                <section className="py-12 bg-slate-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                            {homepageData.category_promotions.map((item, idx) => (
+                                <motion.div
+                                    key={item.id}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    whileHover={{ scale: 1.02 }}
+                                >
+                                    <Link to={item.link_url}>
+                                        <div
+                                            className="rounded-xl p-6 text-white min-h-[200px] flex flex-col justify-between hover:shadow-xl transition-all"
+                                            style={{ background: item.background_color }}
+                                        >
+                                            <div>
+                                                <h3 className="text-2xl font-bold mb-2">{item.name}</h3>
+                                                <p className="text-lg font-semibold text-yellow-300">{item.discount_text}</p>
+                                            </div>
+                                            <Button size="sm" className="bg-white text-slate-900 hover:bg-yellow-400 w-fit">
+                                                Shop Now
+                                            </Button>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* Final CTA */}
+            <section className="py-16 bg-gradient-to-r from-yellow-500 to-amber-500">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                     >
-                        <h2 className="text-4xl md:text-5xl font-bold mb-4">Ready to Start Shopping?</h2>
-                        <p className="text-xl mb-8 text-orange-100">Join thousands of happy customers today</p>
-                        <div className="flex gap-4 justify-center">
+                        <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+                            Transform Your Home Today
+                        </h2>
+                        <p className="text-xl text-slate-800 mb-8">
+                            Discover thousands of products from local vendors
+                        </p>
+                        <div className="flex gap-4 justify-center flex-wrap">
                             <Link to="/products">
-                                <Button size="lg" className="bg-white text-orange-600 hover:bg-orange-50 px-8">
-                                    Browse Products
+                                <Button size="lg" className="bg-slate-900 text-white hover:bg-slate-800 px-8">
+                                    Start Shopping
                                 </Button>
                             </Link>
                             <Link to="/register">
-                                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 px-8">
+                                <Button size="lg" variant="outline" className="border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white px-8">
                                     Become a Vendor
                                 </Button>
                             </Link>
@@ -289,6 +462,9 @@ const HomePage = () => {
                     </motion.div>
                 </div>
             </section>
+
+            {/* Recently Viewed Products */}
+            <RecentlyViewed limit={6} />
         </div>
     );
 };

@@ -2,7 +2,8 @@ from django.urls import path
 from . import views
 from .payout_views import (
     PayoutRequestListView, PayoutRequestDetailView,
-    ApprovePayoutView, RejectPayoutView, VendorPayoutStatsView
+    ApprovePayoutView, RejectPayoutView, VendorPayoutStatsView,
+    CalculatePendingPayoutsView, TriggerPayoutView, PayoutHistoryView
 )
 
 app_name = 'vendors'
@@ -21,4 +22,9 @@ urlpatterns = [
     path('admin/payouts/<int:pk>/approve/', ApprovePayoutView.as_view(), name='admin-payout-approve'),
     path('admin/payouts/<int:pk>/reject/', RejectPayoutView.as_view(), name='admin-payout-reject'),
     path('admin/payouts/stats/', VendorPayoutStatsView.as_view(), name='admin-payout-stats'),
+    
+    # New payout endpoints
+    path('admin/payouts/calculate/', CalculatePendingPayoutsView.as_view(), name='calculate-pending-payouts'),
+    path('admin/payouts/trigger/<int:vendor_id>/', TriggerPayoutView.as_view(), name='trigger-payout'),
+    path('admin/payouts/history/', PayoutHistoryView.as_view(), name='payout-history'),
 ]

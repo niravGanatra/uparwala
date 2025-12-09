@@ -7,6 +7,37 @@ class User(AbstractUser):
     address = models.TextField(blank=True)
     is_vendor = models.BooleanField(default=False)
     
+    # Profile enhancements
+    date_of_birth = models.DateField(null=True, blank=True, help_text="Date of birth")
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other'),
+        ('prefer_not_to_say', 'Prefer not to say'),
+    ]
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True)
+    
+    # Preferences
+    LANGUAGE_CHOICES = [
+        ('en', 'English'),
+        ('hi', 'Hindi'),
+        ('mr', 'Marathi'),
+        ('gu', 'Gujarati'),
+        ('ta', 'Tamil'),
+        ('te', 'Telugu'),
+        ('kn', 'Kannada'),
+        ('ml', 'Malayalam'),
+        ('bn', 'Bengali'),
+    ]
+    preferred_language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='en')
+    preferred_currency = models.CharField(max_length=3, default='INR')
+    preferred_categories = models.ManyToManyField(
+        'products.Category', 
+        blank=True, 
+        related_name='preferred_by_users',
+        help_text="User's favorite product categories"
+    )
+    
     # Vendor approval fields
     vendor_status = models.CharField(
         max_length=20,

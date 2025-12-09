@@ -8,6 +8,13 @@ class Category(models.Model):
     slug = models.SlugField(unique=True)
     image = models.ImageField(upload_to='category_images/', blank=True, null=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    commission_rate = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=5.00,
+        validators=[MinValueValidator(2.00), MaxValueValidator(10.00)],
+        help_text='Commission rate for products in this category (2-10%)'
+    )
 
     class Meta:
         verbose_name_plural = 'Categories'
@@ -353,3 +360,127 @@ class CMSPage(models.Model):
     
     def __str__(self):
         return self.title
+
+
+class ProductQuestion(models.Model):
+    """Customer questions about products"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='questions')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    question = models.TextField()
+    
+    # Moderation
+    is_approved = models.BooleanField(default=False, help_text="Admin approval for display")
+    is_answered = models.BooleanField(default=False)
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['product', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"Q: {self.question[:50]}... by {self.user.username}"
+
+
+class ProductAnswer(models.Model):
+    """Answers to product questions"""
+    question = models.ForeignKey(ProductQuestion, on_delete=models.CASCADE, related_name='answers')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    answer = models.TextField()
+    
+    # Answer type
+    is_vendor = models.BooleanField(default=False, help_text="Answer from product vendor")
+    is_staff = models.BooleanField(default=False, help_text="Answer from staff/admin")
+    
+    # Moderation
+    is_approved = models.BooleanField(default=False, help_text="Admin approval for display")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-is_vendor', '-is_staff', 'created_at']  # Vendor/staff answers first
+    
+    def __str__(self):
+        answer_type = "Vendor" if self.is_vendor else ("Staff" if self.is_staff else "User")
+        return f"A ({answer_type}): {self.answer[:50]}..."
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Mark question as answered
+        if self.is_approved and not self.question.is_answered:
+            self.question.is_answered = True
+            self.question.save()
+
+
+class RecentlyViewed(models.Model):
+    """Track recently viewed products for users and guests"""
+    # Support both logged-in users and guest sessions
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True,
+        related_name='recently_viewed'
+    )
+    session_key = models.CharField(max_length=40, null=True, blank=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    viewed_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-viewed_at']
+        indexes = [
+            models.Index(fields=['user', '-viewed_at']),
+            models.Index(fields=['session_key', '-viewed_at']),
+        ]
+        # Prevent duplicate entries
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'product'],
+                condition=models.Q(user__isnull=False),
+                name='unique_user_product'
+            ),
+            models.UniqueConstraint(
+                fields=['session_key', 'product'],
+                condition=models.Q(session_key__isnull=False),
+                name='unique_session_product'
+            ),
+        ]
+    
+    def __str__(self):
+        identifier = self.user.username if self.user else f"Session {self.session_key}"
+        return f"{identifier} viewed {self.product.name}"
+    
+    @classmethod
+    def add_view(cls, product, user=None, session_key=None):
+        """Add or update a product view"""
+        if user and user.is_authenticated:
+            obj, created = cls.objects.update_or_create(
+                user=user,
+                product=product,
+                defaults={'session_key': None}
+            )
+        elif session_key:
+            obj, created = cls.objects.update_or_create(
+                session_key=session_key,
+                product=product,
+                defaults={'user': None}
+            )
+        return obj
+    
+    @classmethod
+    def get_recent_products(cls, user=None, session_key=None, limit=10):
+        """Get recently viewed products"""
+        if user and user.is_authenticated:
+            views = cls.objects.filter(user=user).select_related('product')[:limit]
+        elif session_key:
+            views = cls.objects.filter(session_key=session_key).select_related('product')[:limit]
+        else:
+            return Product.objects.none()
+        
+        return [view.product for view in views]

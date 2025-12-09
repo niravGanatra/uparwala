@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from .models import PayoutRequest, VendorProfile
 from .serializers import PayoutRequestSerializer
+from .payout_calculator import calculate_pending_payouts, trigger_payout, get_payout_history
 
 
 class PayoutRequestListView(generics.ListAPIView):
@@ -44,6 +45,89 @@ class PayoutRequestDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAdminUser]
     serializer_class = PayoutRequestSerializer
     queryset = PayoutRequest.objects.select_related('vendor', 'vendor__user').all()
+
+
+class CalculatePendingPayoutsView(APIView):
+    """Calculate pending payouts for all vendors based on delivered orders"""
+    permission_classes = [IsAdminUser]
+    
+    def get(self, request):
+        try:
+            pending_payouts = calculate_pending_payouts()
+            
+            # Calculate summary stats
+            total_pending = sum(p['net_payout'] for p in pending_payouts)
+            total_commission = sum(p['total_commission'] for p in pending_payouts)
+            total_sales = sum(p['total_sales'] for p in pending_payouts)
+            
+            return Response({
+                'pending_payouts': pending_payouts,
+                'summary': {
+                    'total_vendors': len(pending_payouts),
+                    'total_pending_payout': total_pending,
+                    'total_commission': total_commission,
+                    'total_sales': total_sales
+                }
+            })
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class TriggerPayoutView(APIView):
+    """Trigger payout for a specific vendor"""
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request, vendor_id):
+        try:
+            transaction_id = request.data.get('transaction_id', '')
+            notes = request.data.get('notes', '')
+            
+            result = trigger_payout(
+                vendor_id=vendor_id,
+                admin_user=request.user,
+                transaction_id=transaction_id,
+                notes=notes
+            )
+            
+            return Response({
+                'message': 'Payout triggered successfully',
+                'payout': result
+            })
+        except ValueError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class PayoutHistoryView(APIView):
+    """Get payout history"""
+    permission_classes = [IsAdminUser]
+    
+    def get(self, request):
+        try:
+            vendor_id = request.query_params.get('vendor_id')
+            limit = int(request.query_params.get('limit', 50))
+            
+            history = get_payout_history(vendor_id=vendor_id, limit=limit)
+            
+            return Response({
+                'history': history,
+                'count': len(history)
+            })
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class ApprovePayoutView(APIView):

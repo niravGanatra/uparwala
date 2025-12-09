@@ -41,6 +41,8 @@ import Wishlist from './pages/Wishlist';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import RequestReturn from './pages/RequestReturn';
+import ProfileSettings from './pages/ProfileSettings';
+import BulkUpload from './pages/vendor/BulkUpload';
 
 function App() {
   return (
@@ -62,6 +64,7 @@ function App() {
                 <Route path="orders" element={<Orders />} />
                 <Route path="orders/:orderId" element={<OrderDetail />} />
                 <Route path="orders/:orderId/return" element={<RequestReturn />} />
+                <Route path="profile/settings" element={<ProfileSettings />} />
               </Route>
 
               {/* Auth Layout Routes */}
@@ -81,6 +84,7 @@ function App() {
                 <Route path="products" element={<VendorProducts />} />
                 <Route path="orders" element={<VendorOrders />} />
                 <Route path="wallet" element={<VendorWallet />} />
+                <Route path="bulk-upload" element={<BulkUpload />} />
               </Route>
 
               {/* Admin Routes - Protected */}

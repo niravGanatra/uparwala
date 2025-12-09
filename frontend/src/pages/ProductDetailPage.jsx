@@ -10,6 +10,7 @@ import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import ProductReviews from '../components/ProductReviews';
 import ProductRecommendations from '../components/ProductRecommendations';
+import ProductQA from '../components/ProductQA';
 
 import ImageGallery from '../components/ImageGallery';
 
@@ -36,6 +37,14 @@ const ProductDetailPage = () => {
         };
         fetchProduct();
     }, [slug]);
+
+    // Track product view
+    useEffect(() => {
+        if (product) {
+            api.post(`/products/${product.id}/track-view/`)
+                .catch(err => console.error('Failed to track view:', err));
+        }
+    }, [product]);
 
     const handleAddToCart = async () => {
         if (!user) {
@@ -155,6 +164,9 @@ const ProductDetailPage = () => {
 
                 {/* Product Reviews Section */}
                 <ProductReviews productId={product.id} />
+
+                {/* Product Q&A Section */}
+                <ProductQA productId={product.id} />
 
                 {/* Similar Products */}
                 <ProductRecommendations productId={product.id} type="similar" />

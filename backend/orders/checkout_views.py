@@ -85,7 +85,7 @@ class CheckoutView(APIView):
         # Calculate tax
         tax_calc = TaxCalculator()
         tax_data = tax_calc.calculate_gst(subtotal, shipping_address.state_code)
-        tax_amount = tax_data['total_tax']
+        tax_amount = Decimal(str(tax_data['total_tax']))
         
         # Apply coupon (TODO: implement coupon logic)
         discount_amount = Decimal('0')
