@@ -7,6 +7,8 @@ import { Trash2, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import CODChecker from '../components/CODChecker';
+import GiftWrapSelector from '../components/GiftWrapSelector';
 
 const CartPage = () => {
     const { cart, fetchCart, removeFromCart, loading, clearCart } = useCart();
@@ -125,6 +127,7 @@ const CartPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
+                    className="space-y-6"
                 >
                     <Card className="sticky top-20">
                         <CardHeader>
@@ -159,6 +162,15 @@ const CartPage = () => {
                             </Link>
                         </CardContent>
                     </Card>
+
+                    {/* Phase 5: COD & Gift Wrapping */}
+                    <div className="space-y-6">
+                        <CODChecker />
+                        <GiftWrapSelector
+                            orderId={null} // Pass orderId if available, or handle in context
+                            onUpdate={() => fetchCart()}
+                        />
+                    </div>
                 </motion.div>
             </div>
         </motion.div>

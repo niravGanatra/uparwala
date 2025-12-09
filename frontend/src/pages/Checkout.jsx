@@ -38,16 +38,34 @@ const Checkout = () => {
         is_default: false
     });
 
+    const [codAvailable, setCodAvailable] = useState(true);
+    const [codMessage, setCodMessage] = useState('');
+    const [giftData, setGiftData] = useState(null);
+
     useEffect(() => {
         fetchAddresses();
         fetchCart();
+
+        // Load gift data from local storage
+        const savedGift = localStorage.getItem('checkout_gift_data');
+        if (savedGift) {
+            const parsed = JSON.parse(savedGift);
+            setGiftData(parsed);
+        }
     }, []);
 
     useEffect(() => {
         if (selectedShippingAddress && (step === 2 || step === 3)) {
             calculateTotals();
         }
-    }, [selectedShippingAddress, step]);
+    }, [selectedShippingAddress, step, giftData]);
+
+    // Separate effect for COD check to ensure orderSummary is ready
+    useEffect(() => {
+        if (orderSummary && selectedShippingAddress && (step === 2 || step === 3)) {
+            checkCodAvailability();
+        }
+    }, [orderSummary, selectedShippingAddress, step]);
 
     const fetchAddresses = async () => {
         try {
@@ -82,13 +100,44 @@ const Checkout = () => {
         if (!address) return;
 
         try {
-            const response = await api.post('/payments/calculate-totals/', {
+            const payload = {
                 state_code: address.state_code
-            });
+            };
+
+            // Add gift option if present
+            if (giftData) {
+                payload.gift_option_id = giftData.gift_option_id;
+            } else {
+            }
+
+            const response = await api.post('/payments/calculate-totals/', payload);
             setOrderSummary(response.data);
         } catch (error) {
             console.error('Failed to calculate totals:', error);
             toast.error('Failed to calculate order total');
+        }
+    };
+
+    const checkCodAvailability = async () => {
+        if (!selectedShippingAddress || !orderSummary) {
+            return;
+        }
+
+        const address = addresses.find(a => a.id === selectedShippingAddress);
+        const totalValue = orderSummary.total;
+
+        try {
+            const response = await api.get(`/orders/check-cod/?pincode=${address.pincode}&order_value=${totalValue}`);
+            setCodAvailable(response.data.available);
+            setCodMessage(response.data.message);
+
+            // If COD selected but no longer available, switch to Online
+            if (!response.data.available && paymentMethod === 'cod') {
+                setPaymentMethod('razorpay');
+                toast.error(`COD not available: ${response.data.message}`);
+            }
+        } catch (error) {
+            console.error('COD check failed:', error);
         }
     };
 
@@ -133,11 +182,20 @@ const Checkout = () => {
         setProcessingPayment(true);
 
         try {
-            const response = await api.post('/orders/checkout/', {
+            const payload = {
                 shipping_address_id: selectedShippingAddress,
                 billing_address_id: sameAsShipping ? selectedShippingAddress : selectedBillingAddress,
                 payment_method: paymentMethod
-            });
+            };
+
+            // Include gift data
+            if (giftData) {
+                payload.gift_option_id = giftData.gift_option_id;
+                payload.gift_message = giftData.gift_message;
+                payload.recipient_name = giftData.recipient_name;
+            }
+
+            const response = await api.post('/orders/checkout/', payload);
 
             if (paymentMethod === 'razorpay') {
                 // Initialize Razorpay
@@ -159,6 +217,8 @@ const Checkout = () => {
                             });
 
                             toast.success('Payment successful!');
+                            // Clear gift data
+                            localStorage.removeItem('checkout_gift_data');
                             navigate(`/order-confirmation/${response.data.order_id}`);
                         } catch (error) {
                             console.error('Payment verification failed:', error);
@@ -184,6 +244,8 @@ const Checkout = () => {
             } else {
                 // COD
                 toast.success('Order placed successfully!');
+                // Clear gift data
+                localStorage.removeItem('checkout_gift_data');
                 navigate(`/order-confirmation/${response.data.order_id}`);
             }
         } catch (error) {
@@ -416,18 +478,22 @@ const Checkout = () => {
                 </div>
 
                 <div
-                    onClick={() => setPaymentMethod('cod')}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${paymentMethod === 'cod'
+                    onClick={() => codAvailable && setPaymentMethod('cod')}
+                    className={`p-4 border-2 rounded-lg transition-all ${paymentMethod === 'cod'
                         ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
+                        : !codAvailable
+                            ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                            : 'border-gray-200 hover:border-blue-300 cursor-pointer'
                         }`}
                 >
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <Truck className="w-6 h-6 text-green-600" />
+                            <Truck className={`w-6 h-6 ${!codAvailable ? 'text-gray-400' : 'text-green-600'}`} />
                             <div>
                                 <h3 className="font-semibold">Cash on Delivery</h3>
-                                <p className="text-sm text-gray-600">Pay when you receive</p>
+                                <p className="text-sm text-gray-600">
+                                    {!codAvailable ? `Unavailable: ${codMessage}` : 'Pay when you receive'}
+                                </p>
                             </div>
                         </div>
                         {paymentMethod === 'cod' && <Check className="w-6 h-6 text-blue-600" />}
@@ -519,6 +585,15 @@ const Checkout = () => {
                                 <span>Tax (GST)</span>
                                 <span>₹{orderSummary.tax_amount.toFixed(2)}</span>
                             </div>
+                            {orderSummary.gift_wrapping_amount > 0 && (
+                                <div className="flex justify-between text-pink-600">
+                                    <span className="flex items-center gap-1">
+                                        Gift Wrapping
+                                        {giftData && <span className="text-xs text-gray-500">({giftData.name})</span>}
+                                    </span>
+                                    <span>₹{orderSummary.gift_wrapping_amount.toFixed(2)}</span>
+                                </div>
+                            )}
                             <div className="border-t pt-2 flex justify-between font-bold text-lg">
                                 <span>Total</span>
                                 <span>₹{orderSummary.total.toFixed(2)}</span>

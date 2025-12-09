@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     'orders',
     'vendors',
     'payments',
+    'marketing',  # Phase 8
+    'analytics',  # Phase 7
     'notifications',
     'homepage',
     'promotions',  # New app for coupons and promotions

@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from .views import (
     CategoryListView, 
     ProductListView, 
@@ -11,7 +11,8 @@ from .views import (
     recently_viewed,
     track_product_view,
     bulk_upload_products,
-    download_csv_template
+    download_csv_template,
+    check_product_pincode
 )
 from .review_views import (
     ProductReviewListCreateView,
@@ -55,6 +56,9 @@ urlpatterns = [
     path('wishlist/<int:product_id>/check/', WishlistCheckView.as_view(), name='wishlist-check'),
     path('wishlist/<int:product_id>/move-to-cart/', WishlistMoveToCartView.as_view(), name='wishlist-move-to-cart'),
     
+    # Phase 3 URLs - TEMPORARILY DISABLED (conflicts with main product list)
+    # path('', include('products.phase3_urls')),
+
     path('', ProductListView.as_view(), name='product-list'),
     path('vendor/my-products/', VendorProductListCreateView.as_view(), name='vendor-product-list'),
     path('vendor/my-products/<slug:slug>/', VendorProductDetailView.as_view(), name='vendor-product-detail'),
@@ -103,5 +107,6 @@ urlpatterns = [
     path('bulk-upload/', bulk_upload_products, name='bulk-upload'),
     path('bulk-template/', download_csv_template, name='bulk-template'),
     
+    path('<slug:slug>/check-pincode/', check_product_pincode, name='check-product-pincode'),
     path('<slug:slug>/', ProductDetailView.as_view(), name='product-detail'),
 ]

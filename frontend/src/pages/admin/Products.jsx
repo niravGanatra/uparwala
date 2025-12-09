@@ -77,6 +77,10 @@ const AdminProducts = () => {
                     <h1 className="text-3xl font-bold text-slate-900 mb-2">Product Management</h1>
                     <p className="text-slate-600">Manage all products across vendors</p>
                 </div>
+                <Button className="bg-orange-600 hover:bg-orange-700">
+                    <Package className="mr-2 h-4 w-4" />
+                    Add Product
+                </Button>
             </div>
 
             <Card>
@@ -137,8 +141,8 @@ const AdminProducts = () => {
                                                 <button
                                                     onClick={() => handleToggleStatus(product.id, product.is_active)}
                                                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${product.is_active
-                                                            ? 'bg-green-500 focus:ring-green-500'
-                                                            : 'bg-gray-300 focus:ring-gray-400'
+                                                        ? 'bg-green-500 focus:ring-green-500'
+                                                        : 'bg-gray-300 focus:ring-gray-400'
                                                         }`}
                                                     title={product.is_active ? 'Click to deactivate' : 'Click to activate'}
                                                 >

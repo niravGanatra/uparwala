@@ -160,17 +160,29 @@ class CalculateTotalsView(APIView):
             tax_data = tax_calc.calculate_gst(subtotal, state_code)
             tax_amount = Decimal(str(tax_data['total_tax']))  # Convert float back to Decimal for calculation
             
-            # Calculate total
-            total = subtotal + shipping_cost + tax_amount
-            
-            # Get delivery estimate
+            # Calculate delivery estimate
             delivery_estimate = shipping_calc.estimate_delivery_date(state_code)
+            
+            # Handle Gift Wrapping
+            gift_option_id = request.data.get('gift_option_id')
+            gift_wrapping_amount = Decimal('0')
+            if gift_option_id:
+                from orders.models import GiftOption
+                try:
+                    gift_option = GiftOption.objects.get(id=gift_option_id, is_active=True)
+                    gift_wrapping_amount = gift_option.price
+                except GiftOption.DoesNotExist:
+                    pass
+
+            # Calculate total
+            total = subtotal + shipping_cost + tax_amount + gift_wrapping_amount
             
             return Response({
                 'subtotal': float(subtotal),
                 'shipping': shipping_data,
                 'tax': tax_data,
                 'tax_amount': float(tax_amount),
+                'gift_wrapping_amount': float(gift_wrapping_amount),
                 'total': float(total),
                 'delivery_estimate': delivery_estimate,
                 'items_count': cart_items.count()

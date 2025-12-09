@@ -26,16 +26,21 @@ const ProductDetailPage = () => {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
+                console.log('Fetching product details for slug:', slug);
                 const response = await api.get(`/products/${slug}/`);
+                console.log('Fetch response:', response);
                 setProduct(response.data);
             } catch (error) {
                 console.error('Failed to fetch product:', error);
+                console.error('Error details:', error.response?.data);
                 toast.error('Failed to load product');
             } finally {
                 setLoading(false);
             }
         };
-        fetchProduct();
+        if (slug) {
+            fetchProduct();
+        }
     }, [slug]);
 
     // Track product view
@@ -129,6 +134,52 @@ const ProductDetailPage = () => {
                         <span className="text-sm text-muted-foreground">
                             {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
                         </span>
+                        <span className="text-sm text-muted-foreground">
+                            {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                        </span>
+                    </div>
+
+                    {/* Pincode Checker */}
+                    <div className="border-t border-b py-4 my-4">
+                        <h3 className="font-medium mb-2 text-sm">Delivery Availability</h3>
+                        <div className="flex gap-2 items-start">
+                            <div className="flex-1">
+                                <input
+                                    type="text"
+                                    placeholder="Enter Pincode"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    maxLength={6}
+                                    id="pincode-input"
+                                />
+                                <p id="pincode-message" className="text-sm mt-1"></p>
+                            </div>
+                            <Button
+                                variant="outline"
+                                onClick={async () => {
+                                    const code = document.getElementById('pincode-input').value;
+                                    const msgEl = document.getElementById('pincode-message');
+                                    if (!code || code.length < 6) {
+                                        toast.error("Please enter valid pincode");
+                                        return;
+                                    }
+                                    try {
+                                        const res = await api.get(`/products/${product.slug}/check-pincode/?pincode=${code}`);
+                                        if (res.data.available) {
+                                            msgEl.textContent = "✅ " + res.data.message;
+                                            msgEl.className = "text-sm mt-1 text-green-600 font-medium";
+                                        } else {
+                                            msgEl.textContent = "❌ " + res.data.message;
+                                            msgEl.className = "text-sm mt-1 text-red-600 font-medium";
+                                        }
+                                    } catch (err) {
+                                        msgEl.textContent = "Error checking availability";
+                                        msgEl.className = "text-sm mt-1 text-red-600";
+                                    }
+                                }}
+                            >
+                                Check
+                            </Button>
+                        </div>
                     </div>
 
                     <div className="flex gap-4">

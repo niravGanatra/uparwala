@@ -1,8 +1,13 @@
 from django.contrib import admin
-from .models import Cart, CartItem, Order, OrderItem
+from .models import (
+    Cart, CartItem, Order, OrderItem, OrderReturn,
+    AddressVerification, CODPincode, GiftOption, OrderGift
+)
 
-# Import Shiprocket admin
-from .shiprocket_admin import ShiprocketConfigAdmin, ShipmentTrackingAdmin, OrderTrackingStatusAdmin
+# Import admin modules
+from . import shiprocket_admin
+from . import package_admin
+from . import phase45_admin
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem

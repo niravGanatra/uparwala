@@ -235,7 +235,7 @@ const ProductListingPage = () => {
                                 transition={{ delay: idx * 0.05 }}
                                 whileHover={{ y: -10 }}
                             >
-                                <Link to={`/products/${product.slug}`}>
+                                <Link to={`/products/${product.slug || product.id}`}>
                                     <Card className="overflow-hidden hover:shadow-2xl transition-all h-full">
                                         <div className="relative aspect-square bg-slate-100 overflow-hidden">
                                             {product.images && product.images.length > 0 ? (

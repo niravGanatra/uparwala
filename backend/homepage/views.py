@@ -46,14 +46,16 @@ def homepage_data(request):
         # Get active category promotions
         category_promotions = CategoryPromotion.objects.filter(is_active=True)
         
+        context = {'request': request}
+        
         data = {
-            'hero_banner': HeroBannerSerializer(hero_banner).data if hero_banner else None,
-            'promotional_banners': PromotionalBannerSerializer(promotional_banners, many=True).data,
-            'featured_categories': FeaturedCategorySerializer(featured_categories, many=True).data,
-            'deals': DealOfTheDaySerializer(deals, many=True).data,
-            'hosting_essentials': HostingEssentialSerializer(hosting_essentials, many=True).data,
-            'premium_sections': PremiumSectionSerializer(premium_sections, many=True).data,
-            'category_promotions': CategoryPromotionSerializer(category_promotions, many=True).data,
+            'hero_banner': HeroBannerSerializer(hero_banner, context=context).data if hero_banner else None,
+            'promotional_banners': PromotionalBannerSerializer(promotional_banners, many=True, context=context).data,
+            'featured_categories': FeaturedCategorySerializer(featured_categories, many=True, context=context).data,
+            'deals': DealOfTheDaySerializer(deals, many=True, context=context).data,
+            'hosting_essentials': HostingEssentialSerializer(hosting_essentials, many=True, context=context).data,
+            'premium_sections': PremiumSectionSerializer(premium_sections, many=True, context=context).data,
+            'category_promotions': CategoryPromotionSerializer(category_promotions, many=True, context=context).data,
         }
         
         return Response(data)

@@ -6,6 +6,9 @@ class VendorProfileSerializer(serializers.ModelSerializer):
         model = VendorProfile
         fields = '__all__'
         read_only_fields = ('user', 'is_approved', 'created_at')
+        extra_kwargs = {
+            'serviceable_pincodes': {'required': False}
+        }
 
 class WalletSerializer(serializers.ModelSerializer):
     class Meta:

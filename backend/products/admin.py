@@ -1,6 +1,9 @@
 from django.contrib import admin
 from .models import (Category, Product, ProductImage, ProductAttribute, Variation, ProductDownload,
-                      ProductQuestion, ProductAnswer, RecentlyViewed)
+                      ProductQuestion, ProductAnswer, RecentlyViewed, ProductReview, ReviewHelpful, Wishlist)
+
+# Import Phase 3 admin
+from .phase3_admin import BrandAdmin, ProductVideoAdmin, ProductVideoInline, ProductComparisonAdmin, ProductBundleAdmin
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage

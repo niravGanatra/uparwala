@@ -172,3 +172,28 @@ def download_csv_template(request):
     response = HttpResponse(template_content, content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="product_upload_template.csv"'
     return response
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def check_product_pincode(request, slug):
+    """
+    Check if a product is deliverable to a specific pincode.
+    Logic:
+    1. Check if pincode is in Global ServiceablePincode list.
+    2. Check if pincode is in Vendor's serviceable_pincodes list.
+    """
+    from orders.utils import is_pincode_servicable
+    pincode = request.query_params.get('pincode')
+    if not pincode:
+        return Response({'available': False, 'message': 'Pincode is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    product = get_object_or_404(Product, slug=slug)
+    
+    is_available, message = is_pincode_servicable(pincode, product.vendor)
+    
+    return Response({
+        'available': is_available,
+        'message': message,
+        'pincode': pincode
+    })

@@ -30,6 +30,11 @@ urlpatterns = [
     path('api/notifications/', include('notifications.urls')),
     path('api/homepage/', include('homepage.urls')),
     path('api/promotions/', include('promotions.urls')),
+    path('api/analytics/', include('analytics.urls')),  # Phase 7
+    path('api/marketing/', include('marketing.urls')),  # Phase 8
+    
+    # Webhooks
+    path('api/webhooks/', include('orders.shiprocket_urls')),
     
     # Authentication URLs
     path('api/auth/', include('dj_rest_auth.urls')),

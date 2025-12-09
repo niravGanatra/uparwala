@@ -135,10 +135,16 @@ const VendorProducts = () => {
                     <h1 className="text-3xl font-bold text-slate-900 mb-2">My Products</h1>
                     <p className="text-slate-600">Manage your product inventory</p>
                 </div>
-                <Button onClick={() => setIsAddModalOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Product
-                </Button>
+                <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => window.location.href = '/vendor/bulk-upload'}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Bulk Upload
+                    </Button>
+                    <Button onClick={() => setIsAddModalOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Product
+                    </Button>
+                </div>
             </div>
 
             <Card>
@@ -163,10 +169,16 @@ const VendorProducts = () => {
                             <Package className="h-16 w-16 text-slate-300 mx-auto mb-4" />
                             <p className="text-slate-500 text-lg mb-2">No products yet</p>
                             <p className="text-slate-400 mb-4">Start by adding your first product</p>
-                            <Button onClick={() => setIsAddModalOpen(true)}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Product
-                            </Button>
+                            <div className="flex gap-3 justify-center">
+                                <Button variant="outline" onClick={() => window.location.href = '/vendor/bulk-upload'}>
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Bulk Upload
+                                </Button>
+                                <Button onClick={() => setIsAddModalOpen(true)}>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Product
+                                </Button>
+                            </div>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">

@@ -60,6 +60,9 @@ class VendorProfile(models.Model):
     )
     review_count = models.PositiveIntegerField(default=0)
     
+    # Serviceability
+    serviceable_pincodes = models.TextField(blank=True, help_text="Comma-separated list of pincodes. Leave empty to serve all (subject to global restrictions).")
+    
     # Social Media
     facebook_url = models.URLField(blank=True)
     twitter_url = models.URLField(blank=True)

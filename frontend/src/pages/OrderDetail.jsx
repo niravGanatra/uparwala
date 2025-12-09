@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Package, Truck, CheckCircle, Clock, MapPin, CreditCard, ArrowLeft } from 'lucide-react';
+import { Package, Truck, CheckCircle, Clock, MapPin, CreditCard, ArrowLeft, XCircle } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import CancelItemModal from '../components/CancelItemModal';
+import PackageList from '../components/PackageList';
 
 const OrderDetail = () => {
     const { orderId } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [cancellingItem, setCancellingItem] = useState(null);
 
     useEffect(() => {
         fetchOrderDetail();
@@ -81,6 +84,13 @@ const OrderDetail = () => {
                         <div className="text-right">
                             <div className="text-3xl font-bold text-blue-600">₹{order.total_amount}</div>
                             <div className="text-sm text-gray-600">{order.payment_status}</div>
+                            <button
+                                onClick={() => navigate(`/orders/${orderId}/track`)}
+                                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                            >
+                                <Truck className="w-4 h-4" />
+                                Track Order
+                            </button>
                         </div>
                     </div>
 
@@ -136,6 +146,9 @@ const OrderDetail = () => {
                     )}
                 </div>
 
+                {/* Packages */}
+                <PackageList orderId={orderId} />
+
                 {/* Shipping Address */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -161,21 +174,38 @@ const OrderDetail = () => {
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <h2 className="text-lg font-semibold mb-4">Order Items</h2>
                     <div className="space-y-4">
-                        {order.items?.map((item) => (
-                            <div key={item.id} className="flex items-center gap-4 pb-4 border-b last:border-0">
-                                <div className="w-20 h-20 bg-gray-100 rounded flex items-center justify-center">
-                                    <Package className="w-8 h-8 text-gray-400" />
+                        {order.items?.map((item) => {
+                            const canCancel = order.status !== 'DELIVERED' && order.status !== 'CANCELLED';
+                            const activeQty = item.quantity - (item.cancelled_quantity || 0);
+
+                            return (
+                                <div key={item.id} className="flex items-center gap-4 pb-4 border-b last:border-0">
+                                    <div className="w-20 h-20 bg-gray-100 rounded flex items-center justify-center">
+                                        <Package className="w-8 h-8 text-gray-400" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-medium">{item.product.name}</h3>
+                                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                                        {item.cancelled_quantity > 0 && (
+                                            <p className="text-sm text-red-600">Cancelled: {item.cancelled_quantity}</p>
+                                        )}
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-bold">₹{(item.price * item.quantity).toFixed(2)}</p>
+                                        <p className="text-sm text-gray-600">₹{item.price} each</p>
+                                        {canCancel && activeQty > 0 && (
+                                            <button
+                                                onClick={() => setCancellingItem(item)}
+                                                className="mt-2 text-sm text-red-600 hover:text-red-700 flex items-center gap-1"
+                                            >
+                                                <XCircle className="w-4 h-4" />
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="font-medium">{item.product.name}</h3>
-                                    <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-bold">₹{(item.price * item.quantity).toFixed(2)}</p>
-                                    <p className="text-sm text-gray-600">₹{item.price} each</p>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -207,6 +237,15 @@ const OrderDetail = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Cancel Item Modal */}
+                {cancellingItem && (
+                    <CancelItemModal
+                        item={cancellingItem}
+                        onClose={() => setCancellingItem(null)}
+                        onSuccess={fetchOrderDetail}
+                    />
+                )}
             </div>
         </div>
     );

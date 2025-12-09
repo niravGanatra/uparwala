@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from vendors.models import VendorProfile
 from django.conf import settings
+from django.utils.text import slugify
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
@@ -22,10 +23,45 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
+class Brand(models.Model):
+    """Product brands/manufacturers"""
+    name = models.CharField(max_length=200, unique=True)
+    slug = models.SlugField(max_length=200, unique=True)
+    logo = models.ImageField(upload_to='brands/', blank=True)
+    description = models.TextField(blank=True)
+    website = models.URLField(blank=True)
+    
+    # SEO
+    meta_title = models.CharField(max_length=200, blank=True)
+    meta_description = models.TextField(blank=True)
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    featured = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Brand'
+        verbose_name_plural = 'Brands'
+    
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
 class Product(models.Model):
     # Basic Information
     vendor = models.ForeignKey(VendorProfile, on_delete=models.CASCADE, related_name='products')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     description = models.TextField()
@@ -90,6 +126,13 @@ class Product(models.Model):
     ]
     catalog_visibility = models.CharField(max_length=20, choices=CATALOG_VISIBILITY_CHOICES, default='visible')
     purchase_note = models.TextField(blank=True, help_text='Note to customer after purchase')
+    
+    # Additional Product Information (Phase 3)
+    manufacturing_country = models.CharField(max_length=100, blank=True, help_text='Country of manufacture')
+    whats_in_box = models.TextField(blank=True, help_text='List items included in the package')
+    safety_instructions = models.TextField(blank=True, help_text='Safety warnings and instructions')
+    handling_time = models.IntegerField(default=2, help_text='Days required to prepare for shipping')
+    expiry_date = models.DateField(null=True, blank=True, help_text='For perishable items')
     
     # Reviews
     enable_reviews = models.BooleanField(default=True)

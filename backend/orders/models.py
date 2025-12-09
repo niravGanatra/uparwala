@@ -3,6 +3,7 @@ from django.conf import settings
 from products.models import Product
 from vendors.models import VendorProfile
 from .shiprocket_models import ShiprocketConfig, ShipmentTracking, OrderTrackingStatus
+from .package_models import OrderPackage, PackageItem
 
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart')
@@ -93,9 +94,48 @@ class OrderItem(models.Model):
     payout_date = models.DateTimeField(null=True, blank=True)
     payout_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     commission_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Partial cancellation support
+    cancelled_quantity = models.PositiveIntegerField(default=0)
+    cancellation_reason = models.TextField(blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    refund_processed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} (Order #{self.order.id})"
+    
+    def get_active_quantity(self):
+        """Get quantity that hasn't been cancelled"""
+        return self.quantity - self.cancelled_quantity
+    
+    def can_cancel(self, quantity):
+        """Check if quantity can be cancelled"""
+        return quantity <= self.get_active_quantity()
+    
+    def cancel_partial(self, quantity, reason):
+        """Cancel partial quantity and calculate refund"""
+        from django.utils import timezone
+        
+        if not self.can_cancel(quantity):
+            raise ValueError(f"Cannot cancel {quantity} items. Only {self.get_active_quantity()} available.")
+        
+        # Update cancelled quantity
+        self.cancelled_quantity += quantity
+        self.cancellation_reason = reason
+        self.cancelled_at = timezone.now()
+        
+        # Calculate refund amount (price per item * cancelled quantity)
+        refund = self.price * quantity
+        self.refund_amount += refund
+        
+        self.save()
+        
+        # Restore inventory
+        self.product.stock += quantity
+        self.product.save()
+        
+        return refund
 
 
 class OrderReturn(models.Model):
@@ -147,7 +187,118 @@ class OrderReturn(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"Return #{self.id} - Order #{self.order.id}"
+        return f"Return Request #{self.id} for Order #{self.order.id}"
+
+
+# Phase 4-5 Models: Address Verification, COD, Gift Wrapping
+
+class AddressVerification(models.Model):
+    """Address verification for high-value orders"""
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='address_verification')
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending Verification'),
+        ('verified', 'Verified'),
+        ('failed', 'Verification Failed'),
+        ('manual_review', 'Manual Review Required'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    verified_address = models.TextField(blank=True)
+    verification_method = models.CharField(max_length=50, blank=True)
+    verification_notes = models.TextField(blank=True)
+    
+    verified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_addresses')
+    verified_at = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Address Verification'
+        verbose_name_plural = 'Address Verifications'
+    
+    def __str__(self):
+        return f"Verification for Order #{self.order.id} - {self.status}"
+
+
+class CODPincode(models.Model):
+    """Allowed pincodes for Cash on Delivery"""
+    pincode = models.CharField(max_length=10, unique=True, db_index=True)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+    max_order_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    notes = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'COD Pincode'
+        verbose_name_plural = 'COD Pincodes'
+    
+    def __str__(self):
+        return f"{self.pincode} - {self.city}, {self.state}"
+    
+        return True
+
+
+class ServiceablePincode(models.Model):
+    """Global list of serviceable pincodes for the platform"""
+    pincode = models.CharField(max_length=10, unique=True, db_index=True)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Serviceable Pincode'
+        verbose_name_plural = 'Serviceable Pincodes'
+    
+    def __str__(self):
+        return f"{self.pincode} - {self.city}"
+
+
+class GiftOption(models.Model):
+    """Gift wrapping options"""
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    image = models.ImageField(upload_to='gift_wrapping/', blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Gift Option'
+        verbose_name_plural = 'Gift Options'
+        ordering = ['sort_order', 'name']
+    
+    def __str__(self):
+        return f"{self.name} - ₹{self.price}"
+
+
+class OrderGift(models.Model):
+    """Gift details for an order"""
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='gift_details')
+    gift_option = models.ForeignKey(GiftOption, on_delete=models.SET_NULL, null=True)
+    gift_message = models.TextField(max_length=500, blank=True)
+    recipient_name = models.CharField(max_length=200, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Order Gift'
+        verbose_name_plural = 'Order Gifts'
+    
+    def __str__(self):
+        return f"Gift for Order #{self.order.id}"
 
 
 class OrderStatusHistory(models.Model):

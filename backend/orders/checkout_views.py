@@ -73,6 +73,18 @@ class CheckoutView(APIView):
                 )
             subtotal += item.product.price * item.quantity
         
+        # Validate Pincode Serviceability for all items
+        from .utils import is_pincode_servicable
+        shipping_pincode = shipping_address.pincode
+        
+        for item in cart_items:
+            is_available, message = is_pincode_servicable(shipping_pincode, item.product.vendor)
+            if not is_available:
+                return Response(
+                    {'error': f"Item '{item.product.name}' cannot be delivered to {shipping_pincode}. {message}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
         # Calculate shipping
         shipping_calc = ShippingCalculator()
         shipping_data = shipping_calc.calculate_shipping(
@@ -90,8 +102,23 @@ class CheckoutView(APIView):
         # Apply coupon (TODO: implement coupon logic)
         discount_amount = Decimal('0')
         
+        # Validate and get Gift Option if provided
+        gift_option_id = request.data.get('gift_option_id')
+        gift_message = request.data.get('gift_message', '')
+        recipient_name = request.data.get('recipient_name', '')
+        gift_option = None
+        gift_amount = Decimal('0')
+        
+        if gift_option_id:
+            from .models import GiftOption, OrderGift
+            try:
+                gift_option = GiftOption.objects.get(id=gift_option_id, is_active=True)
+                gift_amount = gift_option.price
+            except GiftOption.DoesNotExist:
+                pass
+
         # Calculate total
-        total_amount = subtotal + shipping_cost + tax_amount - discount_amount
+        total_amount = subtotal + shipping_cost + tax_amount - discount_amount + gift_amount
         
         # Create order
         order = Order.objects.create(
@@ -134,6 +161,15 @@ class CheckoutView(APIView):
             # Tax breakdown
             tax_breakdown=tax_data
         )
+        
+        # Create Order Gift Record if selected
+        if gift_option:
+            OrderGift.objects.create(
+                order=order,
+                gift_option=gift_option,
+                gift_message=gift_message,
+                recipient_name=recipient_name
+            )
         
         # Create order items and reduce stock
         for item in cart_items:

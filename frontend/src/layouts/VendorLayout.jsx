@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 
@@ -37,6 +37,10 @@ const VendorLayout = () => {
                         <Wallet className="h-5 w-5" />
                         <span>Wallet</span>
                     </Link>
+                    <Link to="/vendor/settings" className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors">
+                        <Settings className="h-5 w-5" />
+                        <span>Settings</span>
+                    </Link>
                 </nav>
 
                 <div className="p-4 border-t border-slate-800">
@@ -64,7 +68,7 @@ const VendorLayout = () => {
                     <Outlet />
                 </div>
             </main>
-        </div>
+        </div >
     );
 };
 
