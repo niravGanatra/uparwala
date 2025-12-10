@@ -159,7 +159,10 @@ class CheckoutView(APIView):
             },
             
             # Tax breakdown
-            tax_breakdown=tax_data
+            tax_breakdown=tax_data,
+            
+            # Customer Note
+            customer_note=request.data.get('customer_note', '')
         )
         
         # Create Order Gift Record if selected

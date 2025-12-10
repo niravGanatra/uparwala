@@ -125,10 +125,16 @@ class CalculateTotalsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
+        # Debug logging
+        print(f"DEBUG: Calculate totals request data: {request.data}")
+        
         state_code = request.data.get('state_code')
         cart_id = request.data.get('cart_id')
         
+        print(f"DEBUG: state_code = '{state_code}', cart_id = '{cart_id}'")
+        
         if not state_code:
+            print(f"DEBUG: State code validation failed - state_code is: '{state_code}'")
             return Response({'error': 'State code is required'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
@@ -147,14 +153,28 @@ class CalculateTotalsView(APIView):
             
             # Calculate subtotal
             subtotal = Decimal('0')
+            discount_total = Decimal('0')
+            from orders.services import PriceCalculatorService
+
             for item in cart_items:
-                subtotal += item.product.price * item.quantity
+                price_info = PriceCalculatorService.calculate_price(item.product)
+                # Ensure we work with Decimals
+                final_price = Decimal(str(price_info['price']))
+                quantity = Decimal(str(item.quantity))
+                
+                subtotal += final_price * quantity
+                discount_total += Decimal(str(price_info['discount_amount'])) * quantity
             
             # Calculate shipping
             shipping_calc = ShippingCalculator()
             shipping_data = shipping_calc.calculate_shipping(cart_items, state_code, subtotal)
             shipping_cost = Decimal(str(shipping_data['total_shipping']))
             
+            # Ensure shipping data values are floats for JSON
+            shipping_data['base_rate'] = float(shipping_data['base_rate'])
+            shipping_data['weight_charge'] = float(shipping_data['weight_charge'])
+            shipping_data['total_shipping'] = float(shipping_data['total_shipping'])
+
             # Calculate tax
             tax_calc = TaxCalculator()
             tax_data = tax_calc.calculate_gst(subtotal, state_code)
@@ -173,12 +193,13 @@ class CalculateTotalsView(APIView):
                     gift_wrapping_amount = gift_option.price
                 except GiftOption.DoesNotExist:
                     pass
-
+ 
             # Calculate total
             total = subtotal + shipping_cost + tax_amount + gift_wrapping_amount
             
             return Response({
                 'subtotal': float(subtotal),
+                'discount_total': float(discount_total),
                 'shipping': shipping_data,
                 'tax': tax_data,
                 'tax_amount': float(tax_amount),
@@ -195,11 +216,19 @@ class CalculateTotalsView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ShippingZoneListView(generics.ListAPIView):
-    """List all active shipping zones"""
-    queryset = ShippingZone.objects.filter(is_active=True)
-    serializer_class = ShippingZoneSerializer
+from rest_framework import viewsets, permissions
 
+class ShippingZoneViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for Shipping Zones (Admin Only for modifications)
+    """
+    queryset = ShippingZone.objects.all()
+    serializer_class = ShippingZoneSerializer
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAdminUser()]
+        return [permissions.IsAuthenticated()]
 
 class TaxRateListView(generics.ListAPIView):
     """List all tax rates"""

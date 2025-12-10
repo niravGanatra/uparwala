@@ -1,13 +1,19 @@
 from django.urls import path, include
+from . import views
 from .views import (
     CartDetailView, AddToCartView, RemoveFromCartView, 
-    OrderListCreateView, OrderDetailView, AdminOrderListView
+    OrderListCreateView, OrderDetailView, AdminOrderListView,
+    OrderNoteViewSet, ShiprocketConfigViewSet
 )
 from .checkout_views import CheckoutView
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'notes', OrderNoteViewSet, basename='order-note')
+router.register(r'shiprocket-config', ShiprocketConfigViewSet, basename='shiprocket-config')
 
 urlpatterns = [
-    # Phase 4-5 URLs
-    path('', include('orders.phase45_urls')),
+    path('manage/', include(router.urls)), # /api/orders/manage/notes/
     
     # Existing URLs
     path('cart/', CartDetailView.as_view(), name='cart-detail'),
@@ -16,6 +22,11 @@ urlpatterns = [
     path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
     path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),
     path('admin/orders/', AdminOrderListView.as_view(), name='admin-order-list'),
+    
+    # COD and Gift Options
+    path('check-cod/', views.check_cod_availability, name='check-cod'),
+    path('gift-options/', views.list_gift_options, name='gift-options'),
+    
     path('checkout/', CheckoutView.as_view(), name='checkout'),
     
     # Shiprocket endpoints

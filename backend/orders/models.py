@@ -24,6 +24,9 @@ class Order(models.Model):
         ('SHIPPED', 'Shipped'),
         ('DELIVERED', 'Delivered'),
         ('CANCELLED', 'Cancelled'),
+        ('ON_HOLD', 'On Hold'),
+        ('FAILED', 'Failed'),
+        ('REFUNDED', 'Refunded'),
     )
     
     PAYMENT_STATUS_CHOICES = (
@@ -41,6 +44,7 @@ class Order(models.Model):
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    customer_note = models.TextField(blank=True, help_text="Notes from customer at checkout")
     
     # Payment information
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
@@ -241,6 +245,12 @@ class CODPincode(models.Model):
     def __str__(self):
         return f"{self.pincode} - {self.city}, {self.state}"
     
+    def is_cod_available(self, order_value):
+        """Check if COD is available for given order value"""
+        if not self.is_active:
+            return False
+        if self.max_order_value and order_value > self.max_order_value:
+            return False
         return True
 
 
@@ -315,3 +325,17 @@ class OrderStatusHistory(models.Model):
     
     def __str__(self):
         return f"Order #{self.order.id} - {self.status}"
+
+class OrderNote(models.Model):
+    """Granular Order Notes (Private vs Customer)"""
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='notes')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    content = models.TextField()
+    is_customer_note = models.BooleanField(default=False, help_text="Visible to customer?")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Note on Order #{self.order.id} ({'Public' if self.is_customer_note else 'Private'})"
