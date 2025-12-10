@@ -19,8 +19,35 @@ const CartPage = () => {
     }, []);
 
     const calculateTotal = () => {
-        if (!cart || !cart.items) return 0;
-        return cart.items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+        if (!cart) return 0;
+        // Prefer backend calculation if available
+        if (cart.total_amount !== undefined) return parseFloat(cart.total_amount);
+
+        // Fallback to frontend calculation (with deal logic)
+        return cart.items.reduce((total, item) => {
+            const price = item.product.active_deal
+                ? parseFloat(item.product.active_deal.discounted_price)
+                : parseFloat(item.product.price);
+            return total + (price * item.quantity);
+        }, 0);
+    };
+
+    // Helper to get item price details
+    const getItemPrice = (item) => {
+        if (item.product.active_deal) {
+            return {
+                price: parseFloat(item.product.active_deal.discounted_price),
+                original: parseFloat(item.product.price),
+                isDeal: true,
+                discount: parseInt(item.product.active_deal.discount_percentage)
+            };
+        }
+        return {
+            price: parseFloat(item.product.price),
+            original: null,
+            isDeal: false,
+            discount: 0
+        };
     };
 
     const handleCheckout = () => {
@@ -69,58 +96,74 @@ const CartPage = () => {
             <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-4">
-                    {cart.items.map((item, index) => (
-                        <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                        >
-                            <Card>
-                                <CardContent className="p-4 flex gap-4">
-                                    <div className="h-24 w-24 bg-slate-100 rounded-md overflow-hidden flex-shrink-0">
-                                        {item.product.images && item.product.images.length > 0 ? (
-                                            <img
-                                                src={item.product.images[0].image}
-                                                alt={item.product.name}
-                                                className="object-cover w-full h-full"
-                                            />
-                                        ) : (
-                                            <div className="flex items-center justify-center h-full text-slate-400 text-xs">
-                                                No Image
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between mb-2">
-                                            <h3 className="font-semibold text-lg">{item.product.name}</h3>
-                                            <span className="font-bold">₹{item.product.price * item.quantity}</span>
+                    {cart.items.map((item, index) => {
+                        const priceInfo = getItemPrice(item);
+                        return (
+                            <motion.div
+                                key={item.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                            >
+                                <Card className="relative overflow-hidden">
+                                    {priceInfo.isDeal && (
+                                        <div className="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-bold px-2 py-1 z-10">
+                                            DEAL APPLIED
                                         </div>
-                                        <p className="text-sm text-muted-foreground mb-4">
-                                            Sold by {item.product.vendor_name}
-                                        </p>
-                                        <div className="flex justify-between items-center">
-                                            <div className="flex items-center space-x-2 text-sm">
-                                                <span className="text-muted-foreground">Qty: {item.quantity}</span>
-                                                <span className="text-muted-foreground">×</span>
-                                                <span className="text-muted-foreground">₹{item.product.price}</span>
-                                            </div>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                                                onClick={() => handleRemove(item.id)}
-                                                disabled={loading}
-                                            >
-                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                Remove
-                                            </Button>
+                                    )}
+                                    <CardContent className="p-4 flex gap-4">
+                                        <div className="h-24 w-24 bg-slate-100 rounded-md overflow-hidden flex-shrink-0">
+                                            {item.product.images && item.product.images.length > 0 ? (
+                                                <img
+                                                    src={item.product.images[0].image}
+                                                    alt={item.product.name}
+                                                    className="object-cover w-full h-full"
+                                                />
+                                            ) : (
+                                                <div className="flex items-center justify-center h-full text-slate-400 text-xs">
+                                                    No Image
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    ))}
+                                        <div className="flex-1">
+                                            <div className="flex justify-between mb-2">
+                                                <h3 className="font-semibold text-lg">{item.product.name}</h3>
+                                                <div className="text-right">
+                                                    <span className="font-bold block">₹{(priceInfo.price * item.quantity).toFixed(2)}</span>
+                                                    {priceInfo.isDeal && (
+                                                        <span className="text-sm text-slate-400 line-through">₹{(priceInfo.original * item.quantity).toFixed(2)}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground mb-4">
+                                                Sold by {item.product.vendor_name}
+                                            </p>
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex items-center space-x-2 text-sm">
+                                                    <span className="text-muted-foreground">Qty: {item.quantity}</span>
+                                                    <span className="text-muted-foreground">×</span>
+                                                    <span className="font-medium">₹{priceInfo.price}</span>
+                                                    {priceInfo.isDeal && (
+                                                        <span className="text-red-600 font-bold ml-1">({priceInfo.discount}% OFF)</span>
+                                                    )}
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                    onClick={() => handleRemove(item.id)}
+                                                    disabled={loading}
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        )
+                    })}
                 </div>
 
                 <motion.div
@@ -136,8 +179,16 @@ const CartPage = () => {
                         <CardContent className="space-y-4">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Subtotal ({cart.items.length} items)</span>
-                                <span>₹{calculateTotal().toFixed(2)}</span>
+                                <span>₹{(cart.subtotal !== undefined ? cart.subtotal : calculateTotal()).toFixed(2)}</span>
                             </div>
+
+                            {(cart.discount_amount > 0 || (cart.subtotal - cart.total_amount) > 0) && (
+                                <div className="flex justify-between text-sm text-green-600">
+                                    <span>Discount</span>
+                                    <span>-₹{(cart.discount_amount || (cart.subtotal - cart.total_amount)).toFixed(2)}</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Shipping</span>
                                 <span className="text-green-600 font-medium">Free</span>

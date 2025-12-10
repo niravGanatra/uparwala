@@ -36,12 +36,17 @@ const GiftWrapSelector = ({ orderId, onSelect }) => {
             if (!orderId) {
                 const savedGift = localStorage.getItem('checkout_gift_data');
                 if (savedGift) {
-                    const parsed = JSON.parse(savedGift);
-                    const option = response.data.find(o => o.id === parsed.gift_option_id);
-                    if (option) {
-                        setSelectedOption(option);
-                        setGiftMessage(parsed.gift_message || '');
-                        setRecipientName(parsed.recipient_name || '');
+                    try {
+                        const parsed = JSON.parse(savedGift);
+                        const option = response.data.find(o => o.id === parsed.gift_option_id);
+                        if (option) {
+                            setSelectedOption(option);
+                            setGiftMessage(parsed.gift_message || '');
+                            setRecipientName(parsed.recipient_name || '');
+                        }
+                    } catch (e) {
+                        console.error('Error parsing gift data:', e);
+                        localStorage.removeItem('checkout_gift_data');
                     }
                 }
             }
