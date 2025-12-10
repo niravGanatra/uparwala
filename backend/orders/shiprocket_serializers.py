@@ -40,4 +40,15 @@ class TrackingHistorySerializer(serializers.Serializer):
     courier_name = serializers.CharField()
     current_status = serializers.CharField()
     tracking_url = serializers.URLField()
+    tracking_url = serializers.URLField()
     tracking_events = OrderTrackingStatusSerializer(many=True)
+
+from .shiprocket_models import ShiprocketConfig
+
+class ShiprocketConfigSerializer(serializers.ModelSerializer):
+    """Serializer for Shiprocket Configuration"""
+    class Meta:
+        model = ShiprocketConfig
+        fields = '__all__'
+        extra_kwargs = {'password': {'write_only': True}}
+        read_only_fields = ('api_token', 'token_expiry', 'created_at', 'updated_at')

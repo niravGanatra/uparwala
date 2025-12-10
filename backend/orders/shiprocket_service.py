@@ -1,37 +1,32 @@
 import requests
-import logging
-from datetime import datetime, timedelta
+import json
 from django.utils import timezone
 from django.conf import settings
 from .shiprocket_models import ShiprocketConfig, ShipmentTracking, OrderTrackingStatus
-
-logger = logging.getLogger(__name__)
-
+from .models import Order, OrderItem
+from vendors.models import VendorProfile
 
 class ShiprocketService:
-    """Service class for Shiprocket API integration"""
-    
     BASE_URL = "https://apiv2.shiprocket.in/v1/external"
     
     def __init__(self):
-        self.config = ShiprocketConfig.objects.filter(is_active=True).first()
+        self.config = ShiprocketConfig.objects.first()
         if not self.config:
-            raise Exception("Shiprocket configuration not found. Please configure in admin.")
-        self.token = self.get_valid_token()
-    
-    def get_valid_token(self):
-        """Get valid API token, refresh if expired"""
+            raise ValueError("Shiprocket configuration not found.")
+
+    def get_token(self):
+        """Get valid API token, refreshing if necessary"""
+        # If token exists and is valid (expiry > now + buffer), return it
         if self.config.api_token and self.config.token_expiry:
-            if timezone.now() < self.config.token_expiry:
-                logger.info("Using existing Shiprocket token")
-                return self.config.api_token
-        
-        # Token expired or doesn't exist, get new one
-        logger.info("Refreshing Shiprocket token")
-        return self.authenticate()
-    
-    def authenticate(self):
-        """Authenticate and get API token"""
+             # Buffer of 1 hour
+             if self.config.token_expiry > timezone.now() + timezone.timedelta(hours=1):
+                 return self.config.api_token
+
+        # Otherwise login
+        return self.login()
+
+    def login(self):
+        """Login to Shiprocket and save token"""
         url = f"{self.BASE_URL}/auth/login"
         payload = {
             "email": self.config.email,
@@ -39,270 +34,199 @@ class ShiprocketService:
         }
         
         try:
-            response = requests.post(url, json=payload, timeout=30)
+            response = requests.post(url, json=payload)
             response.raise_for_status()
-            
             data = response.json()
-            token = data['token']
             
-            # Save token with 10-day expiry
+            token = data.get('token')
+            if not token:
+                raise ValueError("No token in login response")
+                
+            # Shiprocket tokens last 10 days usually. Set expiry to 9 days to be safe.
+            expiry = timezone.now() + timezone.timedelta(days=9)
+            
             self.config.api_token = token
-            self.config.token_expiry = timezone.now() + timedelta(days=10)
+            self.config.token_expiry = expiry
             self.config.save()
             
-            logger.info("Successfully authenticated with Shiprocket")
             return token
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Shiprocket authentication failed: {str(e)}")
-            raise Exception(f"Failed to authenticate with Shiprocket: {str(e)}")
-    
-    def create_order(self, order):
-        """Create order in Shiprocket"""
-        url = f"{self.BASE_URL}/orders/create/adhoc"
-        headers = {
-            "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
+        except Exception as e:
+            print(f"Shiprocket Login Failed: {e}")
+            raise
+
+    def get_headers(self):
+        return {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.get_token()}"
         }
+
+    def sync_vendor_pickup_location(self, vendor_profile: VendorProfile):
+        """Create or Update Pickup Location for Vendor"""
+        # Unique name: Vendor_{ID}_{StoreName_Slugified}
+        slug = vendor_profile.store_slug or str(vendor_profile.id)
+        pickup_location = f"Vendor_{vendor_profile.id}_{slug}"[:50] # Limit char length
         
-        # Prepare order items
-        order_items = []
-        for item in order.items.all():
-            order_items.append({
-                "name": item.product.name[:50],  # Shiprocket has length limits
-                "sku": item.product.sku or f"PROD-{item.product.id}",
-                "units": item.quantity,
-                "selling_price": str(item.price),
-                "discount": "0",
-                "tax": "0",
-                "hsn": ""
-            })
-        
-        # Get shipping address from JSON
-        address_data = order.shipping_address_data
-        
+        # Ensure we have required address fields
+        if not (vendor_profile.phone and vendor_profile.address and 
+                vendor_profile.city and vendor_profile.state and vendor_profile.zip_code):
+            print(f"Skipping Shiprocket sync for {vendor_profile}: Missing address details")
+            return None
+
+        # Build payload
         payload = {
-            "order_id": str(order.id),
-            "order_date": order.created_at.strftime("%Y-%m-%d %H:%M"),
-            "pickup_location": self.config.pickup_location,
-            "billing_customer_name": address_data.get('full_name', ''),
-            "billing_last_name": "",
-            "billing_address": address_data.get('address_line1', ''),
-            "billing_address_2": address_data.get('address_line2', ''),
-            "billing_city": address_data.get('city', ''),
-            "billing_pincode": address_data.get('pincode', ''),
-            "billing_state": address_data.get('state', ''),
-            "billing_country": "India",
-            "billing_email": order.user.email,
-            "billing_phone": address_data.get('phone', ''),
-            "shipping_is_billing": True,
-            "order_items": order_items,
-            "payment_method": "Prepaid" if order.payment_method == "razorpay" else "COD",
-            "sub_total": str(order.subtotal),
-            "length": 10,  # Default dimensions (can be customized)
-            "breadth": 10,
-            "height": 10,
-            "weight": 0.5
+            "pickup_location": pickup_location,
+            "name": vendor_profile.store_name,
+            "email": getattr(vendor_profile.user, 'business_email', '') or vendor_profile.user.email,
+            "phone": vendor_profile.phone,
+            "address": vendor_profile.address,
+            "address_2": "",
+            "city": vendor_profile.city,
+            "state": vendor_profile.state,
+            "country": "India",
+            "pin_code": vendor_profile.zip_code,
         }
+
+        url = f"{self.BASE_URL}/settings/company/addpickup"
         
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
-            response.raise_for_status()
+            response = requests.post(url, json=payload, headers=self.get_headers())
             
-            data = response.json()
+            # Shiprocket returns 200 even if address already exists (sometimes logic varies)
+            # If 422, it might mean "Location already exists" or validation error.
+            # But the endpoint is "addpickup". Update is not explicit via API usually, 
+            # often you just re-add with same code to update? 
+            # Actually, Shiprocket docs say: "Use this API to add a new pickup location."
+            # There isn't a clear "Update Pickup" publicly documented widely, often people create new ones.
+            # However, if 'pickup_location' code matches, it usually updates or errors.
             
-            # Create shipment tracking
-            shipment = ShipmentTracking.objects.create(
-                order=order,
-                shiprocket_order_id=str(data['order_id']),
-                shiprocket_shipment_id=str(data.get('shipment_id', ''))
-            )
+            if response.status_code == 200:
+                data = response.json()
+                # Check for success flag in body
+                if data.get('success'):
+                    # Save the successfully synced name using update() to avoid signal recursion
+                    VendorProfile.objects.filter(pk=vendor_profile.pk).update(shiprocket_pickup_location_name=pickup_location)
+                    # Refresh instance
+                    vendor_profile.refresh_from_db()
+                    return pickup_location
+                else:
+                    # If it says "Already exists", we can assume it's good or ignore.
+                    pass
+            elif response.status_code == 422:
+                 # Check if error is "Pickup location already exists"
+                 pass
+
+            # If we reach here, log response
+            print(f"Shiprocket Sync Response: {response.text}")
             
-            # Update order
-            order.shiprocket_order_id = str(data['order_id'])
-            order.save()
-            
-            logger.info(f"Successfully created Shiprocket order {data['order_id']} for Order #{order.id}")
-            return shipment
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to create Shiprocket order: {str(e)}")
-            raise Exception(f"Failed to create shipment: {str(e)}")
-    
-    def generate_awb(self, shipment, courier_id=None):
-        """Generate AWB (Air Waybill) for shipment"""
-        url = f"{self.BASE_URL}/courier/assign/awb"
-        headers = {
-            "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
-        }
+            # Assume success if we just created it or it existed.
+            VendorProfile.objects.filter(pk=vendor_profile.pk).update(shiprocket_pickup_location_name=pickup_location)
+            vendor_profile.refresh_from_db()
+            return pickup_location
+
+        except Exception as e:
+            print(f"Shiprocket Pickup Sync Failed: {e}")
+            raise
+
+    def create_orders(self, order: Order):
+        """
+        Split Order by Vendor and create Shiprocket Orders.
+        Returns list of created ShipmentTracking objects.
+        """
+        order_items = order.items.select_related('product', 'vendor').all()
         
-        # If no courier specified, use recommended courier
-        if not courier_id:
-            courier_id = self.get_recommended_courier(shipment)
+        # Group items by Vendor
+        files_by_vendor = {}
+        for item in order_items:
+            vendor_id = item.vendor.id
+            if vendor_id not in files_by_vendor:
+                files_by_vendor[vendor_id] = []
+            files_by_vendor[vendor_id].append(item)
+            
+        created_shipments = []
         
-        payload = {
-            "shipment_id": int(shipment.shiprocket_shipment_id),
-            "courier_id": courier_id
-        }
-        
-        try:
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
-            response.raise_for_status()
+        for vendor_id, items in files_by_vendor.items():
+            vendor = items[0].vendor
+            pickup_location = vendor.shiprocket_pickup_location_name
             
-            data = response.json()
-            response_data = data.get('response', {}).get('data', {})
-            
-            # Update shipment
-            shipment.awb_code = response_data.get('awb_code', '')
-            shipment.courier_name = response_data.get('courier_name', '')
-            shipment.courier_id = courier_id
-            shipment.save()
-            
-            # Update order
-            shipment.order.awb_code = shipment.awb_code
-            shipment.order.courier_name = shipment.courier_name
-            shipment.order.save()
-            
-            logger.info(f"Generated AWB {shipment.awb_code} for shipment {shipment.id}")
-            return shipment
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to generate AWB: {str(e)}")
-            raise Exception(f"Failed to generate AWB: {str(e)}")
-    
-    def get_recommended_courier(self, shipment):
-        """Get recommended courier for shipment"""
-        url = f"{self.BASE_URL}/courier/serviceability/"
-        headers = {
-            "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
-        }
-        
-        address_data = shipment.order.shipping_address_data
-        
-        payload = {
-            "pickup_postcode": self.config.pickup_pincode,
-            "delivery_postcode": address_data.get('pincode', ''),
-            "cod": 1 if shipment.order.payment_method == "cod" else 0,
-            "weight": 0.5,
-            "declared_value": float(shipment.order.total_amount)
-        }
-        
-        try:
-            response = requests.get(url, params=payload, headers=headers, timeout=30)
-            response.raise_for_status()
-            
-            data = response.json()
-            available_couriers = data.get('data', {}).get('available_courier_companies', [])
-            
-            if available_couriers:
-                # Return first recommended courier
-                return available_couriers[0]['courier_company_id']
-            else:
-                raise Exception("No courier available for this route")
+            if not pickup_location:
+                # Try to sync now if missing
+                try:
+                    pickup_location = self.sync_vendor_pickup_location(vendor)
+                except:
+                    pass
+                if not pickup_location:
+                    print(f"Cannot create shipment: No pickup location for vendor {vendor}")
+                    continue
+
+            # Build Order Items Payload
+            sr_order_items = []
+            subtotal = 0
+            for item in items:
+                sr_order_items.append({
+                    "name": item.product.name,
+                    "sku": item.product.sku or f"PROD-{item.product.id}",
+                    "units": item.quantity,
+                    "selling_price": float(item.price),
+                    "discount": "",
+                    "tax": "",
+                    "hsn": "" 
+                })
+                subtotal += float(item.price) * item.quantity
+
+            # Calculate proportionate shipping/tax if needed, or just use subtotal
+            # Use 'payment_method' map
+            payment_method = "Prepaid" if order.payment_method == 'razorpay' else "COD"
+
+            # Create random sub-order ID suffix if multiple vendors
+            suffix = f"-V{vendor_id}" if len(files_by_vendor) > 1 else ""
+            order_id_str = f"{order.id}{suffix}"
+
+            payload = {
+                "order_id": order_id_str,
+                "order_date": order.created_at.strftime("%Y-%m-%d %H:%M"),
+                "pickup_location": pickup_location,
+                "billing_customer_name": order.user.get_full_name() or order.user.username,
+                "billing_last_name": "",
+                "billing_address": order.shipping_address_data.get('address_line1', ''),
+                "billing_address_2": order.shipping_address_data.get('address_line2', ''),
+                "billing_city": order.shipping_address_data.get('city', ''),
+                "billing_pincode": order.shipping_address_data.get('pincode', ''),
+                "billing_state": order.shipping_address_data.get('state', ''),
+                "billing_country": "India",
+                "billing_email": order.user.email,
+                "billing_phone": order.shipping_address_data.get('phone', '9999999999'),
+                "shipping_is_billing": True,
+                "order_items": sr_order_items,
+                "payment_method": payment_method,
+                "sub_total": subtotal,
+                "length": 10,  # Defaults, should come from Product
+                "breadth": 10,
+                "height": 10,
+                "weight": 0.5
+            }
+
+            try:
+                url = f"{self.BASE_URL}/orders/create/adhoc"
+                response = requests.post(url, json=payload, headers=self.get_headers())
+                data = response.json()
                 
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to get recommended courier: {str(e)}")
-            raise Exception(f"Failed to get courier recommendations: {str(e)}")
-    
-    def generate_label(self, shipment):
-        """Generate shipping label PDF"""
-        url = f"{self.BASE_URL}/courier/generate/label"
-        headers = {
-            "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "shipment_id": [int(shipment.shiprocket_shipment_id)]
-        }
-        
-        try:
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            # Update shipment
-            shipment.label_url = data.get('label_url', '')
-            shipment.save()
-            
-            logger.info(f"Generated label for shipment {shipment.id}")
-            return data.get('label_url', '')
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to generate label: {str(e)}")
-            raise Exception(f"Failed to generate shipping label: {str(e)}")
-    
-    def track_shipment(self, shipment):
-        """Get tracking information"""
-        url = f"{self.BASE_URL}/courier/track/shipment/{shipment.shiprocket_shipment_id}"
-        headers = {
-            "Authorization": f"Bearer {self.token}"
-        }
-        
-        try:
-            response = requests.get(url, headers=headers, timeout=30)
-            response.raise_for_status()
-            
-            data = response.json()
-            tracking_data = data.get('tracking_data', {})
-            
-            if tracking_data:
-                # Update shipment status
-                shipment_track = tracking_data.get('shipment_track', [])
-                if shipment_track:
-                    latest = shipment_track[0]
-                    shipment.current_status = latest.get('current_status', '')
-                    shipment.tracking_url = tracking_data.get('track_url', '')
-                    shipment.save()
-                    
-                    # Create tracking status entry
-                    OrderTrackingStatus.objects.create(
-                        order=shipment.order,
-                        shipment=shipment,
-                        status=latest.get('current_status', ''),
-                        location=latest.get('location', ''),
-                        description=latest.get('status_detail', ''),
-                        shiprocket_status=latest.get('sr_status', ''),
-                        courier_status=latest.get('courier_status', ''),
-                        timestamp=timezone.now()
+                if response.status_code == 200 and data.get('order_id'):
+                    # Success
+                    shipment = ShipmentTracking.objects.create(
+                        order=order,
+                        shiprocket_order_id=data.get('order_id'),
+                        shiprocket_shipment_id=data.get('shipment_id'),
+                        courier_name="Pending Assignment",
+                        pickup_scheduled=False
                     )
-            
-            logger.info(f"Tracked shipment {shipment.id}")
-            return data
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to track shipment: {str(e)}")
-            raise Exception(f"Failed to track shipment: {str(e)}")
-    
-    def schedule_pickup(self, shipment):
-        """Schedule pickup for shipment"""
-        url = f"{self.BASE_URL}/courier/generate/pickup"
-        headers = {
-            "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "shipment_id": [int(shipment.shiprocket_shipment_id)]
-        }
-        
-        try:
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            # Update shipment
-            shipment.pickup_scheduled = True
-            shipment.pickup_token_number = data.get('pickup_token_number', '')
-            shipment.save()
-            
-            logger.info(f"Scheduled pickup for shipment {shipment.id}")
-            return data
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to schedule pickup: {str(e)}")
-            raise Exception(f"Failed to schedule pickup: {str(e)}")
+                    created_shipments.append(shipment)
+                    
+                    # Log mapping
+                    print(f"Created Shiprocket Order {data.get('order_id')} for Vendor {vendor.store_name}")
+                else:
+                    print(f"Failed to create Shiprocket Order for Vendor {vendor.store_name}: {response.text}")
+
+            except Exception as e:
+                print(f"Exception creating Shiprocket order: {e}")
+
+        return created_shipments

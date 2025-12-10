@@ -8,6 +8,14 @@ class Category(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     image = models.ImageField(upload_to='category_images/', blank=True, null=True)
+    description = models.TextField(blank=True)
+    DISPLAY_TYPE_CHOICES = (
+        ('default', 'Default'),
+        ('products', 'Products'),
+        ('subcategories', 'Subcategories'),
+        ('both', 'Both'),
+    )
+    display_type = models.CharField(max_length=20, choices=DISPLAY_TYPE_CHOICES, default='default')
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
     commission_rate = models.DecimalField(
         max_digits=5, 
@@ -22,6 +30,37 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+class GlobalAttribute(models.Model):
+    """Global Product Attributes (e.g. Size, Color)"""
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    ORDER_BY_CHOICES = (
+        ('menu_order', 'Custom Ordering'),
+        ('name', 'Name'),
+        ('name_num', 'Name (Numeric)'),
+        ('id', 'Term ID'),
+    )
+    default_sort_order = models.CharField(max_length=20, choices=ORDER_BY_CHOICES, default='menu_order')
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+class AttributeTerm(models.Model):
+    """Terms for Global Attributes (e.g. Red, Blue, S, M)"""
+    attribute = models.ForeignKey(GlobalAttribute, on_delete=models.CASCADE, related_name='terms')
+    name = models.CharField(max_length=200)
+    slug = models.SlugField()
+    description = models.TextField(blank=True)
+    menu_order = models.IntegerField(default=0)
+    
+    class Meta:
+        unique_together = ['attribute', 'slug']
+        ordering = ['menu_order', 'name']
+
+    def __str__(self):
+        return f"{self.attribute.name}: {self.name}"
 
 
 class Brand(models.Model):
@@ -358,10 +397,21 @@ class Coupon(models.Model):
         ('fixed', 'Fixed Amount'),
     )
     
+    APPLICABILITY_CHOICES = (
+        ('site_wide', 'Site Wide'),
+        ('specific_products', 'Specific Products'),
+        ('specific_categories', 'Specific Categories'),
+        ('new_user', 'New Users Only'),
+    )
+    
     code = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
     discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES)
     discount_value = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    applicability_type = models.CharField(max_length=20, choices=APPLICABILITY_CHOICES, default='site_wide')
+    specific_products = models.ManyToManyField('Product', blank=True, related_name='coupons')
+    specific_categories = models.ManyToManyField('Category', blank=True, related_name='coupons')
     
     min_purchase_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     max_discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -376,7 +426,7 @@ class Coupon(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"{self.code} - {self.discount_value}{'%' if self.discount_type == 'percentage' else '₹'}"
+        return f"{self.code} - {self.discount_value}{'%' if self.discount_type == 'percentage' else '₹'} ({self.get_applicability_type_display()})"
     
     def is_valid(self):
         from django.utils import timezone

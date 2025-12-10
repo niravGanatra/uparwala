@@ -1,8 +1,11 @@
 from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import (
-    CategoryListView, 
+    CategoryViewSet, 
     ProductListView, 
     ProductDetailView,
+    GlobalAttributeViewSet,
+    AttributeTermViewSet,
     VendorProductListCreateView,
     VendorProductDetailView,
     AdminProductDetailView,
@@ -44,22 +47,15 @@ from .cms_views import (
     CMSPageListView, CMSPageDetailView, PublishCMSPageView, PublicCMSPageView
 )
 
-urlpatterns = [
-    path('categories/', CategoryListView.as_view(), name='category-list'),
-    path('search/', ProductSearchView.as_view(), name='product-search'),
-    path('autocomplete/', ProductAutocompleteView.as_view(), name='product-autocomplete'),
-    path('filter-options/', FilterOptionsView.as_view(), name='filter-options'),
-    
-    # Wishlist
-    path('wishlist/', WishlistView.as_view(), name='wishlist'),
-    path('wishlist/<int:product_id>/', WishlistAddRemoveView.as_view(), name='wishlist-add-remove'),
-    path('wishlist/<int:product_id>/check/', WishlistCheckView.as_view(), name='wishlist-check'),
-    path('wishlist/<int:product_id>/move-to-cart/', WishlistMoveToCartView.as_view(), name='wishlist-move-to-cart'),
-    
-    # Phase 3 URLs - TEMPORARILY DISABLED (conflicts with main product list)
-    # path('', include('products.phase3_urls')),
+router = DefaultRouter()
+router.register(r'manage/categories', CategoryViewSet, basename='category-manage')
+router.register(r'manage/attributes/global', GlobalAttributeViewSet, basename='attribute-global')
+router.register(r'manage/attributes/terms', AttributeTermViewSet, basename='attribute-term')
 
-    path('', ProductListView.as_view(), name='product-list'),
+urlpatterns = [
+    path('', ProductListView.as_view(), name='product-list'), # Explicit Product List at /api/products/
+    path('', include(router.urls)),
+    path('categories/', CategoryViewSet.as_view({'get': 'list'}), name='category-list'), # Public list
     path('vendor/my-products/', VendorProductListCreateView.as_view(), name='vendor-product-list'),
     path('vendor/my-products/<slug:slug>/', VendorProductDetailView.as_view(), name='vendor-product-detail'),
     path('admin/<int:pk>/', AdminProductDetailView.as_view(), name='admin-product-detail'),

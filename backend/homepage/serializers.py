@@ -25,13 +25,18 @@ class FeaturedCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'icon', 'image', 'link_url', 'priority', 'is_active']
 
 
+from products.models import Product
+
 class DealOfTheDaySerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(), source='product', write_only=True
+    )
     discounted_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     
     class Meta:
         model = DealOfTheDay
-        fields = ['id', 'product', 'discount_percentage', 'discounted_price', 
+        fields = ['id', 'product', 'product_id', 'discount_percentage', 'discounted_price', 
                   'start_date', 'end_date', 'is_active', 'priority']
 
 
