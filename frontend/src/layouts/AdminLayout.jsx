@@ -14,7 +14,8 @@ import {
     DollarSign,
     CheckCircle,
     Percent,
-    FileText
+    FileText,
+    UserCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
@@ -37,6 +38,7 @@ const AdminLayout = () => {
         { path: '/admin/product-moderation', icon: CheckCircle, label: 'Moderation' },
         { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
         { path: '/admin/vendors', icon: Store, label: 'Vendors' },
+        { path: '/admin/vendor-approvals', icon: UserCheck, label: 'Vendor Approvals' },
         { path: '/admin/payout-requests', icon: DollarSign, label: 'Payouts' },
         { path: '/admin/commission-settings', icon: Percent, label: 'Commission' },
         { path: '/admin/homepage', icon: LayoutDashboard, label: 'Homepage' },

@@ -16,6 +16,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 // Product pages
 import ProductListingPage from './pages/ProductListingPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import CategoryPage from './pages/CategoryPage';
 
 // Cart and Checkout
 import CartPage from './pages/CartPage';
@@ -47,10 +48,13 @@ import AdminProducts from './pages/admin/Products';
 import AdminOrders from './pages/admin/Orders';
 import AdminVendors from './pages/admin/Vendors';
 import AdminSettings from './pages/admin/Settings';
+import VendorApprovals from './pages/admin/VendorApprovals';
 import VendorApplications from './pages/admin/VendorApplications';
 import PayoutRequests from './pages/admin/PayoutRequests';
 import ProductModeration from './pages/admin/ProductModeration';
 import CommissionSettings from './pages/admin/CommissionSettings';
+import ShippingSettings from './pages/admin/ShippingSettings';
+import AdminCategories from './pages/admin/Categories';
 import CMSPages from './pages/admin/CMSPages';
 import HomepageManager from './pages/admin/HomepageManager';
 
@@ -94,6 +98,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/products" element={<ProductListingPage />} />
                 <Route path="/products/:slug" element={<ProductDetailPage />} />
+                <Route path="/category/:categorySlug" element={<CategoryPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
@@ -130,11 +135,14 @@ function App() {
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="vendors" element={<AdminVendors />} />
+                <Route path="vendor-approvals" element={<VendorApprovals />} />
                 <Route path="settings" element={<AdminSettings />} />
                 <Route path="vendor-applications" element={<VendorApplications />} />
                 <Route path="payout-requests" element={<PayoutRequests />} />
                 <Route path="product-moderation" element={<ProductModeration />} />
                 <Route path="commission-settings" element={<CommissionSettings />} />
+                <Route path="shipping" element={<ShippingSettings />} />
+                <Route path="categories" element={<AdminCategories />} />
                 <Route path="cms-pages" element={<CMSPages />} />
                 <Route path="homepage" element={<HomepageManager />} />
               </Route>
