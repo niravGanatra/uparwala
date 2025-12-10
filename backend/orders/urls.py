@@ -6,14 +6,18 @@ from .views import (
     OrderNoteViewSet, ShiprocketConfigViewSet
 )
 from .checkout_views import CheckoutView
+from .logistics_views import CODPincodeViewSet, GiftOptionViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'notes', OrderNoteViewSet, basename='order-note')
 router.register(r'shiprocket-config', ShiprocketConfigViewSet, basename='shiprocket-config')
+router.register(r'admin/cod-pincodes', CODPincodeViewSet, basename='admin-cod-pincodes')
+router.register(r'admin/gift-options', GiftOptionViewSet, basename='admin-gift-options')
 
 urlpatterns = [
     path('manage/', include(router.urls)), # /api/orders/manage/notes/
+    path('', include(router.urls)), # For admin endpoints
     
     # Existing URLs
     path('cart/', CartDetailView.as_view(), name='cart-detail'),

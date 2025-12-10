@@ -568,12 +568,18 @@ class RecentlyViewed(models.Model):
     
     @classmethod
     def get_recent_products(cls, user=None, session_key=None, limit=10):
-        """Get recently viewed products"""
+        """Get recently viewed products - only active products from verified vendors"""
         if user and user.is_authenticated:
-            views = cls.objects.filter(user=user).select_related('product')[:limit]
+            views = cls.objects.filter(user=user).select_related('product', 'product__vendor')[:limit]
         elif session_key:
-            views = cls.objects.filter(session_key=session_key).select_related('product')[:limit]
+            views = cls.objects.filter(session_key=session_key).select_related('product', 'product__vendor')[:limit]
         else:
             return Product.objects.none()
         
-        return [view.product for view in views]
+        # Filter to only return active products from verified vendors
+        products = []
+        for view in views:
+            if view.product.is_active and view.product.vendor.verification_status == 'verified':
+                products.append(view.product)
+        
+        return products

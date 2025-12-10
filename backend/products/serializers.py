@@ -26,9 +26,20 @@ class AttributeTermSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    
     class Meta:
         model = ProductImage
         fields = ('id', 'image', 'is_primary')
+    
+    def get_image(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(obj.image.url)
+            # Fallback for cases where request context is not available
+            return obj.image.url
+        return None
 
 class VariationSerializer(serializers.ModelSerializer):
     class Meta:

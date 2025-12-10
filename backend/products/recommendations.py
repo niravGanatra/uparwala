@@ -9,10 +9,11 @@ class RecommendationEngine:
         try:
             product = Product.objects.get(id=product_id)
             
-            # Base query: same category, exclude current product
+            # Base query: same category, exclude current product, only active products from verified vendors
             similar = Product.objects.filter(
                 category=product.category,
-                is_active=True
+                is_active=True,
+                vendor__verification_status='verified'
             ).exclude(id=product_id)
             
             # Price range logic (within 30% range)
@@ -29,7 +30,8 @@ class RecommendationEngine:
             if similar.count() < limit:
                 more_similar = Product.objects.filter(
                     category=product.category,
-                    is_active=True
+                    is_active=True,
+                    vendor__verification_status='verified'
                 ).exclude(
                     id__in=[p.id for p in similar]
                 ).exclude(
@@ -64,8 +66,14 @@ class RecommendationEngine:
         """
         if not user.is_authenticated:
             # Return popular products for guests
-            return Product.objects.filter(is_active=True).order_by('-review_count')[:limit]
+            return Product.objects.filter(
+                is_active=True,
+                vendor__verification_status='verified'
+            ).order_by('-review_count')[:limit]
             
-        # For logged in users, look at their order history or wishlist
-        # Placeholder: return featured products
-        return Product.objects.filter(is_active=True, featured=True).order_by('?')[:limit]
+        # For logged in users, return popular products
+        # TODO: Implement actual personalization based on order/view history
+        return Product.objects.filter(
+            is_active=True,
+            vendor__verification_status='verified'
+        ).order_by('-review_count', '?')[:limit]

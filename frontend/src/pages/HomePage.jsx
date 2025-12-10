@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import api from '../services/api';
 import homepageService from '../services/homepageService';
 import RecentlyViewed from '../components/RecentlyViewed';
+import ProductRecommendations from '../components/ProductRecommendations';
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -447,7 +448,7 @@ const HomePage = () => {
                         <p className="text-xl text-slate-800 mb-8">
                             Discover thousands of products from local vendors
                         </p>
-                        <div className="mt-8 flex gap-4">
+                        <div className="mt-8 flex gap-4 justify-center">
                             <Link to="/vendor/register">
                                 <Button size="lg" className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600">
                                     Become a Vendor
@@ -460,6 +461,13 @@ const HomePage = () => {
                             </Link>
                         </div>
                     </motion.div>
+                </div>
+            </section>
+
+            {/* Personalized Recommendations */}
+            <section className="py-12 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <ProductRecommendations type="personalized" />
                 </div>
             </section>
 

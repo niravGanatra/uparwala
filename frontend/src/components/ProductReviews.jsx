@@ -206,8 +206,8 @@ const ProductReviews = ({ productId }) => {
                                 <button
                                     onClick={() => handleVote(review.id, true)}
                                     className={`flex items-center gap-1 px-3 py-1 rounded-lg border ${review.user_vote === 'helpful'
-                                            ? 'bg-blue-50 border-blue-600 text-blue-600'
-                                            : 'hover:bg-gray-50'
+                                        ? 'bg-blue-50 border-blue-600 text-blue-600'
+                                        : 'hover:bg-gray-50'
                                         }`}
                                 >
                                     <ThumbsUp className="w-4 h-4" />
@@ -216,8 +216,8 @@ const ProductReviews = ({ productId }) => {
                                 <button
                                     onClick={() => handleVote(review.id, false)}
                                     className={`flex items-center gap-1 px-3 py-1 rounded-lg border ${review.user_vote === 'not_helpful'
-                                            ? 'bg-red-50 border-red-600 text-red-600'
-                                            : 'hover:bg-gray-50'
+                                        ? 'bg-red-50 border-red-600 text-red-600'
+                                        : 'hover:bg-gray-50'
                                         }`}
                                 >
                                     <ThumbsDown className="w-4 h-4" />
@@ -274,8 +274,8 @@ const ReviewForm = ({ productId, onSuccess, onCancel }) => {
                         <Star
                             key={star}
                             className={`w-8 h-8 cursor-pointer transition-colors ${star <= (hoverRating || rating)
-                                    ? 'fill-yellow-400 text-yellow-400'
-                                    : 'text-gray-300'
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-300'
                                 }`}
                             onClick={() => setRating(star)}
                             onMouseEnter={() => setHoverRating(star)}

@@ -159,7 +159,7 @@ def recently_viewed(request):
             session_key = request.session.session_key
         products = RecentlyViewed.get_recent_products(session_key=session_key, limit=limit)
     
-    serializer = ProductSerializer(products, many=True)
+    serializer = ProductSerializer(products, many=True, context={'request': request})
     return Response(serializer.data)
 
 

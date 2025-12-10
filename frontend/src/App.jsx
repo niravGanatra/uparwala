@@ -32,6 +32,7 @@ import RequestReturn from './pages/RequestReturn';
 import ProfileSettings from './pages/ProfileSettings';
 import OrderTracking from './pages/OrderTracking';
 import ProductComparison from './pages/ProductComparison';
+import CMSPage from './pages/CMSPage';
 
 // Vendor pages (existing old structure)
 import VendorLayout from './layouts/VendorLayout';
@@ -40,6 +41,8 @@ import VendorOrders from './pages/vendor/Orders';
 import VendorWallet from './pages/vendor/Wallet';
 import BulkUpload from './pages/vendor/BulkUpload';
 import VendorSettings from './pages/vendor/Settings';
+import VendorAnalytics from './pages/vendor/Analytics';
+import VendorWalletEnhanced from './pages/vendor/WalletEnhanced';
 
 // Admin pages (existing old structure)
 import AdminLayout from './layouts/AdminLayout';
@@ -109,6 +112,7 @@ function App() {
                 <Route path="/orders/:orderId/return" element={<RequestReturn />} />
                 <Route path="/profile/settings" element={<ProfileSettings />} />
                 <Route path="/compare" element={<ProductComparison />} />
+                <Route path="/pages/:slug" element={<CMSPage />} />
               </Route>
 
               {/* Phase 7: NEW Analytics Dashboards - MOVED TO CORRECT LAYOUTS */}
@@ -124,6 +128,8 @@ function App() {
                 <Route path="products" element={<VendorProducts />} />
                 <Route path="orders" element={<VendorOrders />} />
                 <Route path="wallet" element={<VendorWallet />} />
+                <Route path="analytics" element={<VendorAnalytics />} />
+                <Route path="wallet-enhanced" element={<VendorWalletEnhanced />} />
                 <Route path="bulk-upload" element={<BulkUpload />} />
                 <Route path="settings" element={<VendorSettings />} />
               </Route>
