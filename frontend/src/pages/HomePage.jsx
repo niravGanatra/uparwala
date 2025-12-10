@@ -447,15 +447,15 @@ const HomePage = () => {
                         <p className="text-xl text-slate-800 mb-8">
                             Discover thousands of products from local vendors
                         </p>
-                        <div className="flex gap-4 justify-center flex-wrap">
-                            <Link to="/products">
-                                <Button size="lg" className="bg-slate-900 text-white hover:bg-slate-800 px-8">
-                                    Start Shopping
+                        <div className="mt-8 flex gap-4">
+                            <Link to="/vendor/register">
+                                <Button size="lg" className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600">
+                                    Become a Vendor
                                 </Button>
                             </Link>
-                            <Link to="/register">
-                                <Button size="lg" variant="outline" className="border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white px-8">
-                                    Become a Vendor
+                            <Link to="/products">
+                                <Button size="lg" variant="outline">
+                                    Shop Now
                                 </Button>
                             </Link>
                         </div>

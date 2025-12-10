@@ -1,16 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, Menu, LogOut, UserCircle, Package, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { Button } from '../components/ui/button';
+import api from '../services/api';
 
 const MainLayout = () => {
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [categories, setCategories] = useState([]);
     const { user, logout } = useAuth();
     const { cartCount } = useCart();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await api.get('/products/categories/');
+            setCategories(response.data.filter(cat => !cat.parent)); // Only parent categories
+        } catch (error) {
+            console.error('Failed to fetch categories:', error);
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -26,13 +41,26 @@ const MainLayout = () => {
                         Uparwala
                     </Link>
 
+
                     <nav className="hidden md:flex items-center space-x-6">
-                        <Link to="/" className="text-sm font-medium hover:text-orange-600 transition-colors">Home</Link>
-                        <Link to="/products" className="text-sm font-medium hover:text-orange-600 transition-colors">Products</Link>
+                        <Link to="/products" className="text-sm font-medium hover:text-orange-600 transition-colors">All Products</Link>
+
+                        {/* Top 5 Categories */}
+                        {categories.slice(0, 5).map(category => (
+                            <Link
+                                key={category.id}
+                                to={`/category/${category.slug}`}
+                                className="text-sm font-medium hover:text-orange-600 transition-colors"
+                            >
+                                {category.name}
+                            </Link>
+                        ))}
+
                         {user && user.is_vendor && (
                             <Link to="/vendor/dashboard" className="text-sm font-medium hover:text-orange-600 transition-colors">Dashboard</Link>
                         )}
                     </nav>
+
 
                     <div className="flex items-center space-x-4">
                         <Link to="/wishlist">
