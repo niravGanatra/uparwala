@@ -1,7 +1,7 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from django.utils import timezone
 from .models import (
     HeroBanner, PromotionalBanner, FeaturedCategory,
@@ -12,6 +12,13 @@ from .serializers import (
     DealOfTheDaySerializer, HostingEssentialSerializer, PremiumSectionSerializer,
     CategoryPromotionSerializer, HomepageDataSerializer
 )
+
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user and request.user.is_staff
 
 
 @api_view(['GET'])
@@ -29,13 +36,13 @@ def homepage_data(request):
         # Get active featured categories
         featured_categories = FeaturedCategory.objects.filter(is_active=True)
         
-        # Get active deals (within date range)
-        today = timezone.now().date()
+        # Get active deals - only from verified vendors
         deals = DealOfTheDay.objects.filter(
             is_active=True,
-            start_date__lte=today,
-            end_date__gte=today
-        )
+            start_date__lte=timezone.now(),
+            end_date__gte=timezone.now(),
+            product__vendor__verification_status='verified'
+        ).select_related('product', 'product__vendor').order_by('-priority')
         
         # Get active hosting essentials
         hosting_essentials = HostingEssential.objects.filter(is_active=True)
@@ -66,57 +73,50 @@ def homepage_data(request):
         )
 
 
-class HeroBannerViewSet(viewsets.ReadOnlyModelViewSet):
+class HeroBannerViewSet(viewsets.ModelViewSet):
     """ViewSet for hero banners"""
-    queryset = HeroBanner.objects.filter(is_active=True)
+    queryset = HeroBanner.objects.all()
     serializer_class = HeroBannerSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 
-class PromotionalBannerViewSet(viewsets.ReadOnlyModelViewSet):
+class PromotionalBannerViewSet(viewsets.ModelViewSet):
     """ViewSet for promotional banners"""
-    queryset = PromotionalBanner.objects.filter(is_active=True)
+    queryset = PromotionalBanner.objects.all()
     serializer_class = PromotionalBannerSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 
-class FeaturedCategoryViewSet(viewsets.ReadOnlyModelViewSet):
+class FeaturedCategoryViewSet(viewsets.ModelViewSet):
     """ViewSet for featured categories"""
-    queryset = FeaturedCategory.objects.filter(is_active=True)
+    queryset = FeaturedCategory.objects.all()
     serializer_class = FeaturedCategorySerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 
-class DealOfTheDayViewSet(viewsets.ReadOnlyModelViewSet):
+class DealOfTheDayViewSet(viewsets.ModelViewSet):
     """ViewSet for deals of the day"""
+    queryset = DealOfTheDay.objects.all()
     serializer_class = DealOfTheDaySerializer
-    permission_classes = [AllowAny]
-    
-    def get_queryset(self):
-        today = timezone.now().date()
-        return DealOfTheDay.objects.filter(
-            is_active=True,
-            start_date__lte=today,
-            end_date__gte=today
-        )
+    permission_classes = [IsAdminOrReadOnly]
 
 
-class HostingEssentialViewSet(viewsets.ReadOnlyModelViewSet):
+class HostingEssentialViewSet(viewsets.ModelViewSet):
     """ViewSet for hosting essentials"""
-    queryset = HostingEssential.objects.filter(is_active=True)
+    queryset = HostingEssential.objects.all()
     serializer_class = HostingEssentialSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 
-class PremiumSectionViewSet(viewsets.ReadOnlyModelViewSet):
+class PremiumSectionViewSet(viewsets.ModelViewSet):
     """ViewSet for premium sections"""
-    queryset = PremiumSection.objects.filter(is_active=True)
+    queryset = PremiumSection.objects.all()
     serializer_class = PremiumSectionSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 
-class CategoryPromotionViewSet(viewsets.ReadOnlyModelViewSet):
+class CategoryPromotionViewSet(viewsets.ModelViewSet):
     """ViewSet for category promotions"""
-    queryset = CategoryPromotion.objects.filter(is_active=True)
+    queryset = CategoryPromotion.objects.all()
     serializer_class = CategoryPromotionSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrReadOnly]

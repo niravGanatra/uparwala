@@ -11,31 +11,62 @@ from .bulk_upload import process_product_csv, generate_csv_template
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
-class CategoryListView(generics.ListAPIView):
+from rest_framework import viewsets
+from .models import Category, Product, ProductQuestion, ProductAnswer, RecentlyViewed, GlobalAttribute, AttributeTerm
+from .serializers import (
+    CategorySerializer, ProductSerializer, ProductCreateSerializer,
+    GlobalAttributeSerializer, AttributeTermSerializer
+)
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """Admin CRUD for Categories. Public Read-Only."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [permissions.AllowAny]
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAdminUser()]
+        return [permissions.AllowAny()]
+
+class GlobalAttributeViewSet(viewsets.ModelViewSet):
+    """Admin CRUD for Global Attributes."""
+    queryset = GlobalAttribute.objects.all()
+    serializer_class = GlobalAttributeSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+class AttributeTermViewSet(viewsets.ModelViewSet):
+    """Admin CRUD for Attribute Terms."""
+    queryset = AttributeTerm.objects.all()
+    serializer_class = AttributeTermSerializer
+    permission_classes = [permissions.IsAdminUser]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['attribute']
 
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category', 'vendor']
+    filterset_fields = ['category', 'category__slug', 'vendor']
     search_fields = ['name', 'description']
-    ordering_fields = ['price', 'created_at']
+    ordering_fields = ['price', 'created_at', 'stock_quantity']
     
     def get_queryset(self):
         # Admin users can see all products (including inactive)
         if self.request.user and (self.request.user.is_staff or self.request.user.is_superuser):
             return Product.objects.all()
-        # Regular customers only see active products
-        return Product.objects.filter(is_active=True)
+        # Regular customers only see active products from verified vendors
+        return Product.objects.filter(is_active=True, vendor__verification_status='verified')
 
 class ProductDetailView(generics.RetrieveAPIView):
-    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'slug'
+    
+    def get_queryset(self):
+        """Only show products from verified vendors"""
+        if self.request.user and (self.request.user.is_staff or self.request.user.is_superuser):
+            return Product.objects.all()
+        return Product.objects.filter(is_active=True, vendor__verification_status='verified')
 
 class VendorProductListCreateView(generics.ListCreateAPIView):
     serializer_class = ProductCreateSerializer
