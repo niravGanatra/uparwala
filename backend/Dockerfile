@@ -4,6 +4,8 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV PYTHONPATH /app
+ENV DJANGO_SETTINGS_MODULE config.settings
 
 # Set work directory
 WORKDIR /app
