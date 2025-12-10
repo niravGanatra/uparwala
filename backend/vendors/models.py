@@ -47,6 +47,11 @@ class VendorProfile(models.Model):
     verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS_CHOICES, default='pending')
     verified_badge = models.BooleanField(default=False)
     
+    # Approval tracking
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_vendors', help_text='Admin who approved this vendor')
+    approved_at = models.DateTimeField(null=True, blank=True, help_text='When the vendor was approved')
+    rejection_reason = models.TextField(blank=True, help_text='Reason for rejection if status is rejected')
+    
     # Commission
     commission_type = models.CharField(max_length=20, choices=[('percentage', 'Percentage'), ('flat', 'Flat')], default='percentage')
     commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('10.00'))  # Default 10%
@@ -69,6 +74,9 @@ class VendorProfile(models.Model):
     instagram_url = models.URLField(blank=True)
     youtube_url = models.URLField(blank=True)
     
+    # Shiprocket Integration
+    shiprocket_pickup_location_name = models.CharField(max_length=100, blank=True, help_text="Unique Pickup Location Name in Shiprocket")
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -284,3 +292,22 @@ class VendorAnnouncement(models.Model):
 
     def __str__(self):
         return f"{self.vendor.store_name} - {self.title}"
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import VendorProfile
+
+@receiver(post_save, sender=VendorProfile)
+def sync_shiprocket_pickup(sender, instance, created, **kwargs):
+    """Sync Vendor Address to Shiprocket as Pickup Location"""
+    # Only sync if address fields are present
+    if instance.address and instance.city and instance.zip_code:
+        # We perform this asynchronously in production (Celery), 
+        # but for now we do it synchronously or try/except to avoid blocking
+        try:
+            from orders.shiprocket_service import ShiprocketService
+            service = ShiprocketService()
+            service.sync_vendor_pickup_location(instance)
+        except Exception as e:
+            # Don't break the save if SR fails (e.g. invalid config)
+            print(f"Auto-sync Shiprocket failed: {e}")

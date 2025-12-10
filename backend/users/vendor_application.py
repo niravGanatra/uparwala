@@ -34,6 +34,17 @@ class VendorApplicationView(APIView):
             user.tax_number = request.data.get('tax_number', '')
             
             user.save()
+            
+            # Create VendorProfile for the new vendor
+            from vendors.models import VendorProfile
+            VendorProfile.objects.create(
+                user=user,
+                store_name=user.business_name or f"{user.username}'s Store",
+                phone=user.business_phone,
+                address=user.business_address,
+                store_description=user.store_description,
+                verification_status='pending'  # Set as pending for admin approval
+            )
 
             return Response({
                 'message': 'Vendor application submitted successfully. Please wait for admin approval.',

@@ -9,6 +9,7 @@ from .models import VendorProfile, Wallet, Withdrawal
 from .serializers import VendorProfileSerializer, WalletSerializer, WithdrawalSerializer
 from products.models import Product
 from orders.models import OrderItem
+from .wallet_views import VendorWalletStatsView
 
 class VendorProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = VendorProfileSerializer
@@ -158,3 +159,156 @@ class VendorListView(generics.ListAPIView):
 
     def get_queryset(self):
         return VendorProfile.objects.filter(verification_status='APPROVED')
+
+
+# Vendor Approval Views (Admin Only)
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser
+from django.core.mail import send_mail
+from django.conf import settings
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def pending_vendors_list(request):
+    """List all pending vendor applications"""
+    vendors = VendorProfile.objects.filter(verification_status='pending').select_related('user')
+    data = []
+    for vendor in vendors:
+        data.append({
+            'id': vendor.id,
+            'store_name': vendor.store_name,
+            'user_email': vendor.user.email,
+            'user_name': vendor.user.username,
+            'phone': vendor.phone,
+            'city': vendor.city,
+            'state': vendor.state,
+            'created_at': vendor.created_at,
+            'store_description': vendor.store_description,
+        })
+    return Response({'vendors': data, 'count': len(data)})
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def approve_vendor(request, vendor_id):
+    """Approve a pending vendor application"""
+    try:
+        vendor = VendorProfile.objects.get(id=vendor_id)
+        
+        if vendor.verification_status == 'verified':
+            return Response({'message': 'Vendor is already approved'}, status=400)
+        
+        # Update vendor status
+        vendor.verification_status = 'verified'
+        vendor.approved_by = request.user
+        vendor.approved_at = timezone.now()
+        vendor.verified_badge = True
+        vendor.save()
+        
+        # Send email notification
+        try:
+            send_mail(
+                subject='Your Vendor Application has been Approved!',
+                message=f'''Dear {vendor.store_name},
+
+Congratulations! Your vendor application has been approved.
+
+You can now start adding products and managing your store on Uparwala.
+
+Login to your vendor dashboard to get started:
+{settings.FRONTEND_URL}/vendor/dashboard
+
+If you have any questions, please contact our support team.
+
+Best regards,
+Uparwala Team
+''',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[vendor.user.email],
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f"Failed to send approval email: {e}")
+        
+        return Response({
+            'message': 'Vendor approved successfully',
+            'vendor': {
+                'id': vendor.id,
+                'store_name': vendor.store_name,
+                'verification_status': vendor.verification_status,
+            }
+        })
+    except VendorProfile.DoesNotExist:
+        return Response({'error': 'Vendor not found'}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def reject_vendor(request, vendor_id):
+    """Reject a vendor application with reason"""
+    try:
+        vendor = VendorProfile.objects.get(id=vendor_id)
+        reason = request.data.get('reason', 'Your application did not meet our requirements.')
+        
+        if vendor.verification_status == 'rejected':
+            return Response({'message': 'Vendor is already rejected'}, status=400)
+        
+        # Update vendor status
+        vendor.verification_status = 'rejected'
+        vendor.rejection_reason = reason
+        vendor.approved_by = request.user
+        vendor.approved_at = timezone.now()
+        vendor.save()
+        
+        # Send email notification
+        try:
+            send_mail(
+                subject='Update on Your Vendor Application',
+                message=f'''Dear {vendor.store_name},
+
+Thank you for your interest in becoming a vendor on Uparwala.
+
+Unfortunately, we are unable to approve your application at this time.
+
+Reason: {reason}
+
+If you believe this is a mistake or would like to reapply, please contact our support team.
+
+Best regards,
+Uparwala Team
+''',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[vendor.user.email],
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f"Failed to send rejection email: {e}")
+        
+        return Response({
+            'message': 'Vendor rejected',
+            'vendor': {
+                'id': vendor.id,
+                'store_name': vendor.store_name,
+                'verification_status': vendor.verification_status,
+                'rejection_reason': vendor.rejection_reason,
+            }
+        })
+    except VendorProfile.DoesNotExist:
+        return Response({'error': 'Vendor not found'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def vendor_stats(request):
+    """Get vendor application statistics"""
+    pending_count = VendorProfile.objects.filter(verification_status='pending').count()
+    approved_count = VendorProfile.objects.filter(verification_status='verified').count()
+    rejected_count = VendorProfile.objects.filter(verification_status='rejected').count()
+    
+    return Response({
+        'pending': pending_count,
+        'approved': approved_count,
+        'rejected': rejected_count,
+        'total': pending_count + approved_count + rejected_count,
+    })
