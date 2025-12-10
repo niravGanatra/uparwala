@@ -1,0 +1,8 @@
+# Production deployment files
+backend/.env
+backend/.env.production
+frontend/.env.production
+
+# But keep templates
+!backend/.env.production.template
+!frontend/.env.production.template
