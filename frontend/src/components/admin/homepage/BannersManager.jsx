@@ -8,28 +8,87 @@ const BannersManager = () => {
     const [promoBanners, setPromoBanners] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const [categories, setCategories] = useState([]);
+
+    // UI States
+    const [showHeroModal, setShowHeroModal] = useState(false);
+    const [showPromoModal, setShowPromoModal] = useState(false);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [linkType, setLinkType] = useState('category'); // category | custom
+
     useEffect(() => {
-        fetchBanners();
+        fetchData();
     }, []);
 
-    const fetchBanners = async () => {
+    const fetchData = async () => {
         try {
-            const [heroRes, promoRes] = await Promise.all([
+            const [heroRes, promoRes, catRes] = await Promise.all([
                 api.get('/homepage/banners/'),
-                api.get('/homepage/promotions/')
+                api.get('/homepage/promotions/'),
+                api.get('/products/categories/')
             ]);
             setHeroBanners(heroRes.data);
             setPromoBanners(promoRes.data);
+            setCategories(catRes.data.results || catRes.data); // Handle potential pagination
         } catch (error) {
-            toast.error('Failed to load banners');
+            toast.error('Failed to load data');
         } finally {
             setLoading(false);
         }
     };
 
-    // Generic handler for creating/updating/deleting banners would go here
-    // For brevity in this initial setup, I'll focus on structure.
-    // In a real implementation, we'd have forms for file upload.
+
+    const handleDeleteBanner = async (type, id) => {
+        if (!window.confirm('Delete this banner?')) return;
+        try {
+            const endpoint = type === 'hero'
+                ? `/homepage/banners/${id}/`
+                : `/homepage/promotions/${id}/`;
+
+            await api.delete(endpoint);
+            toast.success('Banner deleted');
+            fetchData();
+        } catch (error) {
+            toast.error('Failed to delete banner');
+        }
+    };
+
+    const closeModal = () => {
+        setShowHeroModal(false);
+        setShowPromoModal(false);
+        setSelectedFile(null);
+        setLinkType('category');
+    };
+
+    const handleCreateBanner = async (e, type) => {
+        e.preventDefault();
+        try {
+            const endpoint = type === 'hero' ? '/homepage/banners/' : '/homepage/promotions/';
+            const formData = new FormData(e.target);
+
+            // Handle active checkbox explicitly
+            if (!formData.has('is_active')) {
+                formData.append('is_active', 'false');
+            } else {
+                formData.set('is_active', 'true');
+            }
+
+            if (selectedFile) {
+                formData.append('background_image', selectedFile);
+            }
+
+            await api.post(endpoint, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            toast.success('Banner created');
+            closeModal();
+            fetchData();
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to create banner');
+        }
+    };
 
     return (
         <div className="space-y-8">
@@ -37,7 +96,10 @@ const BannersManager = () => {
             <div className="bg-white p-6 rounded-lg shadow">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">Hero Sliders</h3>
-                    <button className="flex items-center gap-2 text-sm bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700">
+                    <button
+                        onClick={() => setShowHeroModal(true)}
+                        className="flex items-center gap-2 text-sm bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700"
+                    >
                         <Plus className="w-4 h-4" /> Add Slide
                     </button>
                 </div>
@@ -45,16 +107,21 @@ const BannersManager = () => {
                 <div className="space-y-4">
                     {heroBanners.map((banner) => (
                         <div key={banner.id} className="flex items-center gap-4 p-4 border rounded hover:bg-gray-50">
-                            <img src={banner.desktop_image} alt={banner.title} className="w-24 h-16 object-cover rounded" />
+                            {banner.background_image && (
+                                <img src={banner.background_image} alt={banner.title} className="w-24 h-16 object-cover rounded" />
+                            )}
                             <div className="flex-1">
                                 <h4 className="font-medium">{banner.title}</h4>
-                                <p className="text-sm text-gray-500">{banner.link}</p>
+                                <p className="text-sm text-gray-500">{banner.subtitle}</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className={`px-2 py-1 text-xs rounded ${banner.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>
                                     {banner.is_active ? 'Active' : 'Inactive'}
                                 </span>
-                                <button className="p-1 text-red-600 hover:bg-red-50 rounded">
+                                <button
+                                    onClick={() => handleDeleteBanner('hero', banner.id)}
+                                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
@@ -68,7 +135,10 @@ const BannersManager = () => {
             <div className="bg-white p-6 rounded-lg shadow">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">Promotional Banners</h3>
-                    <button className="flex items-center gap-2 text-sm bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700">
+                    <button
+                        onClick={() => setShowPromoModal(true)}
+                        className="flex items-center gap-2 text-sm bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700"
+                    >
                         <Plus className="w-4 h-4" /> Add Promotion
                     </button>
                 </div>
@@ -76,13 +146,18 @@ const BannersManager = () => {
                 <div className="grid grid-cols-2 gap-4">
                     {promoBanners.map((banner) => (
                         <div key={banner.id} className="p-4 border rounded hover:bg-gray-50">
-                            <img src={banner.image} alt={banner.alt_text} className="w-full h-32 object-cover rounded mb-2" />
+                            {banner.background_image && (
+                                <img src={banner.background_image} alt={banner.title} className="w-full h-32 object-cover rounded mb-2" />
+                            )}
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h4 className="font-medium">{banner.alt_text}</h4>
-                                    <p className="text-sm text-gray-500">{banner.link}</p>
+                                    <h4 className="font-medium">{banner.title}</h4>
+                                    <p className="text-sm text-gray-500">{banner.discount_text}</p>
                                 </div>
-                                <button className="p-1 text-red-600 hover:bg-red-50 rounded">
+                                <button
+                                    onClick={() => handleDeleteBanner('promo', banner.id)}
+                                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
@@ -91,6 +166,122 @@ const BannersManager = () => {
                     {promoBanners.length === 0 && <p className="col-span-2 text-center text-gray-500 py-4">No promotional banners</p>}
                 </div>
             </div>
+
+            {/* Modals */}
+            {(showHeroModal || showPromoModal) && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
+                        <div className="flex justify-between items-center p-6 border-b">
+                            <h2 className="text-xl font-bold">{showHeroModal ? 'Add Hero Slide' : 'Add Promotion'}</h2>
+                            <button onClick={closeModal}><Plus className="w-5 h-5 rotate-45 text-gray-400" /></button>
+                        </div>
+                        <form onSubmit={(e) => handleCreateBanner(e, showHeroModal ? 'hero' : 'promo')} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Title</label>
+                                <input name="title" type="text" className="w-full border rounded px-3 py-2" required />
+                            </div>
+
+                            {showHeroModal && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Subtitle</label>
+                                    <input name="subtitle" type="text" className="w-full border rounded px-3 py-2" />
+                                </div>
+                            )}
+
+                            {showPromoModal && (
+                                <>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Discount Text</label>
+                                        <input name="discount_text" type="text" placeholder="e.g. UPTO 50% OFF" className="w-full border rounded px-3 py-2" required />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Link Destination</label>
+                                        <div className="flex gap-4 mb-2">
+                                            <label className="flex items-center gap-2">
+                                                <input
+                                                    type="radio"
+                                                    name="link_type"
+                                                    value="category"
+                                                    checked={linkType === 'category'}
+                                                    onChange={() => setLinkType('category')}
+                                                />
+                                                <span>Category</span>
+                                            </label>
+                                            <label className="flex items-center gap-2">
+                                                <input
+                                                    type="radio"
+                                                    name="link_type"
+                                                    value="custom"
+                                                    checked={linkType === 'custom'}
+                                                    onChange={() => setLinkType('custom')}
+                                                />
+                                                <span>Custom URL</span>
+                                            </label>
+                                        </div>
+
+                                        {linkType === 'category' ? (
+                                            <select
+                                                name="link_url"
+                                                className="w-full border rounded px-3 py-2"
+                                                required
+                                            >
+                                                <option value="">Select a Category</option>
+                                                {categories.map(cat => (
+                                                    <option key={cat.id} value={`/category/${cat.slug}`}>
+                                                        {cat.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <input
+                                                name="link_url"
+                                                type="text"
+                                                placeholder="/products/..."
+                                                className="w-full border rounded px-3 py-2"
+                                                required
+                                            />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Position</label>
+                                        <select name="position" className="w-full border rounded px-3 py-2">
+                                            <option value="large_left">Large Left</option>
+                                            <option value="large_right">Large Right</option>
+                                            <option value="side">Side Banner</option>
+                                            <option value="full_width">Full Width</option>
+                                        </select>
+                                    </div>
+                                </>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Background Image</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setSelectedFile(e.target.files[0])}
+                                    className="w-full border rounded px-3 py-2"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Background Color (Fallback)</label>
+                                <input name="background_color" type="color" defaultValue="#eab308" className="w-full h-10 border rounded px-1 py-1" />
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <input name="is_active" type="checkbox" defaultChecked id="active_ch" className="w-4 h-4" />
+                                <label htmlFor="active_ch">Active</label>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button type="button" onClick={closeModal} className="px-4 py-2 border rounded">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Create</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

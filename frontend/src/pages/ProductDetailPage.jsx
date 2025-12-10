@@ -107,8 +107,24 @@ const ProductDetailPage = () => {
                         </p>
                     </div>
 
-                    <div className="text-3xl font-bold text-slate-900">
-                        ₹{product.price}
+                    <div className="flex items-baseline gap-4">
+                        {product.active_deal ? (
+                            <>
+                                <span className="text-3xl font-bold text-red-600">
+                                    ₹{product.active_deal.discounted_price}
+                                </span>
+                                <span className="text-xl text-slate-400 line-through">
+                                    ₹{product.price}
+                                </span>
+                                <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-sm font-bold">
+                                    {parseInt(product.active_deal.discount_percentage)}% OFF DEAL
+                                </span>
+                            </>
+                        ) : (
+                            <span className="text-3xl font-bold text-slate-900">
+                                ₹{product.price}
+                            </span>
+                        )}
                     </div>
 
                     <p className="text-slate-600 leading-relaxed">

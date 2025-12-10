@@ -4,19 +4,35 @@ import { Wallet as WalletIcon, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRi
 
 const VendorWallet = () => {
     const [walletData, setWalletData] = useState({
-        balance: 45231.50,
-        totalEarnings: 125430.00,
-        pendingPayouts: 12500.00,
-        lastPayout: 32730.50
+        balance: 0,
+        totalEarnings: 0,
+        pendingPayouts: 0,
+        lastPayout: 0
     });
+    const [transactions, setTransactions] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const transactions = [
-        { id: 1, type: 'credit', amount: 2500, description: 'Order #156 - Payment received', date: '2025-11-28' },
-        { id: 2, type: 'debit', amount: 5000, description: 'Payout to bank account', date: '2025-11-25' },
-        { id: 3, type: 'credit', amount: 1800, description: 'Order #155 - Payment received', date: '2025-11-24' },
-        { id: 4, type: 'credit', amount: 3200, description: 'Order #154 - Payment received', date: '2025-11-23' },
-        { id: 5, type: 'debit', amount: 3000, description: 'Payout to bank account', date: '2025-11-20' },
-    ];
+    useEffect(() => {
+        fetchWalletData();
+    }, []);
+
+    const fetchWalletData = async () => {
+        try {
+            const response = await api.get('/vendors/wallet/stats/');
+            setWalletData({
+                balance: response.data.balance,
+                totalEarnings: response.data.totalEarnings,
+                pendingPayouts: response.data.pendingPayouts,
+                lastPayout: response.data.lastPayout
+            });
+            setTransactions(response.data.transactions || []);
+        } catch (error) {
+            console.error('Failed to fetch wallet data:', error);
+            // toast.error('Failed to load wallet data'); // Optional: silent fail for dashboard
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -75,7 +91,7 @@ const VendorWallet = () => {
                             </div>
                         </div>
                         <p className="text-3xl font-bold text-slate-900">₹{walletData.lastPayout.toLocaleString()}</p>
-                        <p className="text-sm text-slate-500 mt-1">Nov 25, 2025</p>
+                        <p className="text-sm text-slate-500 mt-1">Latest Approved</p>
                     </CardContent>
                 </Card>
             </div>
@@ -87,28 +103,34 @@ const VendorWallet = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {transactions.map((transaction) => (
-                            <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
-                                <div className="flex items-center gap-4">
-                                    <div className={`p-2 rounded-lg ${transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'
+                        {loading ? (
+                            <p className="text-center text-slate-500 py-4">Loading transactions...</p>
+                        ) : transactions.length === 0 ? (
+                            <p className="text-center text-slate-500 py-4">No transactions found</p>
+                        ) : (
+                            transactions.map((transaction) => (
+                                <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-2 rounded-lg ${transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'
+                                            }`}>
+                                            {transaction.type === 'credit' ? (
+                                                <ArrowDownRight className={`h-5 w-5 text-green-600`} />
+                                            ) : (
+                                                <ArrowUpRight className={`h-5 w-5 text-red-600`} />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-slate-900">{transaction.description}</p>
+                                            <p className="text-sm text-slate-500">{new Date(transaction.date).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    <p className={`text-lg font-semibold ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                                         }`}>
-                                        {transaction.type === 'credit' ? (
-                                            <ArrowDownRight className={`h-5 w-5 text-green-600`} />
-                                        ) : (
-                                            <ArrowUpRight className={`h-5 w-5 text-red-600`} />
-                                        )}
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-slate-900">{transaction.description}</p>
-                                        <p className="text-sm text-slate-500">{new Date(transaction.date).toLocaleDateString()}</p>
-                                    </div>
+                                        {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount.toLocaleString()}
+                                    </p>
                                 </div>
-                                <p className={`text-lg font-semibold ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                                    }`}>
-                                    {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount.toLocaleString()}
-                                </p>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </CardContent>
             </Card>

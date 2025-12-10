@@ -227,46 +227,62 @@ const ProductListingPage = () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {products.map((product, idx) => (
-                            <motion.div
-                                key={product.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                whileHover={{ y: -10 }}
-                            >
-                                <Link to={`/products/${product.slug || product.id}`}>
-                                    <Card className="overflow-hidden hover:shadow-2xl transition-all h-full">
-                                        <div className="relative aspect-square bg-slate-100 overflow-hidden">
-                                            {product.images && product.images.length > 0 ? (
-                                                <img
-                                                    src={product.images[0].image}
-                                                    alt={product.name}
-                                                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <ShoppingBag className="h-16 w-16 text-slate-300" />
+                        {products.map((product, idx) => {
+                            const hasDeal = !!product.active_deal;
+                            const price = hasDeal ? product.active_deal.discounted_price : product.price;
+                            const original = hasDeal ? product.price : null;
+
+                            return (
+                                <motion.div
+                                    key={product.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    whileHover={{ y: -10 }}
+                                >
+                                    <Link to={`/products/${product.slug || product.id}`}>
+                                        <Card className="overflow-hidden hover:shadow-2xl transition-all h-full relative">
+                                            {hasDeal && (
+                                                <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow animate-pulse">
+                                                    DEAL: {parseInt(product.active_deal.discount_percentage)}% OFF
                                                 </div>
                                             )}
-                                        </div>
-                                        <CardContent className="p-4">
-                                            <h3 className="font-semibold text-slate-900 mb-1 line-clamp-1 hover:text-orange-600 transition-colors">
-                                                {product.name}
-                                            </h3>
-                                            <p className="text-sm text-slate-500 mb-2">{product.vendor_name}</p>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-2xl font-bold text-orange-600">₹{product.price}</span>
-                                                <div className="flex items-center gap-1 text-yellow-500">
-                                                    <Star className="h-4 w-4 fill-current" />
-                                                    <span className="text-sm font-semibold text-slate-700">4.5</span>
-                                                </div>
+                                            <div className="relative aspect-square bg-slate-100 overflow-hidden">
+                                                {product.images && product.images.length > 0 ? (
+                                                    <img
+                                                        src={product.images[0].image}
+                                                        alt={product.name}
+                                                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <ShoppingBag className="h-16 w-16 text-slate-300" />
+                                                    </div>
+                                                )}
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
-                            </motion.div>
-                        ))}
+                                            <CardContent className="p-4">
+                                                <h3 className="font-semibold text-slate-900 mb-1 line-clamp-1 hover:text-orange-600 transition-colors">
+                                                    {product.name}
+                                                </h3>
+                                                <p className="text-sm text-slate-500 mb-2">{product.vendor_name}</p>
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-2xl font-bold text-orange-600">₹{price}</span>
+                                                        {original && (
+                                                            <span className="text-sm text-slate-400 line-through">₹{original}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-yellow-500">
+                                                        <Star className="h-4 w-4 fill-current" />
+                                                        <span className="text-sm font-semibold text-slate-700">4.5</span>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
+                                </motion.div>
+                            )
+                        })}
                     </div>
                 )}
             </div>

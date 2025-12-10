@@ -2,7 +2,8 @@ import { useState } from 'react';
 import BannersManager from '../../components/admin/homepage/BannersManager';
 import FeaturedManager from '../../components/admin/homepage/FeaturedManager';
 import SectionsManager from '../../components/admin/homepage/SectionsManager';
-import { Layout, Image, Tag } from 'lucide-react';
+import CodesManager from '../../components/admin/homepage/CodesManager';
+import { Layout, Image, Tag, Ticket } from 'lucide-react';
 
 const HomepageManager = () => {
     const [activeTab, setActiveTab] = useState('banners');
@@ -11,6 +12,7 @@ const HomepageManager = () => {
         { id: 'banners', label: 'Banners & Sliders', icon: Image },
         { id: 'featured', label: 'Featured & Deals', icon: Tag },
         { id: 'sections', label: 'Page Sections', icon: Layout },
+        { id: 'codes', label: 'Coupon Codes', icon: Ticket },
     ];
 
     return (
@@ -45,6 +47,7 @@ const HomepageManager = () => {
                 {activeTab === 'banners' && <BannersManager />}
                 {activeTab === 'featured' && <FeaturedManager />}
                 {activeTab === 'sections' && <SectionsManager />}
+                {activeTab === 'codes' && <CodesManager />}
             </div>
         </div>
     );

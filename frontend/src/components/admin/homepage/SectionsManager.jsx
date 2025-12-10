@@ -7,9 +7,44 @@ const SectionsManager = () => {
     const [hosting, setHosting] = useState([]);
     const [premium, setPremium] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [categories, setCategories] = useState([]); // For category selector
+
+    // Modals
+    const [showHostingModal, setShowHostingModal] = useState(false);
+    const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+    // Form Data
+    const [hostingForm, setHostingForm] = useState({
+        name: '',
+        image: null,
+        emoji: '',
+        link_url: '',
+        is_active: true
+    });
+
+    const [premiumForm, setPremiumForm] = useState({
+        title: '',
+        subtitle: '',
+        image: null,
+        icon: '',
+        link_url: '',
+        position: 'left',
+        is_active: true
+    });
+
+    // Helper for URL selection
+    const [linkType, setLinkType] = useState('category'); // 'category' or 'custom'
+
+    // Helper for Image URLs
+    const getImageUrl = (path) => {
+        if (!path) return '/placeholder-image.png'; // Fallback
+        if (path.startsWith('http')) return path;
+        return `http://localhost:8000${path}`;
+    };
 
     useEffect(() => {
         fetchSections();
+        fetchCategories();
     }, []);
 
     const fetchSections = async () => {
@@ -27,6 +62,136 @@ const SectionsManager = () => {
         }
     };
 
+    const fetchCategories = async () => {
+        try {
+            const response = await api.get('/products/categories/');
+            setCategories(response.data);
+        } catch (error) {
+            console.error("Failed to load categories");
+        }
+    };
+
+    // --- Hosting Handlers ---
+    const handleCreateHosting = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        Object.keys(hostingForm).forEach(key => {
+            formData.append(key, hostingForm[key]);
+        });
+
+        try {
+            await api.post('/homepage/hosting/', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            toast.success('Hosting item added');
+            setShowHostingModal(false);
+            fetchSections();
+            setHostingForm({ name: '', image: null, emoji: '', link_url: '', is_active: true });
+        } catch (error) {
+            toast.error('Failed to add item');
+        }
+    };
+
+    const handleDeleteHosting = async (id) => {
+        if (!window.confirm("Delete this hosting item?")) return;
+        try {
+            await api.delete(`/homepage/hosting/${id}/`);
+            toast.success('Item deleted');
+            fetchSections();
+        } catch (error) {
+            toast.error('Failed to delete item');
+        }
+    };
+
+    // --- Premium Handlers ---
+    const handleCreatePremium = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        Object.keys(premiumForm).forEach(key => {
+            formData.append(key, premiumForm[key]);
+        });
+
+        try {
+            await api.post('/homepage/premium/', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            toast.success('Premium section added');
+            setShowPremiumModal(false);
+            fetchSections();
+            setPremiumForm({ title: '', subtitle: '', image: null, icon: '', link_url: '', position: 'left', is_active: true });
+        } catch (error) {
+            toast.error('Failed to add section');
+        }
+    };
+
+    const handleDeletePremium = async (id) => {
+        if (!window.confirm("Delete this premium section?")) return;
+        try {
+            await api.delete(`/homepage/premium/${id}/`);
+            toast.success('Section deleted');
+            fetchSections();
+        } catch (error) {
+            toast.error('Failed to delete section');
+        }
+    };
+
+    // --- Render Helpers ---
+    const handleImageChange = (e, setForm, form) => {
+        const file = e.target.files[0];
+        if (file) {
+            setForm({ ...form, image: file });
+        }
+    };
+
+    // Category Selector Component Logic
+    const renderLinkInput = (form, setForm) => (
+        <div className="space-y-2">
+            <label className="block text-sm font-medium">Link Destination</label>
+            <div className="flex gap-4 mb-2">
+                <label className="flex items-center gap-2 text-sm">
+                    <input
+                        type="radio"
+                        name="linkType"
+                        checked={linkType === 'category'}
+                        onChange={() => setLinkType('category')}
+                    /> Category
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                    <input
+                        type="radio"
+                        name="linkType"
+                        checked={linkType === 'custom'}
+                        onChange={() => setLinkType('custom')}
+                    /> Custom URL
+                </label>
+            </div>
+
+            {linkType === 'category' ? (
+                <select
+                    className="w-full border rounded px-3 py-2"
+                    onChange={(e) => {
+                        const slug = e.target.value;
+                        if (slug) setForm({ ...form, link_url: `/category/${slug}` });
+                    }}
+                >
+                    <option value="">Select Category...</option>
+                    {categories.map(c => (
+                        <option key={c.id} value={c.slug}>{c.name}</option>
+                    ))}
+                </select>
+            ) : (
+                <input
+                    type="text"
+                    value={form.link_url}
+                    onChange={(e) => setForm({ ...form, link_url: e.target.value })}
+                    className="w-full border rounded px-3 py-2"
+                    placeholder="/collection/summer-sale"
+                />
+            )}
+            <p className="text-xs text-gray-500">Selected Path: {form.link_url}</p>
+        </div>
+    );
+
     return (
         <div className="space-y-8">
             {/* Hosting Essentials */}
@@ -36,7 +201,10 @@ const SectionsManager = () => {
                         <Layout className="w-5 h-5 text-purple-500" />
                         Hosting Essentials
                     </h3>
-                    <button className="flex items-center gap-2 text-sm bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700">
+                    <button
+                        onClick={() => setShowHostingModal(true)}
+                        className="flex items-center gap-2 text-sm bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700"
+                    >
                         <Plus className="w-4 h-4" /> Add Item
                     </button>
                 </div>
@@ -44,11 +212,14 @@ const SectionsManager = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {hosting.map((item) => (
                         <div key={item.id} className="p-4 border rounded hover:bg-gray-50">
-                            <img src={item.image} alt={item.title} className="w-full h-32 object-cover rounded mb-2" />
-                            <h4 className="font-medium text-sm">{item.title}</h4>
-                            <p className="text-xs text-gray-500 mt-1">{item.category_name}</p>
+                            <img src={getImageUrl(item.image)} alt={item.name} className="w-full h-32 object-cover rounded mb-2" />
+                            <h4 className="font-medium text-sm">{item.name}</h4>
+                            <p className="text-xs text-gray-500 mt-1">{item.emoji}</p>
                             <div className="mt-2 flex justify-end">
-                                <button className="p-1 text-red-600 hover:bg-red-50 rounded">
+                                <button
+                                    onClick={() => handleDeleteHosting(item.id)}
+                                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
@@ -65,7 +236,10 @@ const SectionsManager = () => {
                         <Award className="w-5 h-5 text-yellow-600" />
                         Premium Collections
                     </h3>
-                    <button className="flex items-center gap-2 text-sm bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700">
+                    <button
+                        onClick={() => setShowPremiumModal(true)}
+                        className="flex items-center gap-2 text-sm bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700"
+                    >
                         <Plus className="w-4 h-4" /> Add Collection
                     </button>
                 </div>
@@ -73,14 +247,16 @@ const SectionsManager = () => {
                 <div className="space-y-4">
                     {premium.map((item) => (
                         <div key={item.id} className="flex items-center gap-4 p-4 border rounded hover:bg-gray-50">
-                            <img src={item.image} alt={item.title} className="w-24 h-24 object-cover rounded" />
+                            <img src={getImageUrl(item.image)} alt={item.title} className="w-24 h-24 object-cover rounded" />
                             <div className="flex-1">
                                 <h4 className="font-medium text-lg">{item.title}</h4>
-                                <p className="text-sm text-gray-500">{item.description}</p>
-                                <p className="text-xs text-orange-600 mt-1">{item.cta_text}</p>
+                                <p className="text-sm text-gray-500">{item.subtitle}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button className="p-1 text-red-600 hover:bg-red-50 rounded">
+                                <button
+                                    onClick={() => handleDeletePremium(item.id)}
+                                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
@@ -89,6 +265,63 @@ const SectionsManager = () => {
                     {premium.length === 0 && <p className="text-center text-gray-500 py-4">No premium collections</p>}
                 </div>
             </div>
+
+            {/* Hosting Modal */}
+            {showHostingModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                        <div className="p-6 border-b"><h2 className="text-xl font-bold">Add Hosting Item</h2></div>
+                        <form onSubmit={handleCreateHosting} className="p-6 space-y-4">
+                            <input type="text" placeholder="Name" className="w-full border rounded px-3 py-2"
+                                value={hostingForm.name} onChange={e => setHostingForm({ ...hostingForm, name: e.target.value })} required />
+                            <input type="text" placeholder="Emoji (Optional)" className="w-full border rounded px-3 py-2"
+                                value={hostingForm.emoji} onChange={e => setHostingForm({ ...hostingForm, emoji: e.target.value })} />
+
+                            {renderLinkInput(hostingForm, setHostingForm)}
+
+                            <div>
+                                <label className="block text-sm mb-1">Image</label>
+                                <input type="file" onChange={e => handleImageChange(e, setHostingForm, hostingForm)} className="w-full" required />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button type="button" onClick={() => setShowHostingModal(false)} className="px-4 py-2 border rounded">Cancel</button>
+                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Create</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Premium Modal */}
+            {showPremiumModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                        <div className="p-6 border-b"><h2 className="text-xl font-bold">Add Premium Section</h2></div>
+                        <form onSubmit={handleCreatePremium} className="p-6 space-y-4">
+                            <input type="text" placeholder="Title" className="w-full border rounded px-3 py-2"
+                                value={premiumForm.title} onChange={e => setPremiumForm({ ...premiumForm, title: e.target.value })} required />
+                            <input type="text" placeholder="Subtitle" className="w-full border rounded px-3 py-2"
+                                value={premiumForm.subtitle} onChange={e => setPremiumForm({ ...premiumForm, subtitle: e.target.value })} required />
+
+                            {renderLinkInput(premiumForm, setPremiumForm)}
+
+                            <select className="w-full border rounded px-3 py-2" value={premiumForm.position} onChange={e => setPremiumForm({ ...premiumForm, position: e.target.value })}>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                            </select>
+
+                            <div>
+                                <label className="block text-sm mb-1">Background Image</label>
+                                <input type="file" onChange={e => handleImageChange(e, setPremiumForm, premiumForm)} className="w-full" required />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button type="button" onClick={() => setShowPremiumModal(false)} className="px-4 py-2 border rounded">Cancel</button>
+                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Create</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
