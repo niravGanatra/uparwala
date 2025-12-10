@@ -13,25 +13,54 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    
-    - name: Deploy backend to cPanel
+
+    # 1. Copy Backend Files via SCP (Bypasses Git Firewall)
+    - name: Copy backend files to server
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        source: "backend/*"
+        target: "/home/${{ secrets.SSH_USERNAME }}/uparwala"
+        strip_components: 0
+
+    # 2. Run Setup Commands via SSH
+    - name: Setup and Restart
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
         password: ${{ secrets.SSH_PASSWORD }}
-        port: 22
         script: |
-          cd ~/uparwala
-          git pull origin main
-          cd backend
+          cd ~/uparwala/backend
+          
+          # Create env if missing (first run)
+          if [ ! -f .env ]; then
+            cp .env.production.template .env
+            echo "⚠️  Created .env from template. Update it with secrets!"
+          fi
+          
+          # Setup Venv
+          if [ ! -d "venv" ]; then
+            python3 -m venv venv
+          fi
+          
           source venv/bin/activate
-          pip install -r requirements.txt
-          pip install -r requirements-production.txt
+          
+          # Install Dependencies
+          pip install -q -r requirements.txt
+          pip install -q -r requirements-production.txt
+          
+          # Run Deployment Tasks
           python manage.py migrate --noinput
           python manage.py collectstatic --noinput
+          
+          # Restart App
+          mkdir -p ~/public_html/tmp
           touch ~/public_html/tmp/restart.txt
-          echo "Backend deployed successfully!"
+          
+          echo "✅ Backend deployed successfully!"
 
   deploy-frontend:
     name: Deploy Frontend
