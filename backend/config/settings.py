@@ -23,10 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(c=4z2uas9w-3#kpc0)deuow-u1la=eh1#nrz*2tt-_s0l76(+'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-dev-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -197,8 +197,8 @@ SOCIALACCOUNT_PROVIDERS = {
             'access_type': 'online',
         },
         'APP': {
-            'client_id': '',  # Will be set via admin or environment variable
-            'secret': '',  # Will be set via admin or environment variable
+            'client_id': os.getenv('GOOGLE_CLIENT_ID', ''),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET', ''),
         }
     }
 }
@@ -217,7 +217,13 @@ AUTH_USER_MODEL = 'users.User'
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    os.getenv('FRONTEND_URL', 'http://localhost:5173'),
+    "https://uparwala.in",
+    "https://www.uparwala.in",
 ]
+# Allow adding more origins via comma-separated env var
+if os.getenv('CORS_ALLOWED_ORIGINS'):
+    CORS_ALLOWED_ORIGINS.extend(os.getenv('CORS_ALLOWED_ORIGINS').split(','))
 
 # DRF Settings
 REST_FRAMEWORK = {
@@ -263,8 +269,9 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
 # Celery Configuration
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+# Railway provides REDIS_URL, so we check that first
+CELERY_BROKER_URL = os.getenv('REDIS_URL', os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0'))
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0'))
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
