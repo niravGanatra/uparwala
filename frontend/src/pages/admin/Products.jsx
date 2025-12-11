@@ -71,7 +71,7 @@ const AdminProducts = () => {
 
     const fetchVendors = async () => {
         try {
-            const response = await api.get('/vendors/');
+            const response = await api.get('/vendors/admin/vendors/');
             setVendors(response.data);
         } catch (error) {
             console.error('Failed to fetch vendors:', error);
@@ -80,7 +80,7 @@ const AdminProducts = () => {
 
     const fetchBrands = async () => {
         try {
-            const response = await api.get('/products/brands/');
+            const response = await api.get('/products/phase3/brands/');
             setBrands(response.data);
         } catch (error) {
             console.error('Failed to fetch brands:', error);

@@ -1,5 +1,6 @@
+```python
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, Variation, GlobalAttribute, AttributeTerm
+from .models import Category, Product, ProductImage, Variation, GlobalAttribute, AttributeTerm, Brand
 
 class CategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
