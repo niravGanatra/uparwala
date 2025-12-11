@@ -185,12 +185,9 @@ ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 LOGIN_URL = 'http://localhost:5173/login'
 
 # New Allauth Configuration (Replaces deprecated settings)
-ACCOUNT_SIGNUP_FIELDS = {
-    'email': {'required': True},
-    'password1': {'required': True},
-    'password2': {'required': True},
-}
-ACCOUNT_LOGIN_METHODS = {'email'}  # Only email login, no username
+# Asterisk (*) means required field
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_LOGIN_METHODS = ['email']  # Only email login, no username
 # ACCOUNT_USERNAME_REQUIRED = False # Already set above
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
