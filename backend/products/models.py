@@ -219,8 +219,9 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    # Explicitly use R2 storage for product images
-    image = models.ImageField(upload_to='product_images/', storage=default_storage)
+    # Use callable to get storage lazily (resolve at runtime, not import time)
+    from django.core.files.storage import storages
+    image = models.ImageField(upload_to='product_images/', storage=lambda: storages['default'])
     is_primary = models.BooleanField(default=False)
     alt_text = models.CharField(max_length=255, blank=True)
 
