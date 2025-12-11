@@ -104,8 +104,8 @@ class DealOfTheDay(models.Model):
 
 
 class HostingEssential(models.Model):
-    """Hosting essentials category section"""
-    name = models.CharField(max_length=100, help_text="Category name (e.g., 'Table Linens')")
+    """Pooja essentials category section - Hindu worship items"""
+    name = models.CharField(max_length=100, help_text="Category name (e.g., 'Diyas', 'Incense Holders')")
     image = models.ImageField(upload_to='homepage/hosting/', blank=True, null=True)
     emoji = models.CharField(max_length=10, blank=True, help_text="Optional emoji representation")
     link_url = models.CharField(max_length=500, help_text="Link destination")
@@ -116,8 +116,8 @@ class HostingEssential(models.Model):
 
     class Meta:
         ordering = ['priority', 'name']
-        verbose_name = 'Hosting Essential'
-        verbose_name_plural = 'Hosting Essentials'
+        verbose_name = 'Pooja Essential'
+        verbose_name_plural = 'Pooja Essentials'
 
     def __str__(self):
         return self.name

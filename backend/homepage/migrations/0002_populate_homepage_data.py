@@ -119,47 +119,47 @@ def populate_homepage_data(apps, schema_editor):
             defaults=data
         )
     
-    # 4. Create Hosting Essentials
-    hosting_items = [
+    # 4. Create Pooja Essentials (Hindu Worship Items)
+    pooja_items = [
         {
-            'name': 'Table Linens',
-            'emoji': '🍽️',
-            'link_url': '/products?category=table-linens',
+            'name': 'Diyas & Lamps',
+            'emoji': '🪔',
+            'link_url': '/products?category=diyas',
             'priority': 1
         },
         {
-            'name': 'Dinnerware',
-            'emoji': '🍽',
-            'link_url': '/products?category=dinnerware',
+            'name': 'Incense Holders',
+            'emoji': '🕉️',
+            'link_url': '/products?category=incense',
             'priority': 2
         },
         {
-            'name': 'Glassware',
-            'emoji': '🥂',
-            'link_url': '/products?category=glassware',
+            'name': 'Pooja Thali',
+            'emoji': '🛕',
+            'link_url': '/products?category=pooja-thali',
             'priority': 3
         },
         {
-            'name': 'Serving Sets',
-            'emoji': '🍛',
-            'link_url': '/products?category=serving',
+            'name': 'Temple Bells',
+            'emoji': '🔔',
+            'link_url': '/products?category=bells',
             'priority': 4
         },
         {
-            'name': 'Centerpieces',
-            'emoji': '💐',
-            'link_url': '/products?category=centerpieces',
+            'name': 'Deity Idols',
+            'emoji': '🙏',
+            'link_url': '/products?category=idols',
             'priority': 5
         },
         {
-            'name': 'Serveware',
-            'emoji': '🍶',
-            'link_url': '/products?category=serveware',
+            'name': 'Kalash & Containers',
+            'emoji': '⚱️',
+            'link_url': '/products?category=kalash',
             'priority': 6
         },
     ]
     
-    for data in hosting_items:
+    for data in pooja_items:
         HostingEssential.objects.get_or_create(
             name=data['name'],
             defaults=data
@@ -246,7 +246,7 @@ def reverse_populate(apps, schema_editor):
     HeroBanner.objects.filter(title__in=['DECOR YOUR SPACE', 'FESTIVE SPECIAL']).delete()
     PromotionalBanner.objects.filter(title__in=['Lights & Lamps', 'Home Decor', 'Wall Art']).delete()
     FeaturedCategory.objects.filter(name__in=['Picture Frames', 'Table Lamps', 'Wall Mirrors', 'Cushions', 'Candles', 'Vases']).delete()
-    HostingEssential.objects.filter(name__in=['Table Linens', 'Dinnerware', 'Glassware', 'Serving Sets', 'Centerpieces', 'Serveware']).delete()
+    HostingEssential.objects.filter(name__in=['Diyas & Lamps', 'Incense Holders', 'Pooja Thali', 'Temple Bells', 'Deity Idols', 'Kalash & Containers']).delete()
     PremiumSection.objects.filter(title__in=['Premium', 'Handcrafted']).delete()
     CategoryPromotion.objects.filter(name__in=['Mirrors', 'Wall Decor', 'Rugs & Carpets', 'Lighting']).delete()
 
