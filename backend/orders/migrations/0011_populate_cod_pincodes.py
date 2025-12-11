@@ -76,7 +76,7 @@ def reverse_populate(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('orders', '0010_alter_order_payment_status'),
+        ('orders', '0010_ordernote'),
     ]
 
     operations = [
