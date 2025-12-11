@@ -106,5 +106,9 @@ urlpatterns = [
     path('bulk-template/', download_csv_template, name='bulk-template'),
     
     path('<slug:slug>/check-pincode/', check_product_pincode, name='check-product-pincode'),
+    
+    # Phase 3 endpoints (brands, comparison, bundles)
+    path('phase3/', include('products.phase3_urls')),
+    
     path('<slug:slug>/', ProductDetailView.as_view(), name='product-detail'),
 ]
