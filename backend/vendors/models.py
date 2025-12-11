@@ -61,7 +61,7 @@ class VendorProfile(models.Model):
         max_digits=3, 
         decimal_places=2, 
         default=0.00,
-        validators=[MinValueValidator(0), MaxValueValidator(5)]
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('5'))]
     )
     review_count = models.PositiveIntegerField(default=0)
     

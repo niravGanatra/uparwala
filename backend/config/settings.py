@@ -177,22 +177,20 @@ AUTHENTICATION_BACKENDS = [
     'users.backends.AllowInactiveUserBackend',  # Custom backend to allow inactive users
     'allauth.account.auth_backends.AuthenticationBackend',  # User Auth
 ]
+
+# Allauth Settings (Modern Format - No Deprecation Warnings)
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Or 'optional'
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 LOGIN_URL = 'http://localhost:5173/login'
 
-# New Allauth Settings (fixes deprecation warnings)
-# Ideally should be:
-# ACCOUNT_SIGNUP_FIELDS = ['email']
-# ACCOUNT_LOGIN_METHODS = {'email'}
-# But keeping legacy ones for now as they still work, just warning.
-# Actually, let's fix the warnings as requested.
-# ACCOUNT_AUTHENTICATION_METHOD = 'email' # Already set above
-# ACCOUNT_EMAIL_REQUIRED = True # Already set above
+# New Allauth Configuration (Replaces deprecated settings)
+ACCOUNT_SIGNUP_FIELDS = {
+    'email': {'required': True},
+    'password1': {'required': True},
+    'password2': {'required': True},
+}
+ACCOUNT_LOGIN_METHODS = {'email'}  # Only email login, no username
 # ACCOUNT_USERNAME_REQUIRED = False # Already set above
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
