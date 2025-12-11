@@ -172,11 +172,21 @@ const AdminProducts = () => {
         e.preventDefault();
 
         const productData = new FormData();
+
+        // Compute price field (required by backend)
+        const computedPrice = formData.sale_price && parseFloat(formData.sale_price) > 0
+            ? formData.sale_price
+            : formData.regular_price;
+
+        // Add all form fields
         Object.keys(formData).forEach(key => {
             if (formData[key] !== '' && formData[key] !== null) {
                 productData.append(key, formData[key]);
             }
         });
+
+        // Add computed price field (backend requires this)
+        productData.append('price', computedPrice);
 
         // Add images
         imageFiles.forEach((file, index) => {
@@ -193,7 +203,13 @@ const AdminProducts = () => {
             fetchProducts();
         } catch (error) {
             console.error('Failed to add product:', error);
-            toast.error(error.response?.data?.name?.[0] || 'Failed to add product');
+            const errorMsg = error.response?.data;
+            if (errorMsg && typeof errorMsg === 'object') {
+                const firstError = Object.values(errorMsg)[0];
+                toast.error(Array.isArray(firstError) ? firstError[0] : 'Failed to add product');
+            } else {
+                toast.error('Failed to add product');
+            }
         }
     };
 
