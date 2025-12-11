@@ -219,8 +219,8 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    # Use callable to get storage lazily (resolve at runtime, not import time)
-    image = models.ImageField(upload_to='product_images/', storage=lambda: storages['default'])
+    # Let ImageField use DEFAULT_FILE_STORAGE automatically (no explicit storage parameter)
+    image = models.ImageField(upload_to='product_images/')
     is_primary = models.BooleanField(default=False)
     alt_text = models.CharField(max_length=255, blank=True)
 
