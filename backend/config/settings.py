@@ -157,7 +157,16 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Storage Configuration
+# Defined using STORAGES for Django 4.2+ compatibility
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+}
 
 # Media files configuration
 USE_R2_STORAGE = os.getenv('USE_R2_STORAGE', 'False') ==  'True'
@@ -189,10 +198,12 @@ if USE_R2_STORAGE:
     AWS_QUERYSTRING_AUTH = False  # Don't add auth params to URLs
     AWS_S3_SIGNATURE_VERSION = 's3v4'
     
-    # Use custom R2 storage backend with timeout config
-    DEFAULT_FILE_STORAGE = 'config.storage_backends.CloudflareR2Storage'
+    # Use custom R2 storage backend with timeout config (Django 4.2+)
+    STORAGES["default"] = {
+        "BACKEND": "config.storage_backends.CloudflareR2Storage",
+    }
     
-    print(f"DEBUG SETTINGS: DEFAULT_FILE_STORAGE = {DEFAULT_FILE_STORAGE}")
+    print(f"DEBUG SETTINGS: STORAGES['default'] = {STORAGES['default']}")
     
     # Public URL for media files
     MEDIA_URL = os.getenv('R2_PUBLIC_URL', 'https://pub-d1ba09fdc860448fad2976607846ddb1.r2.dev/')
