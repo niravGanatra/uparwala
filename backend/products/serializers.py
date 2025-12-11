@@ -107,11 +107,18 @@ class AdminProductSerializer(serializers.ModelSerializer):
                 if key.startswith('image_'):
                     image_file = request.FILES[key]
                     print(f"DEBUG: Creating ProductImage for key: {key}, file: {image_file.name}")
-                    ProductImage.objects.create(
-                        product=product,
-                        image=image_file,
-                        is_primary=(key == 'image_0')  # First image is primary
-                    )
+                    try:
+                        product_image = ProductImage.objects.create(
+                            product=product,
+                            image=image_file,
+                            is_primary=(key == 'image_0')  # First image is primary
+                        )
+                        print(f"DEBUG: ProductImage created successfully! ID: {product_image.id}, Image URL: {product_image.image.url}")
+                    except Exception as e:
+                        print(f"ERROR: Failed to create ProductImage: {type(e).__name__}: {str(e)}")
+                        import traceback
+                        print(f"ERROR: Traceback: {traceback.format_exc()}")
+                        raise  # Re-raise to trigger transaction rollback
         else:
             print(f"DEBUG: No FILES in request or request is None")
         
