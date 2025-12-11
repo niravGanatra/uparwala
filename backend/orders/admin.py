@@ -47,14 +47,14 @@ admin.site.register(Order, OrderAdmin)
 
 @admin.register(OrderReturn)
 class OrderReturnAdmin(admin.ModelAdmin):
-    list_display = ['order', 'status', 'return_reason', 'created_at']
-    list_filter = ['status', 'return_reason', 'created_at']
-    search_fields = ['order__id', 'return_reason']
+    list_display = ['order', 'status', 'reason', 'created_at']
+    list_filter = ['status', 'reason', 'created_at']
+    search_fields = ['order__id', 'reason']
 
 @admin.register(AddressVerification)
 class AddressVerificationAdmin(admin.ModelAdmin):
-    list_display = ['order', 'status', 'method', 'verified_at']
-    list_filter = ['status', 'method']
+    list_display = ['order', 'status', 'verification_method', 'verified_at']
+    list_filter = ['status', 'verification_method']
 
 @admin.register(CODPincode)
 class CODPincodeAdmin(admin.ModelAdmin):
@@ -68,4 +68,4 @@ class GiftOptionAdmin(admin.ModelAdmin):
 
 @admin.register(OrderGift)
 class OrderGiftAdmin(admin.ModelAdmin):
-    list_display = ['order', 'gift_option', 'from_name', 'to_name']
+    list_display = ['order', 'gift_option', 'recipient_name']

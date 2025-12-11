@@ -111,8 +111,8 @@ class ReviewHelpfulAdmin(admin.ModelAdmin):
 
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
-    list_display = ['user', 'created_at']
-    filter_horizontal = ['products']
+    list_display = ['user', 'product', 'created_at']
+    list_filter = ['created_at']
 
 @admin.register(ProductQuestion)
 class ProductQuestionAdmin(admin.ModelAdmin):
