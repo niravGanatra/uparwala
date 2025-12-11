@@ -7,6 +7,7 @@ import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import { Search, Package, Eye, Trash2, Ban, Plus, Edit, Upload } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import ProductForm from '../../components/ProductForm';
 
 const AdminProducts = () => {
     const [products, setProducts] = useState([]);
@@ -231,7 +232,10 @@ const AdminProducts = () => {
         product.vendor_name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const ProductForm = ({ onSubmit, submitText }) => (
+    // ProductForm moved to separate component to prevent re-rendering
+    // See /frontend/src/components/ProductForm.jsx
+
+    const UNUSED_ProductForm = ({ onSubmit, submitText }) => (
         <form onSubmit={onSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -566,12 +570,32 @@ const AdminProducts = () => {
 
             {/* Add Product Modal */}
             <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Product" size="xl">
-                <ProductForm onSubmit={handleAddProduct} submitText="Add Product" />
+                <ProductForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    imageFiles={imageFiles}
+                    handleImageChange={handleImageChange}
+                    vendors={vendors}
+                    categories={categories}
+                    brands={brands}
+                    onSubmit={handleAddProduct}
+                    submitText="Add Product"
+                />
             </Modal>
 
             {/* Edit Product Modal */}
             <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Product" size="xl">
-                <ProductForm onSubmit={handleUpdateProduct} submitText="Update Product" />
+                <ProductForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    imageFiles={imageFiles}
+                    handleImageChange={handleImageChange}
+                    vendors={vendors}
+                    categories={categories}
+                    brands={brands}
+                    onSubmit={handleUpdateProduct}
+                    submitText="Update Product"
+                />
             </Modal>
 
             {/* View Product Modal */}
