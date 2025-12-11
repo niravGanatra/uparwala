@@ -132,12 +132,24 @@ const Checkout = () => {
                 payload.gift_option_id = giftData.gift_option_id;
             }
 
+            console.log('[Checkout] Calculating totals with payload:', payload);
             const response = await api.post('/payments/calculate-totals/', payload);
+            console.log('[Checkout] Total calculation successful:', response.data);
             setOrderSummary(response.data);
         } catch (error) {
-            console.error('Failed to calculate totals:', error);
-            console.error('Error response:', error.response?.data);
-            toast.error('Failed to calculate order totals');
+            console.error('[Checkout] Failed to calculate totals:', error);
+            console.error('[Checkout] Error response:', error.response?.data);
+            console.error('[Checkout] Error status:', error.response?.status);
+
+            // More specific error messages
+            if (error.response?.status === 401) {
+                toast.error('Please log in to continue');
+                navigate('/login');
+            } else if (error.response?.data?.error) {
+                toast.error(error.response.data.error);
+            } else {
+                toast.error('Failed to calculate order totals');
+            }
         }
     };
 
