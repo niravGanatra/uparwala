@@ -1,6 +1,6 @@
-import { Input } from '../../components/ui/input';
+import { Input } from './ui/input';
 import { Upload } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import { Button } from './ui/button';
 
 // Extracted ProductForm component to prevent re-creation on parent renders
 const ProductForm = ({
