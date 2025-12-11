@@ -143,13 +143,14 @@ const ProductForm = ({
             </div>
 
             <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-sm font-medium mb-2">Description *</label>
                 <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg"
                     rows="4"
                     placeholder="Detailed product description"
+                    required
                 />
             </div>
 
