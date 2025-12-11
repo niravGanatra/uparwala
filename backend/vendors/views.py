@@ -117,8 +117,15 @@ class ApproveVendorView(APIView):
     def post(self, request, pk):
         try:
             vendor = VendorProfile.objects.get(pk=pk)
-            vendor.verification_status = 'APPROVED'
+            vendor.verification_status = 'verified'
+            vendor.approved_by = request.user
+            vendor.approved_at = timezone.now()
+            vendor.verified_badge = True
             vendor.save()
+            
+            # Sync with User model
+            vendor.user.vendor_status = 'approved'
+            vendor.user.save()
             
             # Create wallet if not exists
             Wallet.objects.get_or_create(vendor=vendor)
@@ -158,7 +165,7 @@ class VendorListView(generics.ListAPIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get_queryset(self):
-        return VendorProfile.objects.filter(verification_status='APPROVED')
+        return VendorProfile.objects.filter(verification_status='verified')
 
 
 # Vendor Approval Views (Admin Only)
@@ -205,6 +212,10 @@ def approve_vendor(request, vendor_id):
         vendor.approved_at = timezone.now()
         vendor.verified_badge = True
         vendor.save()
+
+        # Sync with User model
+        vendor.user.vendor_status = 'approved'
+        vendor.user.save()
         
         # Send email notification
         try:
@@ -260,6 +271,10 @@ def reject_vendor(request, vendor_id):
         vendor.approved_by = request.user
         vendor.approved_at = timezone.now()
         vendor.save()
+
+        # Sync with User model
+        vendor.user.vendor_status = 'rejected'
+        vendor.user.save()
         
         # Send email notification
         try:
