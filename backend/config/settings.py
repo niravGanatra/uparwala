@@ -198,6 +198,13 @@ if USE_R2_STORAGE:
     AWS_QUERYSTRING_AUTH = False  # Don't add auth params to URLs
     AWS_S3_SIGNATURE_VERSION = 's3v4'
     
+    # Configure custom domain for public access
+    # This ensures obj.image.url returns the public URL instead of the S3 endpoint
+    r2_public_url = os.getenv('R2_PUBLIC_URL', 'https://pub-d1ba09fdc860448fad2976607846ddb1.r2.dev/')
+    AWS_S3_CUSTOM_DOMAIN = r2_public_url.replace('https://', '').replace('http://', '').rstrip('/')
+    
+    print(f"DEBUG SETTINGS: AWS_S3_CUSTOM_DOMAIN = {AWS_S3_CUSTOM_DOMAIN}")
+    
     # Use custom R2 storage backend with timeout config (Django 4.2+)
     STORAGES["default"] = {
         "BACKEND": "config.storage_backends.CloudflareR2Storage",
