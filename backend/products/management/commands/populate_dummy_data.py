@@ -9,9 +9,10 @@ from django.utils.text import slugify
 from django.core.files.base import ContentFile
 from base64 import b64decode
 from products.models import Category, Product, ProductImage
-from products.review_models import ProductReview, ReviewHelpful
+from products.models import ProductReview, ReviewHelpful
 from vendors.models import VendorProfile, StoreReview, Wallet, Transaction, PayoutRequest
-from orders.models import Order, OrderItem, Address
+from orders.models import Order, OrderItem
+from users.models import User, Address
 
 User = get_user_model()
 
@@ -157,10 +158,9 @@ class Command(BaseCommand):
                 name=name,
                 slug=slugify(name),
                 description=desc,
-                price=price,
+                regular_price=price,
                 stock=random.randint(10, 50),
-                is_active=True,
-                status='published'
+                is_active=True
             )
             ProductImage.objects.create(
                 product=prod,
@@ -186,8 +186,7 @@ class Command(BaseCommand):
                 status=status,
                 total_amount=0,
                 shipping_address="123 Temple Street, Varanasi",
-                billing_address="123 Temple Street, Varanasi",
-                payment_method='online',
+                payment_method='razorpay',
                 payment_status='paid' if status != 'PENDING' else 'pending',
                 created_at=timezone.now() - timedelta(days=random.randint(1, 30))
             )
@@ -285,9 +284,9 @@ class Command(BaseCommand):
                 
                 PayoutRequest.objects.create(
                     vendor=vendor,
-                    amount=amount,
+                    requested_amount=amount,
                     status='approved',
-                    admin_note="Weekly payout",
+                    admin_notes="Weekly payout",
                     approved_at=timezone.now()
                 )
                 
