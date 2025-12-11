@@ -78,6 +78,7 @@ class ProductSerializer(serializers.ModelSerializer):
         return None
 
 
+
 class AdminProductSerializer(serializers.ModelSerializer):
     """Serializer for admin product creation - allows setting vendor"""
     images = ProductImageSerializer(many=True, read_only=True)
@@ -86,6 +87,26 @@ class AdminProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')  # vendor NOT read-only for admins
+    
+    def create(self, validated_data):
+        # Create the product first
+        product = Product.objects.create(**validated_data)
+        
+        # Handle image uploads from request.FILES
+        request = self.context.get('request')
+        if request and request.FILES:
+            # Images are sent as image_0, image_1, etc.
+            for key in request.FILES:
+                if key.startswith('image_'):
+                    image_file = request.FILES[key]
+                    ProductImage.objects.create(
+                        product=product,
+                        image=image_file,
+                        is_primary=(key == 'image_0')  # First image is primary
+                    )
+        
+        return product
+
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
