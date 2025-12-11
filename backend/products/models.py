@@ -4,6 +4,7 @@ from decimal import Decimal
 from vendors.models import VendorProfile
 from django.conf import settings
 from django.utils.text import slugify
+from django.core.files.storage import default_storage
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
@@ -218,11 +219,8 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    
     # Explicitly use R2 storage for product images
-    from django.core.files.storage import default_storage
     image = models.ImageField(upload_to='product_images/', storage=default_storage)
-    
     is_primary = models.BooleanField(default=False)
     alt_text = models.CharField(max_length=255, blank=True)
 
