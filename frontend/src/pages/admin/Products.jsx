@@ -77,9 +77,12 @@ const AdminProducts = () => {
                     <h1 className="text-3xl font-bold text-slate-900 mb-2">Product Management</h1>
                     <p className="text-slate-600">Manage all products across vendors</p>
                 </div>
-                <Button className="bg-orange-600 hover:bg-orange-700">
+                <Button
+                    className="bg-orange-600 hover:bg-orange-700"
+                    onClick={() => window.location.href = '/admin/products/product/add/'}
+                >
                     <Package className="mr-2 h-4 w-4" />
-                    Add Product
+                    Add Product (Django Admin)
                 </Button>
             </div>
 

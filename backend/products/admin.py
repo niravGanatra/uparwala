@@ -39,7 +39,7 @@ class ProductAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('vendor', 'category', 'name', 'slug', 'description', 'short_description')
+            'fields': ('vendor', 'category', 'brand', 'name', 'slug', 'description', 'short_description')
         }),
         ('Product Data', {
             'fields': ('sku', 'featured', 'virtual', 'downloadable')
