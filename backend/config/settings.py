@@ -160,9 +160,13 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files configuration
-USE_R2_STORAGE = os.getenv('USE_R2_STORAGE', 'False') == 'True'
+USE_R2_STORAGE = os.getenv('USE_R2_STORAGE', 'False') ==  'True'
+
+print(f"DEBUG SETTINGS: USE_R2_STORAGE env var = {os.getenv('USE_R2_STORAGE')}")
+print(f"DEBUG SETTINGS: USE_R2_STORAGE boolean = {USE_R2_STORAGE}")
 
 if USE_R2_STORAGE:
+    print("DEBUG SETTINGS: R2 Storage is ENABLED")
     # Cloudflare R2 Storage Configuration
     INSTALLED_APPS += ['storages']
     
@@ -172,6 +176,9 @@ if USE_R2_STORAGE:
     AWS_STORAGE_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', 'uparwala-media')
     AWS_S3_ENDPOINT_URL = f"https://{os.getenv('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com"
     AWS_S3_REGION_NAME = 'auto'  # R2 uses 'auto' for region
+    
+    print(f"DEBUG SETTINGS: AWS_STORAGE_BUCKET_NAME = {AWS_STORAGE_BUCKET_NAME}")
+    print(f"DEBUG SETTINGS: AWS_S3_ENDPOINT_URL = {AWS_S3_ENDPOINT_URL}")
     
     # Storage settings
     AWS_S3_FILE_OVERWRITE = False
@@ -184,11 +191,16 @@ if USE_R2_STORAGE:
     # Use R2 for media files
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     
+    print(f"DEBUG SETTINGS: DEFAULT_FILE_STORAGE = {DEFAULT_FILE_STORAGE}")
+    
     # Public URL for media files
     MEDIA_URL = os.getenv('R2_PUBLIC_URL', 'https://pub-d1ba09fdc860448fad2976607846ddb1.r2.dev/')
     if not MEDIA_URL.endswith('/'):
         MEDIA_URL += '/'
+    
+    print(f"DEBUG SETTINGS: MEDIA_URL = {MEDIA_URL}")
 else:
+    print("DEBUG SETTINGS: R2 Storage is DISABLED - using local filesystem")
     # Local development - use local filesystem
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
