@@ -92,6 +92,11 @@ class IsAdminUser(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user and (request.user.is_staff or request.user.is_superuser)
 
+class AdminProductListCreateView(generics.ListCreateAPIView):
+    serializer_class = ProductSerializer
+    permission_classes = [IsAdminUser]
+    queryset = Product.objects.all()
+
 class AdminProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductSerializer
     permission_classes = [IsAdminUser]

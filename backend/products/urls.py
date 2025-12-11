@@ -8,6 +8,7 @@ from .views import (
     AttributeTermViewSet,
     VendorProductListCreateView,
     VendorProductDetailView,
+    AdminProductListCreateView,
     AdminProductDetailView,
     product_questions,
     answer_question,
@@ -58,6 +59,7 @@ urlpatterns = [
     path('categories/', CategoryViewSet.as_view({'get': 'list'}), name='category-list'), # Public list
     path('vendor/my-products/', VendorProductListCreateView.as_view(), name='vendor-product-list'),
     path('vendor/my-products/<slug:slug>/', VendorProductDetailView.as_view(), name='vendor-product-detail'),
+    path('admin/', AdminProductListCreateView.as_view(), name='admin-product-list-create'),
     path('admin/<int:pk>/', AdminProductDetailView.as_view(), name='admin-product-detail'),
     
     # Product reviews
