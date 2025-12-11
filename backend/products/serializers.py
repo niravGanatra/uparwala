@@ -89,21 +89,31 @@ class AdminProductSerializer(serializers.ModelSerializer):
         read_only_fields = ('created_at', 'updated_at')  # vendor NOT read-only for admins
     
     def create(self, validated_data):
+        print(f"DEBUG: AdminProductSerializer.create() called")
+        print(f"DEBUG: validated_data keys: {validated_data.keys()}")
+        
         # Create the product first
         product = Product.objects.create(**validated_data)
+        print(f"DEBUG: Product created with ID: {product.id}")
         
         # Handle image uploads from request.FILES
         request = self.context.get('request')
+        print(f"DEBUG: Request context exists: {request is not None}")
+        
         if request and request.FILES:
+            print(f"DEBUG: request.FILES keys: {list(request.FILES.keys())}")
             # Images are sent as image_0, image_1, etc.
             for key in request.FILES:
                 if key.startswith('image_'):
                     image_file = request.FILES[key]
+                    print(f"DEBUG: Creating ProductImage for key: {key}, file: {image_file.name}")
                     ProductImage.objects.create(
                         product=product,
                         image=image_file,
                         is_primary=(key == 'image_0')  # First image is primary
                     )
+        else:
+            print(f"DEBUG: No FILES in request or request is None")
         
         return product
 
