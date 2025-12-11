@@ -4,7 +4,7 @@ from decimal import Decimal
 from vendors.models import VendorProfile
 from django.conf import settings
 from django.utils.text import slugify
-from django.core.files.storage import default_storage
+from django.core.files.storage import default_storage, storages
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
@@ -220,7 +220,6 @@ class Product(models.Model):
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     # Use callable to get storage lazily (resolve at runtime, not import time)
-    from django.core.files.storage import storages
     image = models.ImageField(upload_to='product_images/', storage=lambda: storages['default'])
     is_primary = models.BooleanField(default=False)
     alt_text = models.CharField(max_length=255, blank=True)
