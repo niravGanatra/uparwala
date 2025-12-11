@@ -44,3 +44,28 @@ class OrderAdmin(admin.ModelAdmin):
 admin.site.register(Cart)
 admin.site.register(CartItem)
 admin.site.register(Order, OrderAdmin)
+
+@admin.register(OrderReturn)
+class OrderReturnAdmin(admin.ModelAdmin):
+    list_display = ['order', 'status', 'return_reason', 'created_at']
+    list_filter = ['status', 'return_reason', 'created_at']
+    search_fields = ['order__id', 'return_reason']
+
+@admin.register(AddressVerification)
+class AddressVerificationAdmin(admin.ModelAdmin):
+    list_display = ['order', 'status', 'method', 'verified_at']
+    list_filter = ['status', 'method']
+
+@admin.register(CODPincode)
+class CODPincodeAdmin(admin.ModelAdmin):
+    list_display = ['pincode', 'city', 'state', 'is_active']
+    search_fields = ['pincode', 'city']
+    list_filter = ['is_active', 'state']
+
+@admin.register(GiftOption)
+class GiftOptionAdmin(admin.ModelAdmin):
+    list_display = ['name', 'price', 'is_active']
+
+@admin.register(OrderGift)
+class OrderGiftAdmin(admin.ModelAdmin):
+    list_display = ['order', 'gift_option', 'from_name', 'to_name']

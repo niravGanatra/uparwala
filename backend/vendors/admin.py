@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     VendorProfile, Wallet, Withdrawal, Transaction,
-    StoreReview, StoreFollower, VendorCoupon, VendorAnnouncement
+    StoreReview, StoreFollower, VendorCoupon, VendorAnnouncement,
+    CommissionSettings, PayoutRequest
 )
 
 @admin.register(VendorProfile)
@@ -53,3 +54,14 @@ class VendorAnnouncementAdmin(admin.ModelAdmin):
     list_display = ['title', 'vendor', 'is_active', 'start_date', 'end_date', 'created_at']
     list_filter = ['is_active', 'start_date']
     search_fields = ['title', 'vendor__store_name']
+
+@admin.register(CommissionSettings)
+class CommissionSettingsAdmin(admin.ModelAdmin):
+    list_display = ['vendor', 'commission_rate', 'commission_type', 'is_active']
+    list_filter = ['commission_type', 'is_active']
+
+@admin.register(PayoutRequest)
+class PayoutRequestAdmin(admin.ModelAdmin):
+    list_display = ['vendor', 'requested_amount', 'status', 'requested_at']
+    list_filter = ['status', 'requested_at']
+    search_fields = ['vendor__store_name']

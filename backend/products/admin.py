@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import (Category, Product, ProductImage, ProductAttribute, Variation, ProductDownload,
-                      ProductQuestion, ProductAnswer, RecentlyViewed, ProductReview, ReviewHelpful, Wishlist)
+                      ProductQuestion, ProductAnswer, RecentlyViewed, ProductReview, ReviewHelpful, Wishlist,
+                      GlobalAttribute, AttributeTerm)
 
 # Import Phase 3 admin
 from .phase3_admin import BrandAdmin, ProductVideoAdmin, ProductVideoInline, ProductComparisonAdmin, ProductBundleAdmin
@@ -86,3 +87,39 @@ class VariationAdmin(admin.ModelAdmin):
 class ProductDownloadAdmin(admin.ModelAdmin):
     list_display = ['product', 'name']
     search_fields = ['product__name', 'name']
+
+class AttributeTermInline(admin.TabularInline):
+    model = AttributeTerm
+    extra = 1
+
+@admin.register(GlobalAttribute)
+class GlobalAttributeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'is_active']
+    prepopulated_fields = {'slug': ('name',)}
+    inlines = [AttributeTermInline]
+
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = ['product', 'user', 'rating', 'is_approved', 'created_at']
+    list_filter = ['is_approved', 'rating', 'created_at']
+    search_fields = ['product__name', 'user__username', 'title']
+    readonly_fields = ['created_at', 'updated_at']
+
+@admin.register(ReviewHelpful)
+class ReviewHelpfulAdmin(admin.ModelAdmin):
+    list_display = ['review', 'user', 'is_helpful']
+
+@admin.register(Wishlist)
+class WishlistAdmin(admin.ModelAdmin):
+    list_display = ['user', 'created_at']
+    filter_horizontal = ['products']
+
+@admin.register(ProductQuestion)
+class ProductQuestionAdmin(admin.ModelAdmin):
+    list_display = ['product', 'user', 'question', 'is_approved', 'created_at']
+    list_filter = ['is_approved']
+    search_fields = ['product__name', 'question']
+
+@admin.register(ProductAnswer)
+class ProductAnswerAdmin(admin.ModelAdmin):
+    list_display = ['question', 'user', 'answer', 'is_approved']
