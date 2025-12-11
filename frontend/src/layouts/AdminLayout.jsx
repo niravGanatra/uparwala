@@ -16,7 +16,8 @@ import {
     CheckCircle,
     Percent,
     FileText,
-    UserCheck
+    UserCheck,
+    FolderTree
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
@@ -45,6 +46,7 @@ const AdminLayout = () => {
             items: [
                 { path: '/admin/users', icon: Users, label: 'Users' },
                 { path: '/admin/products', icon: Package, label: 'Products' },
+                { path: '/admin/categories', icon: FolderTree, label: 'Categories' },
                 { path: '/admin/product-moderation', icon: CheckCircle, label: 'Moderation' },
                 { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
             ]
