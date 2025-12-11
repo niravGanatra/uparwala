@@ -123,3 +123,9 @@ class ProductQuestionAdmin(admin.ModelAdmin):
 @admin.register(ProductAnswer)
 class ProductAnswerAdmin(admin.ModelAdmin):
     list_display = ['question', 'user', 'answer', 'is_approved']
+
+@admin.register(RecentlyViewed)
+class RecentlyViewedAdmin(admin.ModelAdmin):
+    list_display = ['user', 'product', 'viewed_at']
+    list_filter = ['viewed_at']
+    search_fields = ['user__username', 'product__name']
