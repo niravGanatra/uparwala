@@ -187,31 +187,10 @@ if USE_R2_STORAGE:
         'CacheControl': 'max-age=86400',  # 1 day cache
     }
     AWS_QUERYSTRING_AUTH = False  # Don't add auth params to URLs
-    
-    # boto3 client configuration - prevent timeouts
-    AWS_S3_CUSTOM_DOMAIN = None  # Use endpoint URL directly
-    AWS_S3_USE_SSL = True
-    AWS_S3_VERIFY = True
-    
-    # Connection timeout configuration
     AWS_S3_SIGNATURE_VERSION = 's3v4'
-    AWS_S3_REGION_NAME = 'auto'
     
-    # Add connection pooling and timeout settings
-    import boto3
-    from botocore.config import Config
-    
-    AWS_S3_CLIENT_CONFIG = Config(
-        connect_timeout=5,  # 5 seconds to establish connection
-        read_timeout=10,  # 10 seconds to read response
-        retries={
-            'max_attempts': 3,
-            'mode': 'adaptive'
-        }
-    )
-    
-    # Use R2 for media files
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # Use custom R2 storage backend with timeout config
+    DEFAULT_FILE_STORAGE = 'config.storage_backends.CloudflareR2Storage'
     
     print(f"DEBUG SETTINGS: DEFAULT_FILE_STORAGE = {DEFAULT_FILE_STORAGE}")
     
