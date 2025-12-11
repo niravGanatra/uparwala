@@ -159,9 +159,39 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files (User uploaded content)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Media files configuration
+USE_R2_STORAGE = os.getenv('USE_R2_STORAGE', 'False') == 'True'
+
+if USE_R2_STORAGE:
+    # Cloudflare R2 Storage Configuration
+    INSTALLED_APPS += ['storages']
+    
+    # R2 Configuration
+    AWS_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', 'uparwala-media')
+    AWS_S3_ENDPOINT_URL = f"https://{os.getenv('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com"
+    AWS_S3_REGION_NAME = 'auto'  # R2 uses 'auto' for region
+    
+    # Storage settings
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',  # 1 day cache
+    }
+    AWS_QUERYSTRING_AUTH = False  # Don't add auth params to URLs
+    
+    # Use R2 for media files
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    
+    # Public URL for media files
+    MEDIA_URL = os.getenv('R2_PUBLIC_URL', 'https://pub-d1ba09fdc860448fad2976607846ddb1.r2.dev/')
+    if not MEDIA_URL.endswith('/'):
+        MEDIA_URL += '/'
+else:
+    # Local development - use local filesystem
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # Default primary key field type
