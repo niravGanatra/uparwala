@@ -13,6 +13,7 @@ const CheckoutPage = () => {
     const { cart, fetchCart, clearCart } = useCart();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('cod');
     const [shippingAddress, setShippingAddress] = useState({
         full_name: '',
         phone: '',
@@ -57,22 +58,105 @@ const CheckoutPage = () => {
         return true;
     };
 
+    const loadRazorpay = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => {
+                resolve(true);
+            };
+            script.onerror = () => {
+                resolve(false);
+            };
+            document.body.appendChild(script);
+        });
+    };
+
     const handlePlaceOrder = async () => {
         if (!validateForm()) return;
 
         setLoading(true);
         try {
-            const response = await api.post('/orders/orders/', {
+            // 1. Create the base order first
+            const orderResponse = await api.post('/orders/orders/', {
                 shipping_address: shippingAddress
             });
 
-            toast.success('Order placed successfully!', {
-                duration: 3000,
-                position: 'bottom-right',
-            });
+            const orderId = orderResponse.data.id;
 
-            clearCart();
-            navigate('/orders');
+            if (paymentMethod === 'cod') {
+                // If COD, we are done
+                toast.success('Order placed successfully!', {
+                    duration: 3000,
+                    position: 'bottom-right',
+                });
+                clearCart();
+                navigate('/orders');
+            } else if (paymentMethod === 'razorpay') {
+                // 2. Load Razorpay SDK
+                const res = await loadRazorpay();
+                if (!res) {
+                    toast.error('Razorpay SDK failed to load. Are you online?');
+                    return;
+                }
+
+                // 3. Create Razorpay Order
+                const paymentOrderResponse = await api.post('/payments/create-order/', {
+                    order_id: orderId,
+                    amount: calculateTotal()
+                });
+
+                const { razorpay_order_id, amount, currency, key_id, payment_id } = paymentOrderResponse.data;
+
+                // 4. Open Razorpay Modal
+                const options = {
+                    key: key_id,
+                    amount: amount.toString(),
+                    currency: currency,
+                    name: "Uparwala",
+                    description: "Payment for Order #" + orderId,
+                    order_id: razorpay_order_id,
+                    handler: async function (response) {
+                        try {
+                            // 5. Verify Payment
+                            const verifyResponse = await api.post('/payments/verify/', {
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                order_id: orderId
+                            });
+
+                            if (verifyResponse.data.success) {
+                                toast.success('Payment successful! Order placed.', {
+                                    duration: 3000,
+                                    position: 'bottom-right',
+                                });
+                                clearCart();
+                                navigate('/orders');
+                            }
+                        } catch (error) {
+                            console.error('Payment verification failed', error);
+                            toast.error('Payment verification failed. Please contact support.');
+                        }
+                    },
+                    prefill: {
+                        name: shippingAddress.full_name,
+                        contact: shippingAddress.phone,
+                    },
+                    theme: {
+                        color: "#ea580c", // Orange-600 to match theme
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            toast('Payment cancelled', { icon: '⚠️' });
+                        }
+                    }
+                };
+
+                const paymentObject = new window.Razorpay(options);
+                paymentObject.open();
+            }
+
         } catch (error) {
             console.error('Checkout failed:', error);
             const errorMessage = error.response?.data?.error || 'Checkout failed. Please try again.';
@@ -81,6 +165,9 @@ const CheckoutPage = () => {
                 position: 'bottom-right',
             });
         } finally {
+            // Only set loading false if it was a COD order or if payment initialization failed.
+            // For Razorpay, we want to keep loading state or handle it differently while modal is open? 
+            // Actually, once modal opens, we can stop loading.
             setLoading(false);
         }
     };
@@ -208,30 +295,34 @@ const CheckoutPage = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                <div className="flex items-center p-4 border rounded-lg bg-slate-50">
+                                <div className={`flex items-center p-4 border rounded-lg ${paymentMethod === 'cod' ? 'bg-orange-50 border-orange-200' : ''}`}>
                                     <input
                                         type="radio"
                                         id="cod"
                                         name="payment"
-                                        defaultChecked
-                                        className="mr-3"
+                                        value="cod"
+                                        checked={paymentMethod === 'cod'}
+                                        onChange={(e) => setPaymentMethod(e.target.value)}
+                                        className="mr-3 accent-orange-600"
                                     />
                                     <label htmlFor="cod" className="flex-1 cursor-pointer">
                                         <div className="font-medium">Cash on Delivery</div>
                                         <div className="text-sm text-muted-foreground">Pay when you receive your order</div>
                                     </label>
                                 </div>
-                                <div className="flex items-center p-4 border rounded-lg opacity-50">
+                                <div className={`flex items-center p-4 border rounded-lg ${paymentMethod === 'razorpay' ? 'bg-orange-50 border-orange-200' : ''}`}>
                                     <input
                                         type="radio"
-                                        id="online"
+                                        id="razorpay"
                                         name="payment"
-                                        disabled
-                                        className="mr-3"
+                                        value="razorpay"
+                                        checked={paymentMethod === 'razorpay'}
+                                        onChange={(e) => setPaymentMethod(e.target.value)}
+                                        className="mr-3 accent-orange-600"
                                     />
-                                    <label htmlFor="online" className="flex-1">
+                                    <label htmlFor="razorpay" className="flex-1 cursor-pointer">
                                         <div className="font-medium">Online Payment</div>
-                                        <div className="text-sm text-muted-foreground">Coming soon - Stripe/Razorpay</div>
+                                        <div className="text-sm text-muted-foreground">Pay securely via Razorpay</div>
                                     </label>
                                 </div>
                             </div>
@@ -274,7 +365,7 @@ const CheckoutPage = () => {
                             </div>
 
                             <Button
-                                className="w-full"
+                                className="w-full bg-orange-600 hover:bg-orange-700"
                                 size="lg"
                                 onClick={handlePlaceOrder}
                                 disabled={loading}
