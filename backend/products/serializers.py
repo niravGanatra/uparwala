@@ -77,6 +77,16 @@ class ProductSerializer(serializers.ModelSerializer):
             }
         return None
 
+
+class AdminProductSerializer(serializers.ModelSerializer):
+    """Serializer for admin product creation - allows setting vendor"""
+    images = ProductImageSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Product
+        fields = '__all__'
+        read_only_fields = ('created_at', 'updated_at')  # vendor NOT read-only for admins
+
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product

@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Category, Product, ProductQuestion, ProductAnswer, RecentlyViewed
-from .serializers import CategorySerializer, ProductSerializer, ProductCreateSerializer
+from .serializers import CategorySerializer, ProductSerializer, ProductCreateSerializer, AdminProductSerializer
 from .qa_serializers import ProductQuestionSerializer, ProductAnswerSerializer
 from vendors.models import VendorProfile
 from users.permissions import IsApprovedVendor
@@ -93,7 +93,7 @@ class IsAdminUser(permissions.BasePermission):
         return request.user and (request.user.is_staff or request.user.is_superuser)
 
 class AdminProductListCreateView(generics.ListCreateAPIView):
-    serializer_class = ProductSerializer
+    serializer_class = AdminProductSerializer  # Use admin serializer that allows vendor assignment
     permission_classes = [IsAdminUser]
     queryset = Product.objects.all()
 
