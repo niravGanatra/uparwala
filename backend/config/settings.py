@@ -248,8 +248,9 @@ LOGIN_URL = 'http://localhost:5173/login'
 # New Allauth Configuration (Replaces deprecated settings)
 # Asterisk (*) means required field
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-ACCOUNT_LOGIN_METHODS = ['email']  # Only email login, no username
-# ACCOUNT_USERNAME_REQUIRED = False # Already set above
+ACCOUNT_LOGIN_METHODS = {'email'}  # Only email login, no username
+# ACCOUNT_USERNAME_REQUIRED = False # properties accessed by dj_rest_auth causng warnings, but setting them causes allauth warnings.
+# We will rely on SIGNUP_FIELDS as per allauth recommendation.
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
 
@@ -282,15 +283,30 @@ REST_AUTH = {
 AUTH_USER_MODEL = 'users.User'
 
 # CORS Settings
+# CORS Settings
+def clean_cors_origin(url):
+    """Remove path and trailing slash from URL for CORS settings"""
+    if not url:
+        return ""
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    if parsed.scheme and parsed.netloc:
+        return f"{parsed.scheme}://{parsed.netloc}"
+    return url.strip("/").split("?")[0].split("#")[0]
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    os.getenv('FRONTEND_URL', 'http://localhost:5173'),
+    clean_cors_origin(os.getenv('FRONTEND_URL', 'http://localhost:5173')),
     "https://uparwala.in",
     "https://www.uparwala.in",
 ]
+
 # Allow adding more origins via comma-separated env var
 if os.getenv('CORS_ALLOWED_ORIGINS'):
-    CORS_ALLOWED_ORIGINS.extend(os.getenv('CORS_ALLOWED_ORIGINS').split(','))
+    for origin in os.getenv('CORS_ALLOWED_ORIGINS').split(','):
+        cleaned = clean_cors_origin(origin.strip())
+        if cleaned:
+            CORS_ALLOWED_ORIGINS.append(cleaned)
 
 CORS_ALLOW_CREDENTIALS = True
 
