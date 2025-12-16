@@ -252,6 +252,11 @@ const Checkout = () => {
                 payload.customer_note = customerNote;
             }
 
+            // Include selected item IDs for selective checkout
+            if (selectedItemIds && selectedItemIds.length > 0) {
+                payload.selected_item_ids = selectedItemIds;
+            }
+
             const response = await api.post('/orders/checkout/', payload);
 
             if (paymentMethod === 'razorpay') {

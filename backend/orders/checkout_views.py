@@ -35,6 +35,7 @@ class CheckoutView(APIView):
         billing_address_id = request.data.get('billing_address_id', shipping_address_id)
         payment_method = request.data.get('payment_method', 'razorpay')
         coupon_code = request.data.get('coupon_code')
+        selected_item_ids = request.data.get('selected_item_ids', [])  # For selective checkout
         
         # Validate addresses
         try:
@@ -49,7 +50,18 @@ class CheckoutView(APIView):
         # Get cart
         try:
             cart = Cart.objects.get(user=user)
-            cart_items = cart.items.all()
+            all_cart_items = cart.items.all()
+            
+            # Filter by selected items if provided (selective checkout)
+            if selected_item_ids:
+                cart_items = all_cart_items.filter(id__in=selected_item_ids)
+                if not cart_items.exists():
+                    return Response(
+                        {'error': 'No valid items selected for checkout'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            else:
+                cart_items = all_cart_items
             
             if not cart_items.exists():
                 return Response(
@@ -197,7 +209,7 @@ class CheckoutView(APIView):
             item.product.stock -= item.quantity
             item.product.save()
         
-        # Clear cart
+        # Clear only the items that were checked out from cart
         cart_items.delete()
         
         # Create payment based on method
