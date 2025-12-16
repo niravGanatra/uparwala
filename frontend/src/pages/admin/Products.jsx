@@ -14,6 +14,7 @@ const AdminProducts = () => {
     const [categories, setCategories] = useState([]);
     const [vendors, setVendors] = useState([]);
     const [brands, setBrands] = useState([]);
+    const [taxSlabs, setTaxSlabs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -39,7 +40,30 @@ const AdminProducts = () => {
         manage_stock: true,
         weight: '',
         featured: false,
-        is_active: true
+        is_active: true,
+        // Dimensions
+        length: '',
+        width: '',
+        height: '',
+        // Tax
+        tax_status: 'taxable',
+        tax_slab: '',
+        tax_class: '',
+        // Inventory
+        stock_status: 'instock',
+        backorders: 'no',
+        low_stock_threshold: '',
+        // Shipping
+        shipping_class: '',
+        // Type
+        virtual: false,
+        downloadable: false,
+        // Extra
+        manufacturing_country: '',
+        whats_in_box: '',
+        safety_instructions: '',
+        handling_time: 2,
+        expiry_date: '',
     });
 
     useEffect(() => {
@@ -47,6 +71,7 @@ const AdminProducts = () => {
         fetchCategories();
         fetchVendors();
         fetchBrands();
+        fetchTaxSlabs();
     }, []);
 
     const fetchProducts = async () => {
@@ -88,6 +113,15 @@ const AdminProducts = () => {
         }
     };
 
+    const fetchTaxSlabs = async () => {
+        try {
+            const response = await api.get('/products/manage/tax-slabs/');
+            setTaxSlabs(response.data);
+        } catch (error) {
+            console.error('Failed to fetch tax slabs:', error);
+        }
+    };
+
     const handleViewProduct = (product) => {
         setSelectedProduct(product);
         setIsViewModalOpen(true);
@@ -110,7 +144,26 @@ const AdminProducts = () => {
             manage_stock: product.manage_stock !== undefined ? product.manage_stock : true,
             weight: product.weight || '',
             featured: product.featured || false,
-            is_active: product.is_active !== undefined ? product.is_active : true
+            is_active: product.is_active !== undefined ? product.is_active : true,
+
+            // New fields
+            length: product.length || '',
+            width: product.width || '',
+            height: product.height || '',
+            tax_status: product.tax_status || 'taxable',
+            tax_slab: product.tax_slab || '',
+            tax_class: product.tax_class || '',
+            stock_status: product.stock_status || 'instock',
+            backorders: product.backorders || 'no',
+            low_stock_threshold: product.low_stock_threshold || '',
+            shipping_class: product.shipping_class || '',
+            virtual: product.virtual || false,
+            downloadable: product.downloadable || false,
+            manufacturing_country: product.manufacturing_country || '',
+            whats_in_box: product.whats_in_box || '',
+            safety_instructions: product.safety_instructions || '',
+            handling_time: product.handling_time || 2,
+            expiry_date: product.expiry_date || ''
         });
         setIsEditModalOpen(true);
     };
@@ -163,7 +216,24 @@ const AdminProducts = () => {
             manage_stock: true,
             weight: '',
             featured: false,
-            is_active: true
+            is_active: true,
+            length: '',
+            width: '',
+            height: '',
+            tax_status: 'taxable',
+            tax_slab: '',
+            tax_class: '',
+            stock_status: 'instock',
+            backorders: 'no',
+            low_stock_threshold: '',
+            shipping_class: '',
+            virtual: false,
+            downloadable: false,
+            manufacturing_country: '',
+            whats_in_box: '',
+            safety_instructions: '',
+            handling_time: 2,
+            expiry_date: ''
         });
         setImageFiles([]);
     };
@@ -594,6 +664,7 @@ const AdminProducts = () => {
                     vendors={vendors}
                     categories={categories}
                     brands={brands}
+                    taxSlabs={taxSlabs}
                     onSubmit={handleAddProduct}
                     submitText="Add Product"
                 />
@@ -609,6 +680,7 @@ const AdminProducts = () => {
                     vendors={vendors}
                     categories={categories}
                     brands={brands}
+                    taxSlabs={taxSlabs}
                     onSubmit={handleUpdateProduct}
                     submitText="Update Product"
                 />
