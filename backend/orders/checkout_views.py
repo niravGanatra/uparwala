@@ -37,6 +37,11 @@ class CheckoutView(APIView):
         coupon_code = request.data.get('coupon_code')
         selected_item_ids = request.data.get('selected_item_ids', [])  # For selective checkout
         
+        # DEBUG: Log selective checkout
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Checkout - selected_item_ids: {selected_item_ids}")
+        
         # Validate addresses
         try:
             shipping_address = Address.objects.get(id=shipping_address_id, user=user)
@@ -54,13 +59,16 @@ class CheckoutView(APIView):
             
             # Filter by selected items if provided (selective checkout)
             if selected_item_ids:
+                logger.info(f"Filtering {all_cart_items.count()} cart items to selected: {selected_item_ids}")
                 cart_items = all_cart_items.filter(id__in=selected_item_ids)
+                logger.info(f"After filter: {cart_items.count()} items")
                 if not cart_items.exists():
                     return Response(
                         {'error': 'No valid items selected for checkout'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
             else:
+                logger.info("No selected_item_ids - using all cart items")
                 cart_items = all_cart_items
             
             if not cart_items.exists():
@@ -205,9 +213,8 @@ class CheckoutView(APIView):
                 igst_amount=item_tax.get('igst_amount', 0),
             )
             
-            # Reduce stock
-            item.product.stock -= item.quantity
-            item.product.save()
+            # NOTE: Stock reduction moved to payment verification
+            # Stock should only be reduced when payment is confirmed
         
         # Clear only the items that were checked out from cart
         cart_items.delete()
@@ -254,6 +261,14 @@ class CheckoutView(APIView):
             # Cash on Delivery - no payment gateway needed
             order.payment_status = 'cod'
             order.save()
+            
+            # For COD, reduce stock immediately (accepted business risk)
+            for order_item in order.items.all():
+                product = order_item.product
+                product.stock -= order_item.quantity
+                if product.stock < 0:
+                    product.stock = 0
+                product.save()
             
             return Response({
                 'order_id': order.id,

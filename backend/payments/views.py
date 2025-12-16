@@ -103,6 +103,14 @@ class VerifyPaymentView(APIView):
             order.status = 'PROCESSING'
             order.save()
             
+            # Reduce stock NOW that payment is confirmed
+            for order_item in order.items.all():
+                product = order_item.product
+                product.stock -= order_item.quantity
+                if product.stock < 0:
+                    product.stock = 0  # Prevent negative stock
+                product.save()
+            
             return Response({
                 'success': True,
                 'message': 'Payment verified successfully',
