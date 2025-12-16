@@ -136,14 +136,16 @@ class CalculateTotalsView(APIView):
         # Debug logging
         print(f"DEBUG: Calculate totals request data: {request.data}")
         
+        user = request.user
         state_code = request.data.get('state_code')
         cart_id = request.data.get('cart_id')
+        gift_option_id = request.data.get('gift_option_id')
+        selected_item_ids = request.data.get('selected_item_ids', [])  # For selective checkout
         
         print(f"DEBUG: state_code = '{state_code}', cart_id = '{cart_id}'")
         
         if not state_code:
             print(f"DEBUG: State code validation failed - state_code is: '{state_code}'")
-            return Response({'error': 'State code is required'}, status=status.HTTP_400_BAD_REQUEST)
             return Response(
                 {'error': 'State code is required'},
                 status=status.HTTP_400_BAD_REQUEST
