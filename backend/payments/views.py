@@ -171,53 +171,54 @@ class CalculateTotalsView(APIView):
                 {'error': 'Cart not found'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
-            # Calculate subtotal
-            subtotal = Decimal('0')
-            discount_total = Decimal('0')
-            from orders.services import PriceCalculatorService
+        
+        # Calculate subtotal
+        subtotal = Decimal('0')
+        discount_total = Decimal('0')
+        from orders.services import PriceCalculatorService
 
-            for item in cart_items:
-                price_info = PriceCalculatorService.calculate_price(item.product)
-                # Ensure we work with Decimals
-                final_price = Decimal(str(price_info['price']))
-                quantity = Decimal(str(item.quantity))
-                
-                subtotal += final_price * quantity
-                discount_total += Decimal(str(price_info['discount_amount'])) * quantity
+        for item in cart_items:
+            price_info = PriceCalculatorService.calculate_price(item.product)
+            # Ensure we work with Decimals
+            final_price = Decimal(str(price_info['price']))
+            quantity = Decimal(str(item.quantity))
             
-            # Calculate shipping
-            shipping_calc = ShippingCalculator()
-            shipping_data = shipping_calc.calculate_shipping(cart_items, state_code, subtotal)
-            shipping_cost = Decimal(str(shipping_data['total_shipping']))
-            
-            # Ensure shipping data values are floats for JSON
-            shipping_data['base_rate'] = float(shipping_data['base_rate'])
-            shipping_data['weight_charge'] = float(shipping_data['weight_charge'])
-            shipping_data['total_shipping'] = float(shipping_data['total_shipping'])
+            subtotal += final_price * quantity
+            discount_total += Decimal(str(price_info['discount_amount'])) * quantity
+        
+        # Calculate shipping
+        shipping_calc = ShippingCalculator()
+        shipping_data = shipping_calc.calculate_shipping(cart_items, state_code, subtotal)
+        shipping_cost = Decimal(str(shipping_data['total_shipping']))
+        
+        # Ensure shipping data values are floats for JSON
+        shipping_data['base_rate'] = float(shipping_data['base_rate'])
+        shipping_data['weight_charge'] = float(shipping_data['weight_charge'])
+        shipping_data['total_shipping'] = float(shipping_data['total_shipping'])
 
-            # Calculate tax using product-level tax slabs
-            tax_calc = TaxCalculator()
-            tax_data = tax_calc.calculate_gst_with_slabs(cart_items, state_code)
-            tax_amount = Decimal(str(tax_data['total_tax']))  # Convert float back to Decimal for calculation
-            
-            # Calculate delivery estimate
-            delivery_estimate = shipping_calc.estimate_delivery_date(state_code)
-            
-            # Handle Gift Wrapping
-            gift_option_id = request.data.get('gift_option_id')
-            gift_wrapping_amount = Decimal('0')
-            if gift_option_id:
-                from orders.models import GiftOption
-                try:
-                    gift_option = GiftOption.objects.get(id=gift_option_id, is_active=True)
-                    gift_wrapping_amount = gift_option.price
-                except GiftOption.DoesNotExist:
-                    pass
+        # Calculate tax using product-level tax slabs
+        tax_calc = TaxCalculator()
+        tax_data = tax_calc.calculate_gst_with_slabs(cart_items, state_code)
+        tax_amount = Decimal(str(tax_data['total_tax']))  # Convert float back to Decimal for calculation
+        
+        # Calculate delivery estimate
+        delivery_estimate = shipping_calc.estimate_delivery_date(state_code)
+        
+        # Handle Gift Wrapping
+        gift_option_id = request.data.get('gift_option_id')
+        gift_wrapping_amount = Decimal('0')
+        if gift_option_id:
+            from orders.models import GiftOption
+            try:
+                gift_option = GiftOption.objects.get(id=gift_option_id, is_active=True)
+                gift_wrapping_amount = gift_option.price
+            except GiftOption.DoesNotExist:
+                pass
  
-            # Calculate total
-            total = subtotal + shipping_cost + tax_amount + gift_wrapping_amount
-            
+        # Calculate total
+        total = subtotal + shipping_cost + tax_amount + gift_wrapping_amount
+        
+        try:
             return Response({
                 'subtotal': float(subtotal),
                 'discount_total': float(discount_total),
@@ -229,7 +230,6 @@ class CalculateTotalsView(APIView):
                 'delivery_estimate': delivery_estimate,
                 'items_count': cart_items.count()
             })
-            
         except Exception as e:
             import traceback
             print(f"Calculate totals error: {str(e)}")
