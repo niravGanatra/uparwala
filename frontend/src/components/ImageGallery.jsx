@@ -23,23 +23,70 @@ const ImageGallery = ({ images = [], productName }) => {
         <div className="space-y-4">
             {/* Main Image with Zoom */}
             <div className="relative aspect-square bg-white rounded-lg overflow-hidden border border-slate-200 group">
-                <TransformWrapper>
-                    <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full">
-                        <img
-                            src={images[index].image}
-                            alt={productName}
-                            className="w-full h-full object-contain"
-                        />
-                    </TransformComponent>
+                <TransformWrapper
+                    initialScale={1}
+                    minScale={1}
+                    maxScale={4}
+                    wheel={{ step: 0.1 }}
+                    doubleClick={{ mode: "zoomIn" }}
+                >
+                    {({ zoomIn, zoomOut, resetTransform }) => (
+                        <>
+                            <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full">
+                                <img
+                                    src={images[index].image}
+                                    alt={productName}
+                                    className="w-full h-full object-contain cursor-zoom-in"
+                                />
+                            </TransformComponent>
+
+                            {/* Zoom Controls */}
+                            <div className="absolute bottom-4 left-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={() => zoomIn()}
+                                    className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110"
+                                    title="Zoom In"
+                                >
+                                    <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                                    </svg>
+                                </button>
+                                <button
+                                    onClick={() => zoomOut()}
+                                    className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110"
+                                    title="Zoom Out"
+                                >
+                                    <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                                    </svg>
+                                </button>
+                                <button
+                                    onClick={() => resetTransform()}
+                                    className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110"
+                                    title="Reset Zoom"
+                                >
+                                    <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </TransformWrapper>
 
-                {/* Lightbox Trigger */}
+                {/* Fullscreen/Lightbox Trigger */}
                 <button
                     onClick={() => setOpen(true)}
-                    className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                    className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:scale-110"
+                    title="View Fullscreen"
                 >
                     <Maximize2 className="w-5 h-5 text-slate-700" />
                 </button>
+
+                {/* Hint Text */}
+                <div className="absolute top-4 left-4 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                    Double-click or scroll to zoom
+                </div>
             </div>
 
             {/* Thumbnails */}
