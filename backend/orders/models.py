@@ -93,6 +93,13 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2) # Price at time of purchase
     
+    # Tax details (product-level)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Tax rate applied (%)")
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Total tax for this item")
+    cgst_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="CGST amount")
+    sgst_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="SGST amount")
+    igst_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="IGST amount")
+    
     # Payout tracking
     paid_to_vendor = models.BooleanField(default=False)
     payout_date = models.DateTimeField(null=True, blank=True)

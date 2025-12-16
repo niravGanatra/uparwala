@@ -94,9 +94,9 @@ class CheckoutView(APIView):
         )
         shipping_cost = Decimal(str(shipping_data['total_shipping']))
         
-        # Calculate tax
+        # Calculate tax using product-level tax slabs
         tax_calc = TaxCalculator()
-        tax_data = tax_calc.calculate_gst(subtotal, shipping_address.state_code)
+        tax_data = tax_calc.calculate_gst_with_slabs(cart_items, shipping_address.state_code)
         tax_amount = Decimal(str(tax_data['total_tax']))
         
         # Apply coupon (TODO: implement coupon logic)
@@ -176,12 +176,21 @@ class CheckoutView(APIView):
         
         # Create order items and reduce stock
         for item in cart_items:
+            # Find corresponding tax breakdown for this item
+            item_tax = next((t for t in tax_data['items'] if t['product_id'] == item.product.id), {})
+            
             OrderItem.objects.create(
                 order=order,
                 product=item.product,
                 vendor=item.product.vendor,
                 quantity=item.quantity,
-                price=item.product.price
+                price=item.product.price,
+                # Tax details
+                tax_rate=item_tax.get('tax_rate', 0),
+                tax_amount=item_tax.get('tax_amount', 0),
+                cgst_amount=item_tax.get('cgst_amount', 0),
+                sgst_amount=item_tax.get('sgst_amount', 0),
+                igst_amount=item_tax.get('igst_amount', 0),
             )
             
             # Reduce stock

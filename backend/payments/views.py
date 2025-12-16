@@ -175,9 +175,9 @@ class CalculateTotalsView(APIView):
             shipping_data['weight_charge'] = float(shipping_data['weight_charge'])
             shipping_data['total_shipping'] = float(shipping_data['total_shipping'])
 
-            # Calculate tax
+            # Calculate tax using product-level tax slabs
             tax_calc = TaxCalculator()
-            tax_data = tax_calc.calculate_gst(subtotal, state_code)
+            tax_data = tax_calc.calculate_gst_with_slabs(cart_items, state_code)
             tax_amount = Decimal(str(tax_data['total_tax']))  # Convert float back to Decimal for calculation
             
             # Calculate delivery estimate
