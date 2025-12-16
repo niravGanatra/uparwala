@@ -5,6 +5,7 @@ import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import { Search, Plus, Eye, Trash2, Ban, Package, Upload } from 'lucide-react';
+import SpiritualLoader from '../../components/ui/spiritual-loader';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -21,10 +22,39 @@ const VendorProducts = () => {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
+        short_description: '',
+        sku: '',
         price: '',
+        regular_price: '',
+        sale_price: '',
         stock: '',
         category: '',
-        is_active: true
+        brand: '',
+        is_active: true,
+        // Dimensions
+        length: '',
+        width: '',
+        height: '',
+        weight: '',
+        // Tax
+        tax_status: 'taxable',
+        tax_class: '',
+        // Inventory
+        manage_stock: true,
+        stock_status: 'instock',
+        backorders: 'no',
+        low_stock_threshold: '',
+        // Shipping
+        shipping_class: '',
+        // Type
+        virtual: false,
+        downloadable: false,
+        // Extra
+        manufacturing_country: '',
+        whats_in_box: '',
+        safety_instructions: '',
+        handling_time: 2,
+        expiry_date: '',
     });
     const [imageFiles, setImageFiles] = useState([]);
 
@@ -94,13 +124,43 @@ const VendorProducts = () => {
     const handleAddProduct = async (e) => {
         e.preventDefault();
 
-        const productData = new FormData();
-        productData.append('name', formData.name);
-        productData.append('description', formData.description);
-        productData.append('price', formData.price);
-        productData.append('stock', formData.stock);
-        productData.append('category', formData.category);
+        // Helper to append if value exists
+        const appendIf = (key, value) => {
+            if (value !== null && value !== undefined && value !== '') {
+                productData.append(key, value);
+            }
+        };
+
+        appendIf('name', formData.name);
+        appendIf('description', formData.description);
+        appendIf('short_description', formData.short_description);
+        appendIf('sku', formData.sku);
+        appendIf('regular_price', formData.regular_price);
+        appendIf('sale_price', formData.sale_price);
+        appendIf('stock', formData.stock);
+        appendIf('category', formData.category);
+        appendIf('brand', formData.brand);
         productData.append('is_active', formData.is_active);
+        productData.append('manage_stock', formData.manage_stock);
+        productData.append('virtual', formData.virtual);
+        productData.append('downloadable', formData.downloadable);
+
+        // Append new fields
+        appendIf('length', formData.length);
+        appendIf('width', formData.width);
+        appendIf('height', formData.height);
+        appendIf('weight', formData.weight);
+        appendIf('tax_status', formData.tax_status);
+        appendIf('tax_class', formData.tax_class);
+        appendIf('stock_status', formData.stock_status);
+        appendIf('backorders', formData.backorders);
+        appendIf('low_stock_threshold', formData.low_stock_threshold);
+        appendIf('shipping_class', formData.shipping_class);
+        appendIf('manufacturing_country', formData.manufacturing_country);
+        appendIf('whats_in_box', formData.whats_in_box);
+        appendIf('safety_instructions', formData.safety_instructions);
+        appendIf('handling_time', formData.handling_time);
+        appendIf('expiry_date', formData.expiry_date);
 
         // Add images
         imageFiles.forEach((file, index) => {
@@ -115,7 +175,17 @@ const VendorProducts = () => {
             });
             toast.success('Product added successfully!');
             setIsAddModalOpen(false);
-            setFormData({ name: '', description: '', price: '', stock: '', category: '', is_active: true });
+            setFormData({
+                name: '', description: '', short_description: '', sku: '',
+                price: '', regular_price: '', sale_price: '', stock: '',
+                category: '', brand: '', is_active: true,
+                length: '', width: '', height: '', weight: '',
+                tax_status: 'taxable', tax_class: '',
+                manage_stock: true, stock_status: 'instock', backorders: 'no', low_stock_threshold: '',
+                shipping_class: '', virtual: false, downloadable: false,
+                manufacturing_country: '', whats_in_box: '', safety_instructions: '',
+                handling_time: 2, expiry_date: ''
+            });
             setImageFiles([]);
             fetchProducts();
         } catch (error) {
@@ -163,7 +233,9 @@ const VendorProducts = () => {
                 </CardHeader>
                 <CardContent>
                     {loading ? (
-                        <p className="text-center py-8 text-slate-500">Loading products...</p>
+                        <div className="py-12 flex justify-center">
+                            <SpiritualLoader size="lg" />
+                        </div>
                     ) : products.length === 0 ? (
                         <div className="text-center py-12">
                             <Package className="h-16 w-16 text-slate-300 mx-auto mb-4" />
@@ -306,6 +378,19 @@ const VendorProducts = () => {
                             />
                         </div>
                         <div>
+                            <label className="block text-sm font-medium mb-2">Sale Price (₹)</label>
+                            <Input
+                                type="number"
+                                step="0.01"
+                                value={formData.sale_price}
+                                onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
+                                placeholder="0.00"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
                             <label className="block text-sm font-medium mb-2">Stock *</label>
                             <Input
                                 type="number"
@@ -313,6 +398,88 @@ const VendorProducts = () => {
                                 onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                                 required
                                 placeholder="0"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">SKU</label>
+                            <Input
+                                value={formData.sku}
+                                onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                                placeholder="SKU"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Dimensions & Weight */}
+                    <div className="border-t pt-4">
+                        <h4 className="font-medium mb-2">Shipping Dimensions</h4>
+                        <div className="grid grid-cols-4 gap-2">
+                            <div>
+                                <label className="text-xs">Length (cm)</label>
+                                <Input type="number" step="0.01" value={formData.length} onChange={e => setFormData({ ...formData, length: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="text-xs">Width (cm)</label>
+                                <Input type="number" step="0.01" value={formData.width} onChange={e => setFormData({ ...formData, width: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="text-xs">Height (cm)</label>
+                                <Input type="number" step="0.01" value={formData.height} onChange={e => setFormData({ ...formData, height: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="text-xs">Weight (kg)</label>
+                                <Input type="number" step="0.01" value={formData.weight} onChange={e => setFormData({ ...formData, weight: e.target.value })} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Inventory & Tax */}
+                    <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Tax Status</label>
+                            <select
+                                value={formData.tax_status}
+                                onChange={(e) => setFormData({ ...formData, tax_status: e.target.value })}
+                                className="w-full px-3 py-2 border rounded-lg"
+                            >
+                                <option value="taxable">Taxable</option>
+                                <option value="shipping">Shipping only</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Stock Status</label>
+                            <select
+                                value={formData.stock_status}
+                                onChange={(e) => setFormData({ ...formData, stock_status: e.target.value })}
+                                className="w-full px-3 py-2 border rounded-lg"
+                            >
+                                <option value="instock">In Stock</option>
+                                <option value="outofstock">Out of Stock</option>
+                                <option value="onbackorder">On Backorder</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Additional Info */}
+                    <div className="border-t pt-4 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Country of Origin</label>
+                                <Input value={formData.manufacturing_country} onChange={e => setFormData({ ...formData, manufacturing_country: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Box Contents</label>
+                                <Input value={formData.whats_in_box} onChange={e => setFormData({ ...formData, whats_in_box: e.target.value })} />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Short Description</label>
+                            <textarea
+                                value={formData.short_description}
+                                onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+                                className="w-full px-3 py-2 border rounded-lg"
+                                rows="2"
                             />
                         </div>
                     </div>
@@ -353,14 +520,34 @@ const VendorProducts = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={formData.is_active}
-                            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                            id="is-active"
-                        />
-                        <label htmlFor="is-active" className="text-sm">Make product active immediately</label>
+                    <div className="flex flex-wrap gap-4 pt-2">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={formData.is_active}
+                                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                                id="is-active"
+                            />
+                            <label htmlFor="is-active" className="text-sm">Active</label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={formData.manage_stock}
+                                onChange={(e) => setFormData({ ...formData, manage_stock: e.target.checked })}
+                                id="manage-stock"
+                            />
+                            <label htmlFor="manage-stock" className="text-sm">Manage Stock</label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={formData.virtual}
+                                onChange={(e) => setFormData({ ...formData, virtual: e.target.checked })}
+                                id="virtual"
+                            />
+                            <label htmlFor="virtual" className="text-sm">Virtual</label>
+                        </div>
                     </div>
 
                     <div className="flex gap-2 justify-end pt-4">

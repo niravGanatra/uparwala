@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Store, Mail, Phone, MapPin, FileText, Hash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import SpiritualLoader from '../components/ui/spiritual-loader';
 
 const VendorRegistrationPage = () => {
     const [formData, setFormData] = useState({
@@ -73,7 +74,12 @@ const VendorRegistrationPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 to-slate-100 py-12 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 to-slate-100 py-12 px-4 relative">
+            {loading && (
+                <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <SpiritualLoader size="lg" />
+                </div>
+            )}
             <div className="max-w-3xl mx-auto">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -379,14 +385,7 @@ const VendorRegistrationPage = () => {
                                     className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
                                     disabled={loading}
                                 >
-                                    {loading ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            Submitting Application...
-                                        </div>
-                                    ) : (
-                                        'Submit Vendor Application'
-                                    )}
+                                    {loading ? 'Processing...' : 'Submit Vendor Application'}
                                 </Button>
 
                                 <p className="text-center text-sm text-slate-600">

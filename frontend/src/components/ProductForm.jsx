@@ -73,6 +73,29 @@ const ProductForm = ({
                 </div>
             </div>
 
+            {/* Dimensions */}
+            <div className="border-t pt-4">
+                <h4 className="font-medium mb-2 text-sm">Dimensions & Weight</h4>
+                <div className="grid grid-cols-4 gap-2">
+                    <div>
+                        <label className="text-xs">Length (cm)</label>
+                        <Input type="number" step="0.01" value={formData.length} onChange={e => setFormData({ ...formData, length: e.target.value })} />
+                    </div>
+                    <div>
+                        <label className="text-xs">Width (cm)</label>
+                        <Input type="number" step="0.01" value={formData.width} onChange={e => setFormData({ ...formData, width: e.target.value })} />
+                    </div>
+                    <div>
+                        <label className="text-xs">Height (cm)</label>
+                        <Input type="number" step="0.01" value={formData.height} onChange={e => setFormData({ ...formData, height: e.target.value })} />
+                    </div>
+                    <div>
+                        <label className="text-xs">Weight (kg)</label>
+                        <Input type="number" step="0.01" value={formData.weight} onChange={e => setFormData({ ...formData, weight: e.target.value })} />
+                    </div>
+                </div>
+            </div>
+
             <div>
                 <label className="block text-sm font-medium mb-2">Product Name *</label>
                 <Input
@@ -142,6 +165,31 @@ const ProductForm = ({
                 />
             </div>
 
+            {/* Tax & Extra Info */}
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium mb-2">Tax Status</label>
+                    <select
+                        value={formData.tax_status}
+                        onChange={(e) => setFormData({ ...formData, tax_status: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg"
+                    >
+                        <option value="taxable">Taxable</option>
+                        <option value="shipping">Shipping only</option>
+                        <option value="none">None</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium mb-2">Country of Origin</label>
+                    <Input value={formData.manufacturing_country} onChange={e => setFormData({ ...formData, manufacturing_country: e.target.value })} />
+                </div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium mb-2">Box Contents</label>
+                <Input value={formData.whats_in_box} onChange={e => setFormData({ ...formData, whats_in_box: e.target.value })} />
+            </div>
+
             <div>
                 <label className="block text-sm font-medium mb-2">Description *</label>
                 <textarea
@@ -190,7 +238,7 @@ const ProductForm = ({
                 </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4 pt-2 border-t">
                 <label className="flex items-center gap-2">
                     <input
                         type="checkbox"
@@ -205,7 +253,7 @@ const ProductForm = ({
                         checked={formData.featured}
                         onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
                     />
-                    <span className="text-sm">Featured product</span>
+                    <span className="text-sm">Featured</span>
                 </label>
                 <label className="flex items-center gap-2">
                     <input
@@ -214,6 +262,14 @@ const ProductForm = ({
                         onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                     />
                     <span className="text-sm">Active</span>
+                </label>
+                <label className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={formData.virtual}
+                        onChange={(e) => setFormData({ ...formData, virtual: e.target.checked })}
+                    />
+                    <span className="text-sm">Virtual</span>
                 </label>
             </div>
 

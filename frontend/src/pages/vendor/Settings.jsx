@@ -4,7 +4,8 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
-import { Loader2, Store, MapPin } from 'lucide-react';
+import { Store, MapPin } from 'lucide-react';
+import SpiritualLoader from '../../components/ui/spiritual-loader';
 
 const VendorSettings = () => {
     const [loading, setLoading] = useState(true);
@@ -96,7 +97,7 @@ const VendorSettings = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-96">
-                <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
+                <SpiritualLoader size="lg" />
             </div>
         );
     }
@@ -303,7 +304,8 @@ const VendorSettings = () => {
                     <Button type="submit" size="lg" disabled={saving}>
                         {saving ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                Saving...
                             </>
                         ) : (
                             'Save Changes'
