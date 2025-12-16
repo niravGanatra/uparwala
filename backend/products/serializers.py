@@ -1,5 +1,17 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, Variation, GlobalAttribute, AttributeTerm, Brand
+from .models import (
+    Category, Product, ProductImage, ProductAttribute, Variation, 
+    ProductDownload, ProductQuestion, ProductAnswer, RecentlyViewed, 
+    ProductReview, ReviewHelpful, Wishlist, GlobalAttribute, AttributeTerm,
+    Brand, TaxSlab
+)
+from users.serializers import UserSerializer
+from vendors.serializers import VendorProfileSerializer
+
+class TaxSlabSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaxSlab
+        fields = '__all__'
 
 class CategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()

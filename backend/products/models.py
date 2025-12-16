@@ -98,6 +98,28 @@ class Brand(models.Model):
         super().save(*args, **kwargs)
 
 
+class TaxSlab(models.Model):
+    """Tax Slabs for GST (e.g., 5%, 12%, 18%, 28%)"""
+    name = models.CharField(max_length=50, help_text="e.g., GST 18%")
+    rate = models.DecimalField(max_digits=5, decimal_places=2, help_text="Total tax rate %")
+    cgst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Central GST %")
+    sgst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="State GST %")
+    igst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Integrated GST %")
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.rate}%)"
+    
+    def save(self, *args, **kwargs):
+        # Auto-calculate splits if not provided
+        if not self.cgst_rate and not self.sgst_rate and not self.igst_rate:
+            self.igst_rate = self.rate
+            self.cgst_rate = self.rate / 2
+            self.sgst_rate = self.rate / 2
+        super().save(*args, **kwargs)
+
+
 class Product(models.Model):
     # Basic Information
     vendor = models.ForeignKey(VendorProfile, on_delete=models.CASCADE, related_name='products')
@@ -143,14 +165,24 @@ class Product(models.Model):
         ('yes', 'Allow'),
     ]
     backorders = models.CharField(max_length=10, choices=BACKORDER_CHOICES, default='no')
-    low_stock_threshold = models.PositiveIntegerField(blank=True, null=True)
+    low_stock_threshold = models.IntegerField(default=2)
+    sold_individually = models.BooleanField(default=False)
     
-    # Shipping
+    # Weight & Dimensions
     weight = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text='Weight in kg')
     length = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text='Length in cm')
     width = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text='Width in cm')
     height = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text='Height in cm')
     shipping_class = models.CharField(max_length=100, blank=True)
+    
+    # Tax
+    tax_slab = models.ForeignKey('TaxSlab', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
+    tax_status = models.CharField(max_length=20, default='taxable', choices=[
+        ('taxable', 'Taxable'),
+        ('shipping', 'Shipping only'),
+        ('none', 'None'),
+    ])
+    tax_class = models.CharField(max_length=50, blank=True, help_text="Deprecated: Use tax_slab instead")
     
     # Product Type
     virtual = models.BooleanField(default=False, help_text='Virtual products are intangible and are not shipped')

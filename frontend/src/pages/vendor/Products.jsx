@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 const VendorProducts = () => {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [taxSlabs, setTaxSlabs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -38,6 +39,7 @@ const VendorProducts = () => {
         weight: '',
         // Tax
         tax_status: 'taxable',
+        tax_slab: '',
         tax_class: '',
         // Inventory
         manage_stock: true,
@@ -61,6 +63,7 @@ const VendorProducts = () => {
     useEffect(() => {
         fetchProducts();
         fetchCategories();
+        fetchTaxSlabs();
     }, []);
 
     const fetchProducts = async () => {
@@ -81,6 +84,15 @@ const VendorProducts = () => {
             setCategories(response.data);
         } catch (error) {
             console.error('Failed to fetch categories:', error);
+        }
+    };
+
+    const fetchTaxSlabs = async () => {
+        try {
+            const response = await api.get('/products/manage/tax-slabs/');
+            setTaxSlabs(response.data);
+        } catch (error) {
+            console.error('Failed to fetch tax slabs:', error);
         }
     };
 
@@ -144,6 +156,8 @@ const VendorProducts = () => {
         productData.append('manage_stock', formData.manage_stock);
         productData.append('virtual', formData.virtual);
         productData.append('downloadable', formData.downloadable);
+        appendIf('tax_slab', formData.tax_slab);
+        appendIf('tax_status', formData.tax_status);
 
         // Append new fields
         appendIf('length', formData.length);
@@ -448,6 +462,23 @@ const VendorProducts = () => {
                             </select>
                         </div>
                         <div>
+                            <label className="block text-sm font-medium mb-2">Tax Slab</label>
+                            <select
+                                value={formData.tax_slab}
+                                onChange={(e) => setFormData({ ...formData, tax_slab: e.target.value })}
+                                className="w-full px-3 py-2 border rounded-lg"
+                                disabled={formData.tax_status === 'none'}
+                            >
+                                <option value="">Select Tax Slab</option>
+                                {taxSlabs.map(slab => (
+                                    <option key={slab.id} value={slab.id}>
+                                        {slab.name} ({slab.rate}%)
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+
                             <label className="block text-sm font-medium mb-2">Stock Status</label>
                             <select
                                 value={formData.stock_status}

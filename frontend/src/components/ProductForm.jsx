@@ -11,6 +11,7 @@ const ProductForm = ({
     vendors,
     categories,
     brands,
+    taxSlabs,
     onSubmit,
     submitText
 }) => {
@@ -166,7 +167,7 @@ const ProductForm = ({
             </div>
 
             {/* Tax & Extra Info */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
                 <div>
                     <label className="block text-sm font-medium mb-2">Tax Status</label>
                     <select
@@ -177,6 +178,22 @@ const ProductForm = ({
                         <option value="taxable">Taxable</option>
                         <option value="shipping">Shipping only</option>
                         <option value="none">None</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium mb-2">Tax Slab</label>
+                    <select
+                        value={formData.tax_slab}
+                        onChange={(e) => setFormData({ ...formData, tax_slab: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg"
+                        disabled={formData.tax_status === 'none'}
+                    >
+                        <option value="">Select Tax Slab</option>
+                        {taxSlabs && taxSlabs.map(slab => (
+                            <option key={slab.id} value={slab.id}>
+                                {slab.name} ({slab.rate}%)
+                            </option>
+                        ))}
                     </select>
                 </div>
                 <div>

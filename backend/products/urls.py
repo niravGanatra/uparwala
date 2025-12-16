@@ -6,6 +6,7 @@ from .views import (
     ProductDetailView,
     GlobalAttributeViewSet,
     AttributeTermViewSet,
+    TaxSlabViewSet,
     VendorProductListCreateView,
     VendorProductDetailView,
     AdminProductListCreateView,
@@ -52,6 +53,7 @@ router = DefaultRouter()
 router.register(r'manage/categories', CategoryViewSet, basename='category-manage')
 router.register(r'manage/attributes/global', GlobalAttributeViewSet, basename='attribute-global')
 router.register(r'manage/attributes/terms', AttributeTermViewSet, basename='attribute-term')
+router.register(r'manage/tax-slabs', TaxSlabViewSet, basename='tax-slab')
 
 urlpatterns = [
     path('', ProductListView.as_view(), name='product-list'), # Explicit Product List at /api/products/

@@ -12,11 +12,17 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets
-from .models import Category, Product, ProductQuestion, ProductAnswer, RecentlyViewed, GlobalAttribute, AttributeTerm
+from .models import Category, Product, ProductQuestion, ProductAnswer, RecentlyViewed, GlobalAttribute, AttributeTerm, TaxSlab
 from .serializers import (
     CategorySerializer, ProductSerializer, ProductCreateSerializer,
-    GlobalAttributeSerializer, AttributeTermSerializer
+    GlobalAttributeSerializer, AttributeTermSerializer, TaxSlabSerializer
 )
+
+class TaxSlabViewSet(viewsets.ReadOnlyModelViewSet):
+    """List Tax Slabs for vendors to select."""
+    queryset = TaxSlab.objects.filter(is_active=True)
+    serializer_class = TaxSlabSerializer
+    permission_classes = [permissions.AllowAny]
 
 class CategoryViewSet(viewsets.ModelViewSet):
     """Admin CRUD for Categories. Public Read-Only."""

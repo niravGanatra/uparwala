@@ -1,10 +1,17 @@
+
 from django.contrib import admin
 from .models import (Category, Product, ProductImage, ProductAttribute, Variation, ProductDownload,
                       ProductQuestion, ProductAnswer, RecentlyViewed, ProductReview, ReviewHelpful, Wishlist,
-                      GlobalAttribute, AttributeTerm)
+                      GlobalAttribute, AttributeTerm, TaxSlab)
 
 # Import Phase 3 admin
 from .phase3_admin import BrandAdmin, ProductVideoAdmin, ProductVideoInline, ProductComparisonAdmin, ProductBundleAdmin
+
+@admin.register(TaxSlab)
+class TaxSlabAdmin(admin.ModelAdmin):
+    list_display = ('name', 'rate', 'cgst_rate', 'sgst_rate', 'igst_rate', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('name',)
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
