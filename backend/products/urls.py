@@ -1,4 +1,3 @@
-```python
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
@@ -120,4 +119,3 @@ urlpatterns = [
     # Main product detail (must be last)
     path('<slug:slug>/', ProductDetailView.as_view(), name='product-detail'),
 ]
-```
