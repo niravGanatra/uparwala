@@ -37,7 +37,7 @@ def homepage_data(request):
         featured_categories = FeaturedCategory.objects.filter(is_active=True)
         
         # Get active deals - only active products from verified vendors
-        deals = Deal.objects.filter(
+        deals = DealOfTheDay.objects.filter(
             is_active=True,
             start_date__lte=timezone.now(),
             end_date__gte=timezone.now(),
@@ -45,7 +45,8 @@ def homepage_data(request):
             product__vendor__verification_status='verified',
             product__vendor__is_active=True,
             product__vendor__user__is_active=True
-        ).select_related('product').prefetch_related('product__images')[:8].order_by('-priority')
+        ).select_related('product').prefetch_related('product__images').order_by('-priority')[:8]
+
         
         # Get active hosting essentials
         hosting_essentials = HostingEssential.objects.filter(is_active=True)
