@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-import { ShoppingCart, Heart } from 'lucide-react';
+import { ShoppingCart, Heart, Bell } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import ProductReviews from '../components/ProductReviews';
 import ProductRecommendations from '../components/ProductRecommendations';
 import ProductQA from '../components/ProductQA';
+import NotifyMeModal from '../components/NotifyMeModal';
 
 import ImageGallery from '../components/ImageGallery';
 
@@ -20,6 +21,7 @@ const ProductDetailPage = () => {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
+    const [showNotifyModal, setShowNotifyModal] = useState(false);
     const { user } = useAuth();
     const { addToCart, loading: cartLoading } = useCart();
 
@@ -196,35 +198,48 @@ const ProductDetailPage = () => {
                     </div>
 
                     <div className="flex gap-4">
-                        <div className="flex gap-3">
+                        {/* Stock Status Check */}
+                        {(product.stock_status === 'outofstock' || product.stock === 0) ? (
                             <Button
                                 size="lg"
-                                className="flex-1"
-                                onClick={handleAddToCart}
-                                disabled={product.stock === 0 || cartLoading}
+                                variant="outline"
+                                className="flex-1 border-orange-600 text-orange-600 hover:bg-orange-50"
+                                onClick={() => setShowNotifyModal(true)}
                             >
-                                <ShoppingCart className="mr-2 h-4 w-4" />
-                                {cartLoading ? 'Adding...' : 'Add to Cart'}
+                                <Bell className="mr-2 h-4 w-4" />
+                                Notify Me When Available
                             </Button>
-                            <Button
-                                size="lg"
-                                variant="default"
-                                className="flex-1 bg-orange-600 hover:bg-orange-700"
-                                onClick={async () => {
-                                    if (!user) {
-                                        toast.error('Please login to continue');
-                                        navigate('/login');
-                                        return;
-                                    }
-                                    await addToCart(product.id, quantity);
-                                    navigate('/checkout');
-                                }}
-                                disabled={product.stock === 0 || cartLoading}
-                            >
-                                <ShoppingCart className="mr-2 h-4 w-4" />
-                                {cartLoading ? 'Processing...' : 'Buy Now'}
-                            </Button>
-                        </div>
+                        ) : (
+                            <div className="flex gap-3">
+                                <Button
+                                    size="lg"
+                                    className="flex-1"
+                                    onClick={handleAddToCart}
+                                    disabled={cartLoading}
+                                >
+                                    <ShoppingCart className="mr-2 h-4 w-4" />
+                                    {cartLoading ? 'Adding...' : 'Add to Cart'}
+                                </Button>
+                                <Button
+                                    size="lg"
+                                    variant="default"
+                                    className="flex-1 bg-orange-600 hover:bg-orange-700"
+                                    onClick={async () => {
+                                        if (!user) {
+                                            toast.error('Please login to continue');
+                                            navigate('/login');
+                                            return;
+                                        }
+                                        await addToCart(product.id, quantity);
+                                        navigate('/checkout');
+                                    }}
+                                    disabled={cartLoading}
+                                >
+                                    <ShoppingCart className="mr-2 h-4 w-4" />
+                                    {cartLoading ? 'Processing...' : 'Buy Now'}
+                                </Button>
+                            </div>
+                        )}
                         <Button size="lg" variant="outline">
                             <Heart className="h-5 w-5" />
                         </Button>
@@ -255,6 +270,13 @@ const ProductDetailPage = () => {
                 {/* Similar Products */}
                 <ProductRecommendations productId={product.id} type="similar" />
             </div>
+
+            {/* Notify Me Modal */}
+            <NotifyMeModal
+                product={product}
+                isOpen={showNotifyModal}
+                onClose={() => setShowNotifyModal(false)}
+            />
         </motion.div>
     );
 };

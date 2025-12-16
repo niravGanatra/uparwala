@@ -514,6 +514,25 @@ class ProductQuestion(models.Model):
         return f"Q: {self.question[:50]}... by {self.user.username}"
 
 
+class StockNotification(models.Model):
+    """Track customer requests for back-in-stock notifications"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stock_notifications')
+    email = models.EmailField(blank=True, help_text="Customer email for notification")
+    phone = models.CharField(max_length=15, blank=True, help_text="Customer phone for SMS notification")
+    created_at = models.DateTimeField(auto_now_add=True)
+    notified = models.BooleanField(default=False, help_text="Whether customer has been notified")
+    notified_at = models.DateTimeField(null=True, blank=True, help_text="When notification was sent")
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Stock Notification Request"
+        verbose_name_plural = "Stock Notification Requests"
+    
+    def __str__(self):
+        contact = self.email or self.phone or "No contact"
+        return f"{self.product.name} - {contact}"
+
+
 class ProductAnswer(models.Model):
     """Answers to product questions"""
     question = models.ForeignKey(ProductQuestion, on_delete=models.CASCADE, related_name='answers')

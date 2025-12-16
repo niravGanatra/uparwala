@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, filters, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db import models
 from .models import Category, Product, ProductQuestion, ProductAnswer, RecentlyViewed
 from .serializers import CategorySerializer, ProductSerializer, ProductCreateSerializer, AdminProductSerializer
 from .qa_serializers import ProductQuestionSerializer, ProductAnswerSerializer
@@ -62,13 +63,23 @@ class ProductListView(generics.ListAPIView):
     def get_queryset(self):
         # Admin users can see all products (including inactive)
         if self.request.user and (self.request.user.is_staff or self.request.user.is_superuser):
-            return Product.objects.all()
+            return Product.objects.all().order_by('-created_at')
         # Regular customers only see active products from verified, active vendors with active users
+        # Order by stock_status to show in-stock products first
         return Product.objects.filter(
             is_active=True,
             vendor__verification_status='verified',
             vendor__is_active=True,
             vendor__user__is_active=True
+        ).order_by(
+            models.Case(
+                models.When(stock_status='instock', then=0),
+                models.When(stock_status='onbackorder', then=1),
+                models.When(stock_status='outofstock', then=2),
+                default=3,
+                output_field=models.IntegerField(),
+            ),
+            '-created_at'
         )
 
 class ProductDetailView(generics.RetrieveAPIView):

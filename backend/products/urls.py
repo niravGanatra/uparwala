@@ -1,8 +1,9 @@
+```python
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    CategoryViewSet, 
-    ProductListView, 
+    CategoryViewSet,
+    ProductListView,
     ProductDetailView,
     GlobalAttributeViewSet,
     AttributeTermViewSet,
@@ -48,6 +49,7 @@ from .recommendation_views import SimilarProductsView, RecommendedProductsView
 from .cms_views import (
     CMSPageListView, CMSPageDetailView, PublishCMSPageView, PublicCMSPageView
 )
+from . import stock_views
 
 router = DefaultRouter()
 router.register(r'manage/categories', CategoryViewSet, basename='category-manage')
@@ -109,8 +111,13 @@ urlpatterns = [
     
     path('<slug:slug>/check-pincode/', check_product_pincode, name='check-product-pincode'),
     
+    # Stock Notifications
+    path('stock-notifications/', stock_views.register_stock_notification, name='register-stock-notification'),
+    
     # Phase 3 endpoints (brands, comparison, bundles)
     path('phase3/', include('products.phase3_urls')),
     
+    # Main product detail (must be last)
     path('<slug:slug>/', ProductDetailView.as_view(), name='product-detail'),
 ]
+```
