@@ -43,7 +43,6 @@ def homepage_data(request):
             end_date__gte=timezone.now(),
             product__is_active=True,
             product__vendor__verification_status='verified',
-            product__vendor__is_active=True,
             product__vendor__user__is_active=True
         ).select_related('product').prefetch_related('product__images').order_by('-priority')[:8]
 
