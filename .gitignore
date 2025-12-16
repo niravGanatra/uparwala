@@ -44,3 +44,7 @@ frontend/build/
 # But keep templates
 !backend/.env.production.template
 !frontend/.env.production.template
+
+# Local DB and Media
+*.sqlite3
+backend/media/
