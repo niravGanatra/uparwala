@@ -7,6 +7,7 @@ import api from '../services/api';
 import homepageService from '../services/homepageService';
 import RecentlyViewed from '../components/RecentlyViewed';
 import ProductRecommendations from '../components/ProductRecommendations';
+import ProductCard from '../components/ProductCard';
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -327,42 +328,8 @@ const HomePage = () => {
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {products.map((product, idx) => (
-                            <motion.div
-                                key={product.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: idx * 0.05 }}
-                                whileHover={{ y: -8 }}
-                            >
-                                <Link to={`/products/${product.slug}`} className="block group">
-                                    <div className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-yellow-400 hover:shadow-xl transition-all">
-                                        <div className="relative aspect-square bg-slate-50">
-                                            {product.images && product.images.length > 0 ? (
-                                                <img
-                                                    src={product.images[0].image}
-                                                    alt={product.name}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <ShoppingBag className="h-12 w-12 text-slate-300" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="p-3">
-                                            <h3 className="font-medium text-slate-900 mb-1 line-clamp-2 text-sm">
-                                                {product.name}
-                                            </h3>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-lg font-bold text-slate-900">₹{product.price}</span>
-                                                <Tag className="h-4 w-4 text-yellow-600" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Link>
-                            </motion.div>
+                        {products.map((product) => (
+                            <ProductCard key={product.id} product={product} />
                         ))}
                     </div>
                 </div>

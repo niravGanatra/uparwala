@@ -5,6 +5,7 @@ import { Filter, ChevronDown, ShoppingCart, Heart, Star } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useCart } from '../context/CartContext';
+import ProductCard from '../components/ProductCard';
 
 const CategoryPage = () => {
     const { categorySlug } = useParams();
@@ -119,74 +120,9 @@ const CategoryPage = () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {products.map((product) => {
-                            const originalPrice = parseFloat(product.price || product.regular_price || 0);
-
-                            // Check for individual product deal first
-                            let finalPrice = originalPrice;
-                            let discountLabel = null;
-
-                            if (product.active_deal) {
-                                finalPrice = parseFloat(product.active_deal.discounted_price);
-                                discountLabel = `${parseInt(product.active_deal.discount_percentage)}% OFF DEAL`;
-                            } else if (activeDiscount > 0) {
-                                // Fallback to Category-wide Banner discount
-                                finalPrice = originalPrice - (originalPrice * (activeDiscount / 100));
-                                discountLabel = `${activeDiscount}% OFF`;
-                            }
-
-                            return (
-                                <div key={product.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
-                                    <div className="relative aspect-square bg-gray-200">
-                                        <Link to={`/products/${product.slug}`}>
-                                            <img
-                                                src={product.images?.[0]?.image || product.image || 'https://via.placeholder.com/400'}
-                                                alt={product.name}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                        </Link>
-
-                                        {/* Badges */}
-                                        <div className="absolute top-2 left-2 flex flex-col gap-1">
-                                            {discountLabel && (
-                                                <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm animate-pulse">
-                                                    {discountLabel}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {/* Quick Actions */}
-                                        <div className="absolute bottom-4 right-4 flex gap-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                                            <button
-                                                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 text-gray-600 transition-colors"
-                                                onClick={() => addToCart(product, 1)}
-                                            >
-                                                <ShoppingCart className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4">
-                                        <Link to={`/products/${product.slug}`}>
-                                            <h3 className="text-sm font-medium text-gray-900 line-clamp-2 hover:text-blue-600">
-                                                {product.name}
-                                            </h3>
-                                        </Link>
-
-                                        <div className="mt-2 flex items-baseline gap-2">
-                                            <span className="text-lg font-bold text-gray-900">
-                                                ₹{finalPrice.toFixed(2)}
-                                            </span>
-                                            {(discountLabel || originalPrice > finalPrice) && (
-                                                <span className="text-sm text-gray-500 line-through">
-                                                    ₹{originalPrice.toFixed(2)}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        {products.map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
                     </div>
                 )}
             </div>
