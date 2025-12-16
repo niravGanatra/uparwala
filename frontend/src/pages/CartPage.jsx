@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Trash2, ArrowRight, ShoppingBag } from 'lucide-react';
+import { Trash2, ArrowRight, ShoppingBag, CheckSquare, Square } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -13,23 +13,30 @@ import GiftWrapSelector from '../components/GiftWrapSelector';
 const CartPage = () => {
     const { cart, fetchCart, removeFromCart, loading, clearCart } = useCart();
     const navigate = useNavigate();
+    const [selectedItems, setSelectedItems] = useState([]);
 
     useEffect(() => {
         fetchCart();
     }, []);
 
+    // Auto-select all items when cart loads
+    useEffect(() => {
+        if (cart && cart.items) {
+            setSelectedItems(cart.items.map(item => item.id));
+        }
+    }, [cart?.items?.length]);
+
     const calculateTotal = () => {
         if (!cart) return 0;
-        // Prefer backend calculation if available
-        if (cart.total_amount !== undefined) return parseFloat(cart.total_amount);
-
-        // Fallback to frontend calculation (with deal logic)
-        return cart.items.reduce((total, item) => {
-            const price = item.product.active_deal
-                ? parseFloat(item.product.active_deal.discounted_price)
-                : parseFloat(item.product.price);
-            return total + (price * item.quantity);
-        }, 0);
+        // Calculate for selected items only
+        return cart.items
+            .filter(item => selectedItems.includes(item.id))
+            .reduce((total, item) => {
+                const price = item.product.active_deal
+                    ? parseFloat(item.product.active_deal.discounted_price)
+                    : parseFloat(item.product.price);
+                return total + (price * item.quantity);
+            }, 0);
     };
 
     // Helper to get item price details
@@ -50,8 +57,35 @@ const CartPage = () => {
         };
     };
 
-    const handleCheckout = () => {
+    const toggleSelectAll = () => {
+        if (selectedItems.length === cart.items.length) {
+            setSelectedItems([]);
+        } else {
+            setSelectedItems(cart.items.map(item => item.id));
+        }
+    };
+
+    const toggleItemSelection = (itemId) => {
+        setSelectedItems(prev =>
+            prev.includes(itemId)
+                ? prev.filter(id => id !== itemId)
+                : [...prev, itemId]
+        );
+    };
+
+    const handleCheckout = async () => {
+        if (selectedItems.length === 0) {
+            toast.error('Please select at least one item to checkout');
+            return;
+        }
+
+        // Remove unselected items temporarily
+        const unselectedItems = cart.items.filter(item => !selectedItems.includes(item.id));
+
+        // Navigate to checkout (selected items remain in cart)
         navigate('/checkout');
+
+        // Note: In a production system, you might want to pass selected item IDs via state or query params
     };
 
     const handleRemove = async (itemId) => {
@@ -94,6 +128,22 @@ const CartPage = () => {
             animate={{ opacity: 1 }}
         >
             <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+
+            {/* Select All */}
+            <div className="flex items-center gap-3 mb-4 p-4 bg-slate-50 rounded-lg">
+                <button
+                    onClick={toggleSelectAll}
+                    className="flex items-center gap-2 text-sm font-medium hover:text-orange-600 transition-colors"
+                >
+                    {selectedItems.length === cart.items.length ? (
+                        <CheckSquare className="w-5 h-5 text-orange-600" />
+                    ) : (
+                        <Square className="w-5 h-5" />
+                    )}
+                    Select All ({selectedItems.length}/{cart.items.length} selected)
+                </button>
+            </div>
+
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-4">
                     {cart.items.map((item, index) => {
@@ -105,13 +155,27 @@ const CartPage = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
                             >
-                                <Card className="relative overflow-hidden">
+                                <Card className={`relative overflow-hidden transition-all ${selectedItems.includes(item.id)
+                                        ? 'ring-2 ring-orange-500 bg-orange-50/30'
+                                        : 'opacity-60'
+                                    }`}>
                                     {priceInfo.isDeal && (
                                         <div className="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-bold px-2 py-1 z-10">
                                             DEAL APPLIED
                                         </div>
                                     )}
                                     <CardContent className="p-4 flex gap-4">
+                                        {/* Selection Checkbox */}
+                                        <button
+                                            onClick={() => toggleItemSelection(item.id)}
+                                            className="flex-shrink-0 self-start mt-2"
+                                        >
+                                            {selectedItems.includes(item.id) ? (
+                                                <CheckSquare className="w-5 h-5 text-orange-600" />
+                                            ) : (
+                                                <Square className="w-5 h-5 text-slate-400" />
+                                            )}
+                                        </button>
                                         <div className="h-24 w-24 bg-slate-100 rounded-md overflow-hidden flex-shrink-0">
                                             {item.product.images && item.product.images.length > 0 ? (
                                                 <img
@@ -178,8 +242,8 @@ const CartPage = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Subtotal ({cart.items.length} items)</span>
-                                <span>₹{(cart.subtotal !== undefined ? cart.subtotal : calculateTotal()).toFixed(2)}</span>
+                                <span className="text-muted-foreground">Subtotal ({selectedItems.length} selected)</span>
+                                <span>₹{calculateTotal().toFixed(2)}</span>
                             </div>
 
                             {(cart.discount_amount > 0 || (cart.subtotal - cart.total_amount) > 0) && (
@@ -201,11 +265,16 @@ const CartPage = () => {
                                 className="w-full mt-4"
                                 size="lg"
                                 onClick={handleCheckout}
-                                disabled={loading}
+                                disabled={loading || selectedItems.length === 0}
                             >
-                                Proceed to Checkout
+                                Proceed to Checkout ({selectedItems.length} {selectedItems.length === 1 ? 'item' : 'items'})
                                 <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
+                            {selectedItems.length === 0 && (
+                                <p className="text-sm text-red-500 text-center mt-2">
+                                    Please select at least one item
+                                </p>
+                            )}
                             <Link to="/products">
                                 <Button variant="outline" className="w-full">
                                     Continue Shopping

@@ -43,6 +43,7 @@ const MainLayout = () => {
 
 
                     <nav className="hidden md:flex items-center space-x-6">
+                        <Link to="/" className="text-sm font-medium hover:text-orange-600 transition-colors">Home</Link>
                         <Link to="/products" className="text-sm font-medium hover:text-orange-600 transition-colors">All Products</Link>
 
                         {/* Top 5 Categories */}
