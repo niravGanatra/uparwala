@@ -79,13 +79,10 @@ const CartPage = () => {
             return;
         }
 
-        // Remove unselected items temporarily
-        const unselectedItems = cart.items.filter(item => !selectedItems.includes(item.id));
-
-        // Navigate to checkout (selected items remain in cart)
-        navigate('/checkout');
-
-        // Note: In a production system, you might want to pass selected item IDs via state or query params
+        // Navigate to checkout with selected item IDs
+        navigate('/checkout', {
+            state: { selectedItemIds: selectedItems }
+        });
     };
 
     const handleRemove = async (itemId) => {
@@ -156,8 +153,8 @@ const CartPage = () => {
                                 transition={{ delay: index * 0.1 }}
                             >
                                 <Card className={`relative overflow-hidden transition-all ${selectedItems.includes(item.id)
-                                        ? 'ring-2 ring-orange-500 bg-orange-50/30'
-                                        : 'opacity-60'
+                                    ? 'ring-2 ring-orange-500 bg-orange-50/30'
+                                    : 'opacity-60'
                                     }`}>
                                     {priceInfo.isDeal && (
                                         <div className="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-bold px-2 py-1 z-10">

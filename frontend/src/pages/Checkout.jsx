@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -11,6 +11,8 @@ import GiftWrapSelector from '../components/GiftWrapSelector';
 
 const Checkout = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const selectedItemIds = location.state?.selectedItemIds || [];
     const [step, setStep] = useState(1); // 1: Address, 2: Payment, 3: Review
     const [loading, setLoading] = useState(false);
     const [processingPayment, setProcessingPayment] = useState(false);
@@ -106,8 +108,21 @@ const Checkout = () => {
     const fetchCart = async () => {
         try {
             const response = await api.get('/orders/cart/');
-            // Handle response.data.items potentially being undefined
-            setCartItems(response.data?.items || []);
+            const allItems = response.data?.items || [];
+
+            // Filter items based on selection from cart page
+            // If no selectedItemIds, use all items (backward compatibility)
+            const filteredItems = selectedItemIds.length > 0
+                ? allItems.filter(item => selectedItemIds.includes(item.id))
+                : allItems;
+
+            setCartItems(filteredItems);
+
+            // Warn if cart is empty after filtering
+            if (filteredItems.length === 0 && allItems.length > 0) {
+                toast.error('No items selected for checkout');
+                navigate('/cart');
+            }
         } catch (error) {
             console.error('Failed to fetch cart:', error);
             toast.error('Failed to load cart');
