@@ -65,6 +65,19 @@ class VendorProfile(models.Model):
     )
     review_count = models.PositiveIntegerField(default=0)
     
+    # Compliance & Legal
+    is_food_vendor = models.BooleanField(default=False, help_text="Is this vendor selling food products?")
+    food_license_number = models.CharField(max_length=50, blank=True)
+    food_license_certificate = models.FileField(upload_to='vendor_docs/food_license/', blank=True, null=True, help_text="Upload FSSAI license")
+
+    # Bank Details
+    bank_account_holder_name = models.CharField(max_length=255, blank=True)
+    bank_name = models.CharField(max_length=255, blank=True)
+    bank_branch = models.CharField(max_length=255, blank=True)
+    bank_account_number = models.CharField(max_length=50, blank=True)
+    bank_ifsc_code = models.CharField(max_length=20, blank=True)
+    cancelled_cheque = models.FileField(upload_to='vendor_docs/bank/', blank=True, null=True, help_text="Upload cancelled cheque or passbook copy")
+
     # Serviceability
     serviceable_pincodes = models.TextField(blank=True, help_text="Comma-separated list of pincodes. Leave empty to serve all (subject to global restrictions).")
     

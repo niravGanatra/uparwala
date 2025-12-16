@@ -14,6 +14,14 @@ class UserSerializer(serializers.ModelSerializer):
             'vendor_rejection_reason', 'business_name', 'business_email',
             'business_phone', 'business_address', 'store_description', 'tax_number'
         ]
+        
+    def validate_email(self, value):
+        """Strict email validation"""
+        import re
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_regex, value):
+            raise serializers.ValidationError("Enter a valid email address.")
+        return value
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -21,6 +29,14 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'email', 'password')
+
+    def validate_email(self, value):
+        """Strict email validation"""
+        import re
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_regex, value):
+            raise serializers.ValidationError("Enter a valid email address.")
+        return value
 
     def create(self, validated_data):
         user = User.objects.create_user(

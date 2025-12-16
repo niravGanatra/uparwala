@@ -20,16 +20,29 @@ const VendorRegistrationPage = () => {
         business_address: '',
         store_description: '',
         tax_number: '',
+        // Compliance
+        is_food_vendor: false,
+        food_license_number: '',
+        food_license_certificate: null,
+        // Bank Details
+        bank_account_holder_name: '',
+        bank_name: '',
+        bank_branch: '',
+        bank_account_number: '',
+        bank_ifsc_code: '',
+        cancelled_cheque: null,
     });
     const [loading, setLoading] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        const { name, value, type, checked, files } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked :
+                type === 'file' ? files[0] : value
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -48,16 +61,6 @@ const VendorRegistrationPage = () => {
         setLoading(true);
 
         try {
-            const response = await api.post('/users/vendor/apply/', formData);
-
-            toast.success('Vendor application submitted successfully! Please wait for admin approval.', {
-                duration: 5000,
-            });
-
-            // Redirect to login page
-            setTimeout(() => {
-                navigate('/login');
-            }, 2000);
         } catch (error) {
             console.error('Vendor registration failed:', error);
             const errorMessage = error.response?.data?.username?.[0] ||
@@ -234,6 +237,118 @@ const VendorRegistrationPage = () => {
                                                     className="pl-10"
                                                 />
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Compliance & Legal */}
+                                <div className="border-t pt-6">
+                                    <h3 className="text-lg font-semibold mb-4 text-slate-900">Compliance & Legal</h3>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                id="is_food_vendor"
+                                                name="is_food_vendor"
+                                                checked={formData.is_food_vendor}
+                                                onChange={handleChange}
+                                                className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                                            />
+                                            <label htmlFor="is_food_vendor" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                                I am selling food products (Requires FSSAI License)
+                                            </label>
+                                        </div>
+
+                                        {formData.is_food_vendor && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2 border-orange-100">
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-2">FSSAI License Number *</label>
+                                                    <Input
+                                                        name="food_license_number"
+                                                        value={formData.food_license_number}
+                                                        onChange={handleChange}
+                                                        required={formData.is_food_vendor}
+                                                        placeholder="Enter License Number"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-2">Upload License *</label>
+                                                    <Input
+                                                        type="file"
+                                                        name="food_license_certificate"
+                                                        onChange={handleChange}
+                                                        accept=".jpg,.jpeg,.png,.pdf"
+                                                        required={formData.is_food_vendor}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Bank Details */}
+                                <div className="border-t pt-6">
+                                    <h3 className="text-lg font-semibold mb-4 text-slate-900">Bank Details (For Payouts)</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Account Holder Name *</label>
+                                            <Input
+                                                name="bank_account_holder_name"
+                                                value={formData.bank_account_holder_name}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="Name as per bank records"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Bank Name *</label>
+                                            <Input
+                                                name="bank_name"
+                                                value={formData.bank_name}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="e.g. HDFC Bank"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Branch Name *</label>
+                                            <Input
+                                                name="bank_branch"
+                                                value={formData.bank_branch}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="Branch Name"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">IFSC Code *</label>
+                                            <Input
+                                                name="bank_ifsc_code"
+                                                value={formData.bank_ifsc_code}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="IFSC Code"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Account Number *</label>
+                                            <Input
+                                                name="bank_account_number"
+                                                value={formData.bank_account_number}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="Account Number"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Cancelled Cheque/Passbook *</label>
+                                            <Input
+                                                type="file"
+                                                name="cancelled_cheque"
+                                                onChange={handleChange}
+                                                accept=".jpg,.jpeg,.png,.pdf"
+                                                required
+                                            />
                                         </div>
                                     </div>
                                 </div>

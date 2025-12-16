@@ -150,9 +150,6 @@ const ProductDetailPage = () => {
                         <span className="text-sm text-muted-foreground">
                             {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
                         </span>
-                        <span className="text-sm text-muted-foreground">
-                            {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-                        </span>
                     </div>
 
                     {/* Pincode Checker */}

@@ -37,13 +37,32 @@ class VendorApplicationView(APIView):
             
             # Create VendorProfile for the new vendor
             from vendors.models import VendorProfile
+            
+            # Extract new compliance and bank details
+            is_food_vendor = request.data.get('is_food_vendor', False)
+            if isinstance(is_food_vendor, str):
+                is_food_vendor = is_food_vendor.lower() == 'true'
+                
             VendorProfile.objects.create(
                 user=user,
                 store_name=user.business_name or f"{user.username}'s Store",
                 phone=user.business_phone,
                 address=user.business_address,
                 store_description=user.store_description,
-                verification_status='pending'  # Set as pending for admin approval
+                verification_status='pending',
+                
+                # Compliance & Food License
+                is_food_vendor=is_food_vendor,
+                food_license_number=request.data.get('food_license_number', ''),
+                food_license_certificate=request.FILES.get('food_license_certificate'),
+                
+                # Bank Details
+                bank_account_holder_name=request.data.get('bank_account_holder_name', ''),
+                bank_name=request.data.get('bank_name', ''),
+                bank_branch=request.data.get('bank_branch', ''),
+                bank_account_number=request.data.get('bank_account_number', ''),
+                bank_ifsc_code=request.data.get('bank_ifsc_code', ''),
+                cancelled_cheque=request.FILES.get('cancelled_cheque')
             )
 
             return Response({

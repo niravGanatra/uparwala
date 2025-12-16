@@ -13,7 +13,20 @@ const VendorSettings = () => {
         store_name: '',
         contact_number: '',
         bio: '',
-        serviceable_pincodes: ''
+        serviceable_pincodes: '',
+        // New fields
+        is_food_vendor: false,
+        food_license_number: '',
+        bank_account_holder_name: '',
+        bank_name: '',
+        bank_branch: '',
+        bank_account_number: '',
+        bank_ifsc_code: '',
+    });
+    // Separate state for files to only send if changed
+    const [files, setFiles] = useState({
+        food_license_certificate: null,
+        cancelled_cheque: null
     });
 
     useEffect(() => {
@@ -33,19 +46,45 @@ const VendorSettings = () => {
     };
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setProfile(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        const { name, value, type, checked, files: fileInput } = e.target;
+        if (type === 'file') {
+            setFiles(prev => ({ ...prev, [name]: fileInput[0] }));
+        } else {
+            setProfile(prev => ({
+                ...prev,
+                [name]: type === 'checkbox' ? checked : value
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
         try {
-            await api.patch('/vendors/profile/', profile);
+            const formData = new FormData();
+
+            // Append profile fields
+            Object.keys(profile).forEach(key => {
+                if (profile[key] !== null && profile[key] !== undefined) {
+                    formData.append(key, profile[key]);
+                }
+            });
+
+            // Append files if they exist
+            if (files.food_license_certificate) {
+                formData.append('food_license_certificate', files.food_license_certificate);
+            }
+            if (files.cancelled_cheque) {
+                formData.append('cancelled_cheque', files.cancelled_cheque);
+            }
+
+            await api.patch('/vendors/profile/', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
             toast.success('Settings updated successfully');
+            // Refresh profile to get updated file URLs if needed
+            fetchProfile();
         } catch (error) {
             console.error('Error updating profile:', error);
             toast.error('Failed to update settings');
@@ -145,6 +184,117 @@ const VendorSettings = () => {
                             <p className="text-xs text-muted-foreground">
                                 Enter valid 6-digit pincodes separated by commas.
                             </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Compliance & Bank Details */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">FileText & Compliance</CardTitle>
+                        <CardDescription>Legal and Banking information</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {/* Food License */}
+                        <div className="space-y-4 border-b pb-4">
+                            <h3 className="font-semibold">Food License</h3>
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    id="is_food_vendor"
+                                    name="is_food_vendor"
+                                    checked={profile.is_food_vendor}
+                                    onChange={handleChange}
+                                    className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                                />
+                                <label htmlFor="is_food_vendor" className="text-sm font-medium">
+                                    I am selling food products
+                                </label>
+                            </div>
+                            {profile.is_food_vendor && (
+                                <div className="grid md:grid-cols-2 gap-4 pl-4 border-l-2 border-orange-100">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">License Number</label>
+                                        <Input
+                                            name="food_license_number"
+                                            value={profile.food_license_number || ''}
+                                            onChange={handleChange}
+                                            placeholder="FSSAI License No."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Update Certificate</label>
+                                        <Input
+                                            type="file"
+                                            name="food_license_certificate"
+                                            onChange={handleChange}
+                                            accept=".jpg,.jpeg,.png,.pdf"
+                                        />
+                                        {profile.food_license_certificate && typeof profile.food_license_certificate === 'string' && (
+                                            <p className="text-xs text-green-600">Current file: {profile.food_license_certificate.split('/').pop()}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Bank Details */}
+                        <div className="space-y-4">
+                            <h3 className="font-semibold">Bank Details</h3>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Account Holder</label>
+                                    <Input
+                                        name="bank_account_holder_name"
+                                        value={profile.bank_account_holder_name || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Bank Name</label>
+                                    <Input
+                                        name="bank_name"
+                                        value={profile.bank_name || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Branch</label>
+                                    <Input
+                                        name="bank_branch"
+                                        value={profile.bank_branch || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">IFSC Code</label>
+                                    <Input
+                                        name="bank_ifsc_code"
+                                        value={profile.bank_ifsc_code || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Account Number</label>
+                                    <Input
+                                        name="bank_account_number"
+                                        value={profile.bank_account_number || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Update Cheque/Passbook</label>
+                                    <Input
+                                        type="file"
+                                        name="cancelled_cheque"
+                                        onChange={handleChange}
+                                        accept=".jpg,.jpeg,.png,.pdf"
+                                    />
+                                    {profile.cancelled_cheque && typeof profile.cancelled_cheque === 'string' && (
+                                        <p className="text-xs text-green-600">Current file: {profile.cancelled_cheque.split('/').pop()}</p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
