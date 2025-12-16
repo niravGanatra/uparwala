@@ -196,15 +196,35 @@ const ProductDetailPage = () => {
                     </div>
 
                     <div className="flex gap-4">
-                        <Button
-                            size="lg"
-                            className="flex-1"
-                            onClick={handleAddToCart}
-                            disabled={product.stock === 0 || cartLoading}
-                        >
-                            <ShoppingCart className="mr-2 h-5 w-5" />
-                            {cartLoading ? 'Adding...' : 'Add to Cart'}
-                        </Button>
+                        <div className="flex gap-3">
+                            <Button
+                                size="lg"
+                                className="flex-1"
+                                onClick={handleAddToCart}
+                                disabled={product.stock === 0 || cartLoading}
+                            >
+                                <ShoppingCart className="mr-2 h-4 w-4" />
+                                {cartLoading ? 'Adding...' : 'Add to Cart'}
+                            </Button>
+                            <Button
+                                size="lg"
+                                variant="default"
+                                className="flex-1 bg-orange-600 hover:bg-orange-700"
+                                onClick={async () => {
+                                    if (!user) {
+                                        toast.error('Please login to continue');
+                                        navigate('/login');
+                                        return;
+                                    }
+                                    await addToCart(product.id, quantity);
+                                    navigate('/checkout');
+                                }}
+                                disabled={product.stock === 0 || cartLoading}
+                            >
+                                <ShoppingCart className="mr-2 h-4 w-4" />
+                                {cartLoading ? 'Processing...' : 'Buy Now'}
+                            </Button>
+                        </div>
                         <Button size="lg" variant="outline">
                             <Heart className="h-5 w-5" />
                         </Button>
