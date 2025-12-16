@@ -60,6 +60,7 @@ import ShippingSettings from './pages/admin/ShippingSettings';
 import AdminCategories from './pages/admin/Categories';
 import CMSPages from './pages/admin/CMSPages';
 import HomepageManager from './pages/admin/HomepageManager';
+import TaxSlabs from './pages/admin/TaxSlabs';
 
 // Phase 7: NEW Analytics Dashboards
 import VendorDashboard from './pages/VendorDashboard';
@@ -149,6 +150,7 @@ function App() {
                 <Route path="commission-settings" element={<CommissionSettings />} />
                 <Route path="shipping" element={<ShippingSettings />} />
                 <Route path="categories" element={<AdminCategories />} />
+                <Route path="tax-slabs" element={<TaxSlabs />} />
                 <Route path="cms-pages" element={<CMSPages />} />
                 <Route path="homepage" element={<HomepageManager />} />
               </Route>
