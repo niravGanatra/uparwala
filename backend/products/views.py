@@ -63,8 +63,13 @@ class ProductListView(generics.ListAPIView):
         # Admin users can see all products (including inactive)
         if self.request.user and (self.request.user.is_staff or self.request.user.is_superuser):
             return Product.objects.all()
-        # Regular customers only see active products from verified vendors
-        return Product.objects.filter(is_active=True, vendor__verification_status='verified')
+        # Regular customers only see active products from verified, active vendors with active users
+        return Product.objects.filter(
+            is_active=True,
+            vendor__verification_status='verified',
+            vendor__is_active=True,
+            vendor__user__is_active=True
+        )
 
 class ProductDetailView(generics.RetrieveAPIView):
     serializer_class = ProductSerializer
@@ -72,10 +77,15 @@ class ProductDetailView(generics.RetrieveAPIView):
     lookup_field = 'slug'
     
     def get_queryset(self):
-        """Only show products from verified vendors"""
+        """Only show products from verified, active vendors with active users"""
         if self.request.user and (self.request.user.is_staff or self.request.user.is_superuser):
             return Product.objects.all()
-        return Product.objects.filter(is_active=True, vendor__verification_status='verified')
+        return Product.objects.filter(
+            is_active=True,
+            vendor__verification_status='verified',
+            vendor__is_active=True,
+            vendor__user__is_active=True
+        )
 
 class VendorProductListCreateView(generics.ListCreateAPIView):
     serializer_class = ProductCreateSerializer

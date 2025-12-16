@@ -28,17 +28,19 @@ class RecommendationEngine:
             
             # If not enough products, relax price constraint
             if similar.count() < limit:
-                more_similar = Product.objects.filter(
+                more_similar = list(Product.objects.filter(
                     category=product.category,
                     is_active=True,
-                    vendor__verification_status='verified'
+                    vendor__verification_status='verified',
+                    vendor__is_active=True,
+                    vendor__user__is_active=True
                 ).exclude(
                     id__in=[p.id for p in similar]
                 ).exclude(
                     id=product_id
-                ).order_by('?')[:limit - similar.count()]
+                ).order_by('?')[:limit - similar.count()])
                 
-                similar = list(similar) + list(more_similar)
+                similar = list(similar) + more_similar
                 
             return similar
             
@@ -55,7 +57,9 @@ class RecommendationEngine:
             product = Product.objects.get(id=product_id)
             return Product.objects.filter(
                 category=product.category,
-                is_active=True
+                is_active=True,
+                vendor__is_active=True,
+                vendor__user__is_active=True
             ).exclude(id=product_id).order_by('?')[:limit]
         except Product.DoesNotExist:
             return []
@@ -66,14 +70,20 @@ class RecommendationEngine:
         """
         if not user.is_authenticated:
             # Return popular products for guests
-            return Product.objects.filter(
+            recommendations = Product.objects.filter(
                 is_active=True,
-                vendor__verification_status='verified'
+                vendor__verification_status='verified',
+                vendor__is_active=True,
+                vendor__user__is_active=True
             ).order_by('-review_count')[:limit]
+            return recommendations
             
         # For logged in users, return popular products
         # TODO: Implement actual personalization based on order/view history
-        return Product.objects.filter(
+        recommendations = Product.objects.filter(
             is_active=True,
-            vendor__verification_status='verified'
+            vendor__verification_status='verified',
+            vendor__is_active=True,
+            vendor__user__is_active=True
         ).order_by('-review_count', '?')[:limit]
+        return recommendations
