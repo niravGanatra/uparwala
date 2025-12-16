@@ -392,9 +392,33 @@ const Checkout = () => {
                                 {orderSummary.shipping.free_shipping ? 'FREE' : `₹${Number(orderSummary.shipping.total_shipping).toFixed(2)}`}
                             </span>
                         </div>
-                        <div className="flex justify-between text-gray-600">
-                            <span>Tax (GST)</span>
-                            <span>₹{Number(orderSummary.tax_amount).toFixed(2)}</span>
+                        {/* Enhanced Tax Display */}
+                        <div className="border-t pt-3 space-y-2">
+                            <div className="flex justify-between text-gray-700 font-medium">
+                                <span>Tax (GST)</span>
+                                <span>₹{Number(orderSummary.tax_amount).toFixed(2)}</span>
+                            </div>
+                            {orderSummary.tax && (
+                                <div className="ml-4 space-y-1 text-xs text-gray-500">
+                                    {orderSummary.tax.type === 'intra_state' ? (
+                                        <>
+                                            <div className="flex justify-between">
+                                                <span>CGST</span>
+                                                <span>₹{Number(orderSummary.tax.cgst).toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>SGST</span>
+                                                <span>₹{Number(orderSummary.tax.sgst).toFixed(2)}</span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex justify-between">
+                                            <span>IGST</span>
+                                            <span>₹{Number(orderSummary.tax.igst).toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         {orderSummary.gift_wrapping_amount > 0 && (
                             <div className="flex justify-between text-pink-600">
