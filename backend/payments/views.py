@@ -144,20 +144,31 @@ class CalculateTotalsView(APIView):
         if not state_code:
             print(f"DEBUG: State code validation failed - state_code is: '{state_code}'")
             return Response({'error': 'State code is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'State code is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         try:
-            # Get cart items
-            if cart_id:
-                cart = Cart.objects.get(id=cart_id, user=request.user)
-                cart_items = cart.items.all()
-            else:
-                cart = Cart.objects.filter(user=request.user).first()
-                if not cart:
-                    return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
-                cart_items = cart.items.all()
+            cart = Cart.objects.get(user=user)
+            all_cart_items = cart.items.all()
             
+            # Filter by selected items if provided (selective checkout)
+            if selected_item_ids:
+                cart_items = all_cart_items.filter(id__in=selected_item_ids)
+            else:
+                cart_items = all_cart_items
+
             if not cart_items.exists():
-                return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'error': 'Cart is empty'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Cart.DoesNotExist:
+            return Response(
+                {'error': 'Cart not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
             
             # Calculate subtotal
             subtotal = Decimal('0')

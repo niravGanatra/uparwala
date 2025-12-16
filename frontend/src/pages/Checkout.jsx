@@ -142,6 +142,11 @@ const Checkout = () => {
                 state_code: address.state_code || address.state
             };
 
+            // Add selected item IDs for selective checkout
+            if (selectedItemIds && selectedItemIds.length > 0) {
+                payload.selected_item_ids = selectedItemIds;
+            }
+
             // Add gift option if present
             if (giftData) {
                 payload.gift_option_id = giftData.gift_option_id;
