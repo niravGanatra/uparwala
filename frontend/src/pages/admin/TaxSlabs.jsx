@@ -110,71 +110,6 @@ const TaxSlabs = () => {
         slab.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const TaxSlabForm = ({ onSubmit, submitText }) => (
-        <form onSubmit={onSubmit} className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium mb-2">Name *</label>
-                <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                    placeholder="e.g., GST 18%"
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium mb-2">Tax Rate (%) *</label>
-                <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.rate}
-                    onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
-                    required
-                    placeholder="e.g., 18.00"
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                    CGST and SGST will be auto-calculated as half of this rate. IGST will equal the full rate.
-                </p>
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
-                <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
-                    rows="3"
-                    placeholder="Optional description for this tax slab"
-                />
-            </div>
-
-            <div className="flex items-center gap-2">
-                <input
-                    type="checkbox"
-                    id="is_active"
-                    checked={formData.is_active}
-                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                />
-                <label htmlFor="is_active" className="text-sm">Active</label>
-            </div>
-
-            <div className="flex gap-2 justify-end pt-4 border-t">
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                        setIsAddModalOpen(false);
-                        setIsEditModalOpen(false);
-                        resetForm();
-                    }}
-                >
-                    Cancel
-                </Button>
-                <Button type="submit">{submitText}</Button>
-            </div>
-        </form>
-    );
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -242,8 +177,8 @@ const TaxSlabs = () => {
                                             <td className="py-4">{slab.igst_rate}%</td>
                                             <td className="py-4">
                                                 <span className={`px-2 py-1 rounded-full text-xs ${slab.is_active
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-red-100 text-red-700'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-red-100 text-red-700'
                                                     }`}>
                                                     {slab.is_active ? 'Active' : 'Inactive'}
                                                 </span>
@@ -278,12 +213,132 @@ const TaxSlabs = () => {
 
             {/* Add Tax Slab Modal */}
             <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Tax Slab" size="md">
-                <TaxSlabForm onSubmit={handleAddTaxSlab} submitText="Add Tax Slab" />
+                <form onSubmit={handleAddTaxSlab} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Name *</label>
+                        <Input
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                            placeholder="e.g., GST 18%"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Tax Rate (%) *</label>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            value={formData.rate}
+                            onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+                            required
+                            placeholder="e.g., 18.00"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">
+                            CGST and SGST will be auto-calculated as half of this rate. IGST will equal the full rate.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Description</label>
+                        <textarea
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            className="w-full px-3 py-2 border rounded-lg"
+                            rows="3"
+                            placeholder="Optional description for this tax slab"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="is_active_add"
+                            checked={formData.is_active}
+                            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                        />
+                        <label htmlFor="is_active_add" className="text-sm">Active</label>
+                    </div>
+
+                    <div className="flex gap-2 justify-end pt-4 border-t">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                setIsAddModalOpen(false);
+                                resetForm();
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="submit">Add Tax Slab</Button>
+                    </div>
+                </form>
             </Modal>
 
             {/* Edit Tax Slab Modal */}
             <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Tax Slab" size="md">
-                <TaxSlabForm onSubmit={handleUpdateTaxSlab} submitText="Update Tax Slab" />
+                <form onSubmit={handleUpdateTaxSlab} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Name *</label>
+                        <Input
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                            placeholder="e.g., GST 18%"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Tax Rate (%) *</label>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            value={formData.rate}
+                            onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+                            required
+                            placeholder="e.g., 18.00"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">
+                            CGST and SGST will be auto-calculated as half of this rate. IGST will equal the full rate.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Description</label>
+                        <textarea
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            className="w-full px-3 py-2 border rounded-lg"
+                            rows="3"
+                            placeholder="Optional description for this tax slab"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="is_active_edit"
+                            checked={formData.is_active}
+                            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                        />
+                        <label htmlFor="is_active_edit" className="text-sm">Active</label>
+                    </div>
+
+                    <div className="flex gap-2 justify-end pt-4 border-t">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                setIsEditModalOpen(false);
+                                resetForm();
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="submit">Update Tax Slab</Button>
+                    </div>
+                </form>
             </Modal>
 
             {/* Delete Confirmation Dialog */}

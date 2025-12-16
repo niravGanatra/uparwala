@@ -18,11 +18,14 @@ from .serializers import (
     GlobalAttributeSerializer, AttributeTermSerializer, TaxSlabSerializer
 )
 
-class TaxSlabViewSet(viewsets.ReadOnlyModelViewSet):
-    """List Tax Slabs for vendors to select."""
+class TaxSlabViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing tax slabs (full CRUD for admins).
+    Allows listing for all authenticated users, but only admins can create/update/delete.
+    """
     queryset = TaxSlab.objects.filter(is_active=True)
     serializer_class = TaxSlabSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class CategoryViewSet(viewsets.ModelViewSet):
     """Admin CRUD for Categories. Public Read-Only."""
