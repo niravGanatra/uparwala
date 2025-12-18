@@ -99,7 +99,8 @@ const MainLayout = () => {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => setShowUserMenu(!showUserMenu)}
-                                        className="relative"
+                                        className="relative min-h-[44px] min-w-[44px]"
+                                        aria-label="User menu"
                                     >
                                         <User className="h-5 w-5" />
                                     </Button>
@@ -113,46 +114,48 @@ const MainLayout = () => {
                                                     onClick={() => setShowUserMenu(false)}
                                                 />
 
-                                                {/* Dropdown Menu */}
+                                                {/* Dropdown Menu - Mobile Optimized */}
                                                 <motion.div
                                                     initial={{ opacity: 0, y: -10 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     exit={{ opacity: 0, y: -10 }}
                                                     transition={{ duration: 0.2 }}
-                                                    className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border z-50 overflow-hidden"
+                                                    className="absolute right-0 mt-2 w-64 md:w-72 bg-white rounded-xl shadow-xl border-2 border-slate-200 z-50 overflow-hidden"
                                                 >
-                                                    <div className="px-4 py-3 border-b bg-slate-50">
-                                                        <p className="text-sm font-medium text-slate-900">{user.username}</p>
-                                                        <p className="text-xs text-slate-500">{user.email}</p>
+                                                    {/* User Info Header */}
+                                                    <div className="px-5 py-4 border-b-2 border-slate-100 bg-gradient-to-r from-orange-50 to-slate-50">
+                                                        <p className="text-base font-semibold text-slate-900 truncate">{user.username}</p>
+                                                        <p className="text-sm text-slate-600 truncate">{user.email}</p>
                                                     </div>
 
-                                                    <div className="py-1">
+                                                    {/* Menu Items */}
+                                                    <div className="py-2">
                                                         <Link
                                                             to="/orders"
-                                                            className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                                                            className="flex items-center px-5 py-3 text-base text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors min-h-[48px] active:bg-orange-100"
                                                             onClick={() => setShowUserMenu(false)}
                                                         >
-                                                            <Package className="h-4 w-4 mr-3" />
-                                                            My Orders
+                                                            <Package className="h-5 w-5 mr-3 flex-shrink-0" />
+                                                            <span className="font-medium">My Orders</span>
                                                         </Link>
 
                                                         {user.is_vendor && (
                                                             <Link
                                                                 to="/vendor/dashboard"
-                                                                className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                                                                className="flex items-center px-5 py-3 text-base text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors min-h-[48px] active:bg-orange-100"
                                                                 onClick={() => setShowUserMenu(false)}
                                                             >
-                                                                <UserCircle className="h-4 w-4 mr-3" />
-                                                                Vendor Dashboard
+                                                                <UserCircle className="h-5 w-5 mr-3 flex-shrink-0" />
+                                                                <span className="font-medium">Vendor Dashboard</span>
                                                             </Link>
                                                         )}
 
                                                         <button
                                                             onClick={handleLogout}
-                                                            className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                                            className="w-full flex items-center px-5 py-3 text-base font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors min-h-[48px] active:bg-red-100 border-t-2 border-slate-100"
                                                         >
-                                                            <LogOut className="h-4 w-4 mr-3" />
-                                                            Sign Out
+                                                            <LogOut className="h-5 w-5 mr-3 flex-shrink-0" />
+                                                            <span>Sign Out</span>
                                                         </button>
                                                     </div>
                                                 </motion.div>
