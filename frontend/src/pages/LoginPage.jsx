@@ -3,15 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
 const LoginPage = () => {
     const [credentials, setCredentials] = useState({ identifier: '', password: '' });
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -21,11 +21,7 @@ const LoginPage = () => {
 
         try {
             const user = await login(credentials.identifier, credentials.password);
-
-            toast.success('Login successful!', {
-                duration: 2000,
-                position: 'top-right',
-            });
+            toast.success('Login successful!');
 
             // Redirect based on user role
             if (user.is_staff || user.is_superuser) {
@@ -37,35 +33,25 @@ const LoginPage = () => {
             }
         } catch (error) {
             console.error('Login failed:', error);
-            toast.error('Invalid credentials. Please try again.', {
-                duration: 3000,
-                position: 'top-right',
-            });
+            toast.error('Invalid credentials. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
     const googleLogin = useGoogleLogin({
-        flow: 'auth-code',  // Use authorization code flow to avoid COOP errors
+        flow: 'auth-code',
         onSuccess: async (codeResponse) => {
             try {
                 setLoading(true);
-                // Send authorization code to backend
                 const response = await api.post('/users/google/login/', {
                     code: codeResponse.code,
                 });
 
-                // Store tokens with correct keys
                 localStorage.setItem('access_token', response.data.access);
                 localStorage.setItem('refresh_token', response.data.refresh);
+                toast.success('Logged in with Google!');
 
-                toast.success('Logged in with Google!', {
-                    duration: 2000,
-                    position: 'top-right',
-                });
-
-                // Redirect based on user role
                 const user = response.data.user;
                 if (user.is_staff || user.is_superuser) {
                     window.location.href = '/admin/dashboard';
@@ -76,40 +62,36 @@ const LoginPage = () => {
                 }
             } catch (error) {
                 console.error('Google login failed:', error);
-                toast.error('Google login failed. Please try again.', {
-                    duration: 3000,
-                    position: 'top-right',
-                });
+                toast.error('Google login failed. Please try again.');
             } finally {
                 setLoading(false);
             }
         },
         onError: () => {
-            toast.error('Google login failed', {
-                duration: 3000,
-                position: 'top-right',
-            });
+            toast.error('Google login failed');
         },
     });
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 to-slate-100 p-4">
-            <Card className="w-full max-w-md shadow-2xl">
-                <CardHeader className="space-y-1 text-center pb-6">
-                    <div className="flex justify-center mb-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
-                            <User className="h-8 w-8 text-white" />
-                        </div>
-                    </div>
-                    <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-                    <p className="text-slate-600">Sign in to your account to continue</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center px-4 py-12">
+            <div className="w-full max-w-md">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <Link to="/" className="inline-block">
+                        <h1 className="text-4xl font-bold text-orange-600 mb-2">Uparwala</h1>
+                    </Link>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
+                    <p className="text-base text-slate-600">Sign in to continue shopping</p>
+                </div>
+
+                {/* Form Card */}
+                <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 sm:p-8">
                     {/* Google Sign-In Button */}
                     <Button
                         type="button"
                         variant="outline"
-                        className="w-full h-12 border-2 hover:bg-slate-50"
+                        className="w-full mb-5"
+                        size="lg"
                         onClick={() => googleLogin()}
                         disabled={loading}
                     >
@@ -134,70 +116,88 @@ const LoginPage = () => {
                         Continue with Google
                     </Button>
 
-                    <div className="relative">
+                    {/* Divider */}
+                    <div className="relative my-6">
                         <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
+                            <div className="w-full border-t border-slate-200"></div>
                         </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-2 text-slate-500">Or continue with</span>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-4 bg-white text-slate-500">Or continue with email</span>
                         </div>
                     </div>
 
                     {/* Email/Username Login Form */}
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* Email/Username */}
                         <div>
-                            <label className="block text-sm font-medium mb-2 text-slate-700">
+                            <label htmlFor="identifier" className="block text-sm font-medium text-slate-700 mb-2">
                                 Email or Username
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
                                 <Input
+                                    id="identifier"
                                     type="text"
-                                    placeholder="Enter your email or username"
+                                    placeholder="john@example.com or johndoe"
                                     value={credentials.identifier}
                                     onChange={(e) => setCredentials({ ...credentials, identifier: e.target.value })}
-                                    className="pl-10 h-12"
+                                    className="pl-12"
+                                    autoComplete="username"
                                     required
                                 />
                             </div>
                         </div>
 
+                        {/* Password */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
-                                <label className="block text-sm font-medium text-slate-700">
+                                <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                                     Password
                                 </label>
-                                <Link to="/forgot-password" className="text-sm text-orange-600 hover:underline">
+                                <Link to="/forgot-password" className="text-sm text-orange-600 hover:text-orange-700 font-medium">
                                     Forgot?
                                 </Link>
                             </div>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
                                 <Input
-                                    type="password"
-                                    placeholder="Enter your password"
+                                    id="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="••••••••"
                                     value={credentials.password}
                                     onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                                    className="pl-10 h-12"
+                                    className="pl-12 pr-12"
+                                    autoComplete="current-password"
                                     required
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-0 top-0 h-14 w-14 flex items-center justify-center text-slate-500 hover:text-slate-700"
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
                             </div>
                         </div>
 
+                        {/* Remember Me */}
                         <div className="flex items-center">
                             <input
                                 type="checkbox"
                                 id="remember"
-                                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-slate-300 rounded"
                             />
                             <label htmlFor="remember" className="ml-2 block text-sm text-slate-700">
-                                Remember me
+                                Remember me for 30 days
                             </label>
                         </div>
 
+                        {/* Submit Button */}
                         <Button
                             type="submit"
-                            className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                            className="w-full"
+                            size="lg"
                             disabled={loading}
                         >
                             {loading ? (
@@ -211,16 +211,34 @@ const LoginPage = () => {
                         </Button>
                     </form>
 
-                    <div className="text-center pt-4 border-t">
-                        <p className="text-sm text-slate-600">
-                            Don't have an account?{' '}
-                            <Link to="/register" className="text-orange-600 hover:underline font-semibold">
-                                Create Account
-                            </Link>
-                        </p>
+                    {/* Divider */}
+                    <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-slate-200"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-4 bg-white text-slate-500">Don't have an account?</span>
+                        </div>
                     </div>
-                </CardContent>
-            </Card>
+
+                    {/* Register Link */}
+                    <Link to="/register">
+                        <Button variant="outline" className="w-full" size="lg">
+                            Create Account
+                        </Button>
+                    </Link>
+                </div>
+
+                {/* Vendor Registration Link */}
+                <div className="text-center mt-6">
+                    <p className="text-sm text-slate-600">
+                        Want to sell on Uparwala?{' '}
+                        <Link to="/vendor/register" className="text-orange-600 hover:text-orange-700 font-medium">
+                            Become a Vendor
+                        </Link>
+                    </p>
+                </div>
+            </div>
         </div>
     );
 };
