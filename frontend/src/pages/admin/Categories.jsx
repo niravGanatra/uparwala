@@ -129,8 +129,8 @@ const AdminCategories = () => {
     const handleNameChange = (e) => {
         const value = e.target.value;
         setCategoryName(value);
-        // Auto-generate slug only for new categories
-        if (!editingCategory && !categorySlug) {
+        // Auto-generate slug only for new categories (not when editing)
+        if (!editingCategory) {
             const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
             setCategorySlug(slug);
         }
