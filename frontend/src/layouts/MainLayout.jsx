@@ -28,8 +28,10 @@ const MainLayout = () => {
                 const showInMenu = cat.show_in_menu !== false; // true or undefined = show
                 return isParent && showInMenu;
             });
-            console.log('Filtered categories for menu:', filtered);
-            setCategories(filtered);
+            // Sort by menu_order (lower numbers first)
+            const sorted = filtered.sort((a, b) => (a.menu_order || 0) - (b.menu_order || 0));
+            console.log('Filtered and sorted categories for menu:', sorted);
+            setCategories(sorted);
         } catch (error) {
             console.error('Failed to fetch categories:', error);
         }

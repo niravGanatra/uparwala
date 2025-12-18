@@ -30,6 +30,10 @@ class Category(models.Model):
         default=True,
         help_text='Display this category in the navigation menu'
     )
+    menu_order = models.IntegerField(
+        default=0,
+        help_text='Order in which this category appears in the menu (lower numbers first)'
+    )
 
 
     class Meta:

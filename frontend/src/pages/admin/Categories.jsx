@@ -25,6 +25,7 @@ const AdminCategories = () => {
     const [categoryDescription, setCategoryDescription] = useState('');
     const [categoryCommission, setCategoryCommission] = useState('5.00');
     const [showInMenu, setShowInMenu] = useState(true);
+    const [menuOrder, setMenuOrder] = useState(0);
 
     useEffect(() => {
         fetchCategories();
@@ -49,6 +50,7 @@ const AdminCategories = () => {
         setCategoryDescription('');
         setCategoryCommission('5.00');
         setShowInMenu(true);
+        setMenuOrder(0);
         setEditingCategory(null);
     };
 
@@ -65,6 +67,7 @@ const AdminCategories = () => {
         setCategoryDescription(category.description || '');
         setCategoryCommission(category.commission_rate || '5.00');
         setShowInMenu(category.show_in_menu !== undefined ? category.show_in_menu : true);
+        setMenuOrder(category.menu_order || 0);
         setIsEditModalOpen(true);
     };
 
@@ -83,7 +86,8 @@ const AdminCategories = () => {
                 parent: categoryParent,
                 description: categoryDescription,
                 commission_rate: categoryCommission,
-                show_in_menu: showInMenu
+                show_in_menu: showInMenu,
+                menu_order: menuOrder
             });
             toast.success('Category added successfully!');
             handleCloseModals();
@@ -103,7 +107,8 @@ const AdminCategories = () => {
                 parent: categoryParent,
                 description: categoryDescription,
                 commission_rate: categoryCommission,
-                show_in_menu: showInMenu
+                show_in_menu: showInMenu,
+                menu_order: menuOrder
             });
             toast.success('Category updated successfully!');
             handleCloseModals();
@@ -315,6 +320,18 @@ const AdminCategories = () => {
                         />
                     </div>
 
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Menu Order</label>
+                        <input
+                            type="number"
+                            value={menuOrder}
+                            onChange={(e) => setMenuOrder(parseInt(e.target.value) || 0)}
+                            placeholder="0"
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">Lower numbers appear first (0, 1, 2...)</p>
+                    </div>
+
                     <div className="flex items-center gap-2">
                         <input
                             type="checkbox"
@@ -408,6 +425,18 @@ const AdminCategories = () => {
                             placeholder="5.00"
                             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Menu Order</label>
+                        <input
+                            type="number"
+                            value={menuOrder}
+                            onChange={(e) => setMenuOrder(parseInt(e.target.value) || 0)}
+                            placeholder="0"
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">Lower numbers appear first (0, 1, 2...)</p>
                     </div>
 
                     <div className="flex items-center gap-2">
