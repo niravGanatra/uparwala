@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -10,18 +10,19 @@ import toast from 'react-hot-toast';
 
 // Move CategoryForm outside to prevent recreation on every render
 const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories, selectedCategory }) => {
-    const handleNameChange = (e) => {
+    const handleNameChange = useCallback((e) => {
         // Only update name on change
-        setFormData({ ...formData, name: e.target.value });
-    };
+        const value = e.target.value;
+        setFormData(prev => ({ ...prev, name: value }));
+    }, [setFormData]);
 
-    const handleNameBlur = () => {
+    const handleNameBlur = useCallback(() => {
         // Auto-generate slug only when leaving the field, and only for new categories
         if (!selectedCategory && formData.name && !formData.slug) {
             const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-            setFormData({ ...formData, slug });
+            setFormData(prev => ({ ...prev, slug }));
         }
-    };
+    }, [selectedCategory, formData.name, formData.slug, setFormData]);
 
     return (
         <form onSubmit={onSubmit} className="space-y-4">
