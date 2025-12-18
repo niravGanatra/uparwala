@@ -142,8 +142,8 @@ const CartPage = () => {
                     </button>
                 </div>
 
-                <div className="grid lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 space-y-3 md:space-y-4">
+                <div className="grid lg:grid-cols-3 gap-6 w-full max-w-full overflow-hidden">
+                    <div className="lg:col-span-2 space-y-3 md:space-y-4 min-w-0 max-w-full overflow-hidden">
                         {cart.items.map((item, index) => {
                             const priceInfo = getItemPrice(item);
                             return (
@@ -162,9 +162,9 @@ const CartPage = () => {
                                                 DEAL APPLIED
                                             </div>
                                         )}
-                                        <CardContent className="p-3 md:p-4">
+                                        <CardContent className="p-3 md:p-4 overflow-hidden">
                                             {/* Mobile: Stack vertically, Desktop: Horizontal */}
-                                            <div className="flex gap-3 md:gap-4">
+                                            <div className="flex gap-3 md:gap-4 w-full max-w-full overflow-hidden">
                                                 {/* Selection Checkbox - Larger touch target */}
                                                 <button
                                                     onClick={() => toggleItemSelection(item.id)}

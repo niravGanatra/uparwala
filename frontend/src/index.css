@@ -1,18 +1,41 @@
 @import "tailwindcss";
 
-/* Prevent horizontal overflow on mobile */
+/* AGGRESSIVE overflow prevention */
+html {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
 body {
     overflow-x: hidden;
     max-width: 100vw;
+    position: relative;
 }
 
 * {
     box-sizing: border-box;
 }
 
+/* Ensure no element can overflow */
+* {
+    max-width: 100%;
+}
+
 #root {
     max-width: 100%;
     overflow-x: hidden;
+}
+
+/* Prevent images from overflowing */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Flex and grid items need min-width 0 to prevent overflow */
+.flex>*,
+.grid>* {
+    min-width: 0;
 }
 
 @theme {

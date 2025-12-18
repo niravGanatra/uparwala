@@ -84,11 +84,11 @@ const ProductDetailPage = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
             >
-                <div className="grid lg:grid-cols-2 gap-6 md:gap-8 w-full">
+                <div className="grid lg:grid-cols-2 gap-6 md:gap-8 w-full max-w-full overflow-hidden">
 
                     {/* Product Images */}
                     <motion.div
-                        className="space-y-4"
+                        className="space-y-4 min-w-0 max-w-full overflow-hidden"
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.2 }}
@@ -98,7 +98,7 @@ const ProductDetailPage = () => {
 
                     {/* Product Info */}
                     <motion.div
-                        className="space-y-6"
+                        className="space-y-6 min-w-0 max-w-full overflow-hidden"
                         initial={{ x: 20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.3 }}
