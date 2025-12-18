@@ -93,62 +93,67 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-slate-900 mb-2">Dashboard Overview</h1>
-                <p className="text-slate-600">Monitor your marketplace performance</p>
-            </div>
+        <div className="min-h-screen bg-slate-50">
+            <div className="max-w-7xl mx-auto px-4 py-6 md:py-8 w-full max-w-full overflow-hidden">
+                <div className="space-y-6">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Dashboard Overview</h1>
+                        <p className="text-sm md:text-base text-slate-600">Monitor your marketplace performance</p>
+                    </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {statCards.map((stat, index) => {
-                    const Icon = stat.icon;
-                    return (
-                        <motion.div
-                            key={stat.title}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                        >
-                            <Card>
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-600 mb-1">
-                                                {stat.title}
-                                            </p>
-                                            <p className="text-3xl font-bold text-slate-900">
-                                                {stat.value}
-                                            </p>
-                                        </div>
-                                        <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                                            <Icon className={`h-6 w-6 ${stat.color}`} />
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    );
-                })}
-            </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full max-w-full overflow-hidden">
+                        {statCards.map((stat, index) => {
+                            const Icon = stat.icon;
+                            return (
+                                <motion.div
+                                    key={stat.title}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="min-w-0 max-w-full overflow-hidden"
+                                >
+                                    <Card className="border-2 border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                                        <CardContent className="p-5 md:p-6">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">
+                                                        {stat.title}
+                                                    </p>
+                                                    <p className="text-2xl md:text-3xl font-bold text-slate-900 truncate">
+                                                        {stat.value}
+                                                    </p>
+                                                </div>
+                                                <div className={`p-3 md:p-4 rounded-xl flex-shrink-0 ${stat.bgColor}`}>
+                                                    <Icon className={`h-6 w-6 md:h-7 md:w-7 ${stat.color}`} />
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Recent Orders</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-slate-500">Recent orders will appear here</p>
-                    </CardContent>
-                </Card>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 w-full max-w-full overflow-hidden">
+                        <Card className="border-2 border-slate-200 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="text-lg md:text-xl">Recent Orders</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-slate-500">Recent orders will appear here</p>
+                            </CardContent>
+                        </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Top Products</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-slate-500">Top selling products will appear here</p>
-                    </CardContent>
-                </Card>
+                        <Card className="border-2 border-slate-200 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="text-lg md:text-xl">Top Products</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-slate-500">Top selling products will appear here</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
             </div>
         </div>
     );
