@@ -77,207 +77,221 @@ const ProductDetailPage = () => {
     if (!product) return <div className="text-center py-12">Product not found</div>;
 
     return (
-        <motion.div
-            className="container mx-auto px-4 py-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-        >
-            <div className="grid md:grid-cols-2 gap-8">
+        <div className="min-h-screen bg-slate-50">
+            <motion.div
+                className="container mx-auto px-4 py-6 md:py-8 pb-32 md:pb-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className="grid lg:grid-cols-2 gap-6 md:gap-8">
 
-                {/* Product Images */}
-                <motion.div
-                    className="space-y-4"
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                >
-                    <ImageGallery images={product.images} productName={product.name} />
-                </motion.div>
+                    {/* Product Images */}
+                    <motion.div
+                        className="space-y-4"
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        <ImageGallery images={product.images} productName={product.name} />
+                    </motion.div>
 
-                {/* Product Info */}
-                <motion.div
-                    className="space-y-6"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                >
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900 mb-2">{product.name}</h1>
-                        <p className="text-lg text-muted-foreground">
-                            Sold by <span className="text-orange-600 font-medium">{product.vendor_name}</span>
-                        </p>
-                    </div>
-
-                    <div className="flex items-baseline gap-4">
-                        {product.active_deal ? (
-                            <>
-                                <span className="text-3xl font-bold text-red-600">
-                                    ₹{product.active_deal.discounted_price}
-                                </span>
-                                <span className="text-xl text-slate-400 line-through">
-                                    ₹{product.price}
-                                </span>
-                                <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-sm font-bold">
-                                    {parseInt(product.active_deal.discount_percentage)}% OFF DEAL
-                                </span>
-                            </>
-                        ) : (
-                            <span className="text-3xl font-bold text-slate-900">
-                                ₹{product.price}
-                            </span>
-                        )}
-                    </div>
-
-                    <p className="text-slate-600 leading-relaxed">
-                        {product.description}
-                    </p>
-
-                    <div className="flex items-center space-x-4">
-                        <div className="flex items-center border rounded-md">
-                            <button
-                                className="px-3 py-2 hover:bg-slate-100 transition-colors"
-                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                            >
-                                -
-                            </button>
-                            <span className="px-4 font-medium">{quantity}</span>
-                            <button
-                                className="px-3 py-2 hover:bg-slate-100 transition-colors"
-                                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                            >
-                                +
-                            </button>
+                    {/* Product Info */}
+                    <motion.div
+                        className="space-y-6"
+                        initial={{ x: 20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                    >
+                        <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
+                            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">{product.name}</h1>
+                            <p className="text-base md:text-lg text-slate-600">
+                                Sold by <span className="text-orange-600 font-medium">{product.vendor_name}</span>
+                            </p>
                         </div>
-                        <span className="text-sm text-muted-foreground">
-                            {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-                        </span>
-                    </div>
 
-                    {/* Pincode Checker */}
-                    <div className="border-t border-b py-4 my-4">
-                        <h3 className="font-medium mb-2 text-sm">Delivery Availability</h3>
-                        <div className="flex gap-2 items-start">
-                            <div className="flex-1">
-                                <input
-                                    type="text"
-                                    placeholder="Enter Pincode"
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    maxLength={6}
-                                    id="pincode-input"
-                                />
-                                <p id="pincode-message" className="text-sm mt-1"></p>
+                        <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
+                            <div className="flex items-baseline gap-3 flex-wrap">
+                                {product.active_deal ? (
+                                    <>
+                                        <span className="text-3xl md:text-4xl font-bold text-red-600">
+                                            ₹{product.active_deal.discounted_price}
+                                        </span>
+                                        <span className="text-lg md:text-xl text-slate-400 line-through">
+                                            ₹{product.price}
+                                        </span>
+                                        <span className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-sm font-bold">
+                                            {parseInt(product.active_deal.discount_percentage)}% OFF
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span className="text-3xl md:text-4xl font-bold text-slate-900">
+                                        ₹{product.price}
+                                    </span>
+                                )}
                             </div>
-                            <Button
-                                variant="outline"
-                                onClick={async () => {
-                                    const code = document.getElementById('pincode-input').value;
-                                    const msgEl = document.getElementById('pincode-message');
-                                    if (!code || code.length < 6) {
-                                        toast.error("Please enter valid pincode");
-                                        return;
-                                    }
-                                    try {
-                                        const res = await api.get(`/products/${product.slug}/check-pincode/?pincode=${code}`);
-                                        if (res.data.available) {
-                                            msgEl.textContent = "✅ " + res.data.message;
-                                            msgEl.className = "text-sm mt-1 text-green-600 font-medium";
-                                        } else {
-                                            msgEl.textContent = "❌ " + res.data.message;
-                                            msgEl.className = "text-sm mt-1 text-red-600 font-medium";
-                                        }
-                                    } catch (err) {
-                                        msgEl.textContent = "Error checking availability";
-                                        msgEl.className = "text-sm mt-1 text-red-600";
-                                    }
-                                }}
-                            >
-                                Check
-                            </Button>
                         </div>
-                    </div>
 
-                    <div className="flex gap-4">
-                        {/* Stock Status Check */}
-                        {(product.stock_status === 'outofstock' || product.stock === 0) ? (
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="flex-1 border-orange-600 text-orange-600 hover:bg-orange-50"
-                                onClick={() => setShowNotifyModal(true)}
-                            >
-                                <Bell className="mr-2 h-4 w-4" />
-                                Notify Me When Available
-                            </Button>
-                        ) : (
-                            <div className="flex gap-3">
+                        <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
+                            <p className="text-slate-600 leading-relaxed text-base">
+                                {product.description}
+                            </p>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
+                            <h3 className="font-semibold mb-3 text-base">Quantity</h3>
+                            <div className="flex items-center gap-4 flex-wrap">
+                                {/* Quantity Controls - Mobile Optimized */}
+                                <div className="flex items-center border-2 border-slate-300 rounded-lg overflow-hidden">
+                                    <button
+                                        className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 transition-colors text-xl font-bold"
+                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                        aria-label="Decrease quantity"
+                                    >
+                                        −
+                                    </button>
+                                    <span className="px-6 md:px-8 font-bold text-lg min-w-[60px] text-center">{quantity}</span>
+                                    <button
+                                        className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 transition-colors text-xl font-bold"
+                                        onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                                        aria-label="Increase quantity"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                                <span className="text-sm md:text-base text-slate-600 font-medium">
+                                    {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Pincode Checker - Mobile Optimized */}
+                        <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
+                            <h3 className="font-semibold mb-3 text-base">Delivery Availability</h3>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <div className="flex-1">
+                                    <input
+                                        type="text"
+                                        placeholder="Enter Pincode"
+                                        className="flex h-14 w-full rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500"
+                                        maxLength={6}
+                                        id="pincode-input"
+                                    />
+                                    <p id="pincode-message" className="text-sm mt-2"></p>
+                                </div>
                                 <Button
+                                    variant="outline"
                                     size="lg"
-                                    className="flex-1"
-                                    onClick={handleAddToCart}
-                                    disabled={cartLoading}
-                                >
-                                    <ShoppingCart className="mr-2 h-4 w-4" />
-                                    {cartLoading ? 'Adding...' : 'Add to Cart'}
-                                </Button>
-                                <Button
-                                    size="lg"
-                                    variant="default"
-                                    className="flex-1 bg-orange-600 hover:bg-orange-700"
+                                    className="w-full sm:w-auto sm:min-w-[100px]"
                                     onClick={async () => {
-                                        if (!user) {
-                                            toast.error('Please login to continue');
-                                            navigate('/login');
+                                        const code = document.getElementById('pincode-input').value;
+                                        const msgEl = document.getElementById('pincode-message');
+                                        if (!code || code.length < 6) {
+                                            toast.error("Please enter valid pincode");
                                             return;
                                         }
-                                        await addToCart(product.id, quantity);
-                                        navigate('/checkout');
+                                        try {
+                                            const res = await api.get(`/products/${product.slug}/check-pincode/?pincode=${code}`);
+                                            if (res.data.available) {
+                                                msgEl.textContent = "✅ " + res.data.message;
+                                                msgEl.className = "text-sm mt-2 text-green-600 font-medium";
+                                            } else {
+                                                msgEl.textContent = "❌ " + res.data.message;
+                                                msgEl.className = "text-sm mt-2 text-red-600 font-medium";
+                                            }
+                                        } catch (err) {
+                                            msgEl.textContent = "Error checking availability";
+                                            msgEl.className = "text-sm mt-2 text-red-600";
+                                        }
                                     }}
-                                    disabled={cartLoading}
                                 >
-                                    <ShoppingCart className="mr-2 h-4 w-4" />
-                                    {cartLoading ? 'Processing...' : 'Buy Now'}
+                                    Check
                                 </Button>
                             </div>
-                        )}
-                        <Button size="lg" variant="outline">
-                            <Heart className="h-5 w-5" />
-                        </Button>
-                    </div>
+                        </div>
 
-                    <Card>
-                        <CardContent className="p-4 space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Category</span>
-                                <span className="font-medium">{product.category_name}</span>
-                            </div>
-                            {product.sku && (
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">SKU</span>
-                                    <span className="font-medium">{product.sku}</span>
+                        <div className="flex gap-4">
+                            {/* Stock Status Check */}
+                            {(product.stock_status === 'outofstock' || product.stock === 0) ? (
+                                <Button
+                                    size="lg"
+                                    variant="outline"
+                                    className="flex-1 border-orange-600 text-orange-600 hover:bg-orange-50"
+                                    onClick={() => setShowNotifyModal(true)}
+                                >
+                                    <Bell className="mr-2 h-4 w-4" />
+                                    Notify Me When Available
+                                </Button>
+                            ) : (
+                                <div className="flex gap-3">
+                                    <Button
+                                        size="lg"
+                                        className="flex-1"
+                                        onClick={handleAddToCart}
+                                        disabled={cartLoading}
+                                    >
+                                        <ShoppingCart className="mr-2 h-4 w-4" />
+                                        {cartLoading ? 'Adding...' : 'Add to Cart'}
+                                    </Button>
+                                    <Button
+                                        size="lg"
+                                        variant="default"
+                                        className="flex-1 bg-orange-600 hover:bg-orange-700"
+                                        onClick={async () => {
+                                            if (!user) {
+                                                toast.error('Please login to continue');
+                                                navigate('/login');
+                                                return;
+                                            }
+                                            await addToCart(product.id, quantity);
+                                            navigate('/checkout');
+                                        }}
+                                        disabled={cartLoading}
+                                    >
+                                        <ShoppingCart className="mr-2 h-4 w-4" />
+                                        {cartLoading ? 'Processing...' : 'Buy Now'}
+                                    </Button>
                                 </div>
                             )}
-                        </CardContent>
-                    </Card>
-                </motion.div>
+                            <Button size="lg" variant="outline">
+                                <Heart className="h-5 w-5" />
+                            </Button>
+                        </div>
 
-                {/* Product Reviews Section */}
-                <ProductReviews productId={product.id} />
+                        <Card>
+                            <CardContent className="p-4 space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Category</span>
+                                    <span className="font-medium">{product.category_name}</span>
+                                </div>
+                                {product.sku && (
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">SKU</span>
+                                        <span className="font-medium">{product.sku}</span>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </motion.div>
 
-                {/* Product Q&A Section */}
-                <ProductQA productId={product.id} />
+                    {/* Product Reviews Section */}
+                    <ProductReviews productId={product.id} />
 
-                {/* Similar Products */}
-                <ProductRecommendations productId={product.id} type="similar" />
-            </div>
+                    {/* Product Q&A Section */}
+                    <ProductQA productId={product?.id} />
 
-            {/* Notify Me Modal */}
-            <NotifyMeModal
-                product={product}
-                isOpen={showNotifyModal}
-                onClose={() => setShowNotifyModal(false)}
-            />
-        </motion.div>
+                    {/* Recommendations */}
+                    <ProductRecommendations currentProductid={product?.id} />
+
+                    {/* Notify Me Modal */}
+                    <NotifyMeModal
+                        isOpen={showNotifyModal}
+                        onClose={() => setShowNotifyModal(false)}
+                        productId={product.id}
+                    />
+                </div>
+            </motion.div>
+        </div>
     );
 };
 
