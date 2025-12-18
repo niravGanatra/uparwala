@@ -210,52 +210,42 @@ const ProductDetailPage = () => {
                             </div>
                         </div>
 
-                        <div className="flex gap-4">
-                            {/* Stock Status Check */}
-                            {(product.stock_status === 'outofstock' || product.stock === 0) ? (
-                                <Button
-                                    size="lg"
-                                    variant="outline"
-                                    className="flex-1 border-orange-600 text-orange-600 hover:bg-orange-50"
-                                    onClick={() => setShowNotifyModal(true)}
-                                >
-                                    <Bell className="mr-2 h-4 w-4" />
-                                    Notify Me When Available
-                                </Button>
-                            ) : (
-                                <div className="flex gap-3">
+                        {/* Action Buttons - Mobile Optimized */}
+                        <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                {/* Stock Status Check */}
+                                {(product.stock_status === 'outofstock' || product.stock === 0) ? (
                                     <Button
                                         size="lg"
-                                        className="flex-1"
-                                        onClick={handleAddToCart}
-                                        disabled={cartLoading}
+                                        variant="outline"
+                                        className="w-full border-orange-600 text-orange-600 hover:bg-orange-50"
+                                        onClick={() => setShowNotifyModal(true)}
                                     >
-                                        <ShoppingCart className="mr-2 h-4 w-4" />
-                                        {cartLoading ? 'Adding...' : 'Add to Cart'}
+                                        <Bell className="mr-2 h-5 w-5" />
+                                        Notify Me When Available
                                     </Button>
-                                    <Button
-                                        size="lg"
-                                        variant="default"
-                                        className="flex-1 bg-orange-600 hover:bg-orange-700"
-                                        onClick={async () => {
-                                            if (!user) {
-                                                toast.error('Please login to continue');
-                                                navigate('/login');
-                                                return;
-                                            }
-                                            await addToCart(product.id, quantity);
-                                            navigate('/checkout');
-                                        }}
-                                        disabled={cartLoading}
-                                    >
-                                        <ShoppingCart className="mr-2 h-4 w-4" />
-                                        {cartLoading ? 'Processing...' : 'Buy Now'}
-                                    </Button>
-                                </div>
-                            )}
-                            <Button size="lg" variant="outline">
-                                <Heart className="h-5 w-5" />
-                            </Button>
+                                ) : (
+                                    <>
+                                        <Button
+                                            size="lg"
+                                            className="w-full sm:flex-1"
+                                            onClick={handleAddToCart}
+                                            disabled={cartLoading}
+                                        >
+                                            <ShoppingCart className="mr-2 h-5 w-5" />
+                                            {cartLoading ? 'Adding...' : 'Add to Cart'}
+                                        </Button>
+                                        <Button
+                                            size="lg"
+                                            variant="outline"
+                                            className="w-full sm:w-auto sm:min-w-[56px]"
+                                            aria-label="Add to wishlist"
+                                        >
+                                            <Heart className="h-5 w-5" />
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
                         <Card>
