@@ -24,7 +24,14 @@ const RegisterPage = () => {
             await register(formData);
             navigate('/login');
         } catch (error) {
-            setError('Registration failed. Please try again.');
+            console.error('Registration error:', error);
+            // Show specific error message if available
+            const errorMsg = error.response?.data?.username?.[0] ||
+                error.response?.data?.email?.[0] ||
+                error.response?.data?.password?.[0] ||
+                error.response?.data?.message ||
+                'Registration failed. Please try again.';
+            setError(errorMsg);
         }
     };
 
