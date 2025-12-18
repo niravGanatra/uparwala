@@ -177,210 +177,214 @@ const CheckoutPage = () => {
     }
 
     return (
-        <motion.div
-            className="container mx-auto px-4 py-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-        >
-            <button
-                onClick={() => navigate('/cart')}
-                className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
+        <div className="min-h-screen bg-slate-50 pb-24 md:pb-8">
+            <motion.div
+                className="max-w-7xl mx-auto px-4 py-6 md:py-8 w-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
             >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Cart
-            </button>
+                <button
+                    onClick={() => navigate('/cart')}
+                    className="flex items-center gap-2 text-sm md:text-base text-slate-600 hover:text-orange-600 mb-6 min-h-[44px] transition-colors"
+                >
+                    <ArrowLeft className="h-5 w-5" />
+                    Back to Cart
+                </button>
 
-            <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+                <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Checkout</h1>
 
-            <div className="grid md:grid-cols-3 gap-8">
-                {/* Shipping Address Form */}
-                <div className="md:col-span-2 space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center">
-                                <Truck className="h-5 w-5 mr-2" />
-                                Shipping Address
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Full Name *</label>
-                                    <Input
-                                        name="full_name"
-                                        value={shippingAddress.full_name}
-                                        onChange={handleInputChange}
-                                        placeholder="John Doe"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Phone Number *</label>
-                                    <Input
-                                        name="phone"
-                                        value={shippingAddress.phone}
-                                        onChange={handleInputChange}
-                                        placeholder="+91 9876543210"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Address Line 1 *</label>
-                                <Input
-                                    name="address_line1"
-                                    value={shippingAddress.address_line1}
-                                    onChange={handleInputChange}
-                                    placeholder="House No., Street Name"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Address Line 2</label>
-                                <Input
-                                    name="address_line2"
-                                    value={shippingAddress.address_line2}
-                                    onChange={handleInputChange}
-                                    placeholder="Apartment, Suite, etc. (optional)"
-                                />
-                            </div>
-
-                            <div className="grid md:grid-cols-3 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">City *</label>
-                                    <Input
-                                        name="city"
-                                        value={shippingAddress.city}
-                                        onChange={handleInputChange}
-                                        placeholder="Mumbai"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">State *</label>
-                                    <Input
-                                        name="state"
-                                        value={shippingAddress.state}
-                                        onChange={handleInputChange}
-                                        placeholder="Maharashtra"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Postal Code *</label>
-                                    <Input
-                                        name="postal_code"
-                                        value={shippingAddress.postal_code}
-                                        onChange={handleInputChange}
-                                        placeholder="400001"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Country</label>
-                                <Input
-                                    name="country"
-                                    value={shippingAddress.country}
-                                    onChange={handleInputChange}
-                                    disabled
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center">
-                                <CreditCard className="h-5 w-5 mr-2" />
-                                Payment Method
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                <div className={`flex items-center p-4 border rounded-lg ${paymentMethod === 'cod' ? 'bg-orange-50 border-orange-200' : ''}`}>
-                                    <input
-                                        type="radio"
-                                        id="cod"
-                                        name="payment"
-                                        value="cod"
-                                        checked={paymentMethod === 'cod'}
-                                        onChange={(e) => setPaymentMethod(e.target.value)}
-                                        className="mr-3 accent-orange-600"
-                                    />
-                                    <label htmlFor="cod" className="flex-1 cursor-pointer">
-                                        <div className="font-medium">Cash on Delivery</div>
-                                        <div className="text-sm text-muted-foreground">Pay when you receive your order</div>
-                                    </label>
-                                </div>
-                                <div className={`flex items-center p-4 border rounded-lg ${paymentMethod === 'razorpay' ? 'bg-orange-50 border-orange-200' : ''}`}>
-                                    <input
-                                        type="radio"
-                                        id="razorpay"
-                                        name="payment"
-                                        value="razorpay"
-                                        checked={paymentMethod === 'razorpay'}
-                                        onChange={(e) => setPaymentMethod(e.target.value)}
-                                        className="mr-3 accent-orange-600"
-                                    />
-                                    <label htmlFor="razorpay" className="flex-1 cursor-pointer">
-                                        <div className="font-medium">Online Payment</div>
-                                        <div className="text-sm text-muted-foreground">Pay securely via Razorpay</div>
-                                    </label>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Order Summary */}
-                <div>
-                    <Card className="sticky top-20">
-                        <CardHeader>
-                            <CardTitle>Order Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-3">
-                                {cart.items.map((item) => (
-                                    <div key={item.id} className="flex justify-between text-sm">
-                                        <div className="flex-1">
-                                            <div className="font-medium">{item.product.name}</div>
-                                            <div className="text-muted-foreground">Qty: {item.quantity}</div>
-                                        </div>
-                                        <div className="font-medium">₹{(item.product.price * item.quantity).toFixed(2)}</div>
+                <div className="grid lg:grid-cols-3 gap-6 w-full max-w-full overflow-hidden">
+                    {/* Shipping Address Form */}
+                    <div className="lg:col-span-2 space-y-6 min-w-0 max-w-full overflow-hidden">
+                        <Card className="border-2 border-slate-200 shadow-sm">
+                            <CardHeader className="bg-white">
+                                <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                                    <Truck className="h-5 w-5 md:h-6 md:w-6 text-orange-600" />
+                                    Shipping Address
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-5 overflow-hidden">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Full Name *</label>
+                                        <Input
+                                            name="full_name"
+                                            value={shippingAddress.full_name}
+                                            onChange={handleInputChange}
+                                            placeholder="John Doe"
+                                        />
                                     </div>
-                                ))}
-                            </div>
-
-                            <div className="border-t pt-4 space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Subtotal</span>
-                                    <span>₹{calculateTotal().toFixed(2)}</span>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Phone Number *</label>
+                                        <Input
+                                            name="phone"
+                                            value={shippingAddress.phone}
+                                            onChange={handleInputChange}
+                                            placeholder="+91 9876543210"
+                                        />
+                                    </div>
                                 </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Shipping</span>
-                                    <span className="text-green-600 font-medium">Free</span>
-                                </div>
-                                <div className="border-t pt-2 flex justify-between font-bold text-lg">
-                                    <span>Total</span>
-                                    <span>₹{calculateTotal().toFixed(2)}</span>
-                                </div>
-                            </div>
 
-                            <Button
-                                className="w-full bg-orange-600 hover:bg-orange-700"
-                                size="lg"
-                                onClick={handlePlaceOrder}
-                                disabled={loading}
-                            >
-                                {loading ? 'Processing...' : 'Place Order'}
-                            </Button>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Address Line 1 *</label>
+                                    <Input
+                                        name="address_line1"
+                                        value={shippingAddress.address_line1}
+                                        onChange={handleInputChange}
+                                        placeholder="House No., Street Name"
+                                    />
+                                </div>
 
-                            <p className="text-xs text-center text-muted-foreground">
-                                By placing your order, you agree to our terms and conditions
-                            </p>
-                        </CardContent>
-                    </Card>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Address Line 2</label>
+                                    <Input
+                                        name="address_line2"
+                                        value={shippingAddress.address_line2}
+                                        onChange={handleInputChange}
+                                        placeholder="Apartment, Suite, etc. (optional)"
+                                    />
+                                </div>
+
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">City *</label>
+                                        <Input
+                                            name="city"
+                                            value={shippingAddress.city}
+                                            onChange={handleInputChange}
+                                            placeholder="Mumbai"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">State *</label>
+                                        <Input
+                                            name="state"
+                                            value={shippingAddress.state}
+                                            onChange={handleInputChange}
+                                            placeholder="Maharashtra"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Postal Code *</label>
+                                        <Input
+                                            name="postal_code"
+                                            value={shippingAddress.postal_code}
+                                            onChange={handleInputChange}
+                                            placeholder="400001"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Country</label>
+                                    <Input
+                                        name="country"
+                                        value={shippingAddress.country}
+                                        onChange={handleInputChange}
+                                        disabled
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center">
+                                    <CreditCard className="h-5 w-5 mr-2" />
+                                    Payment Method
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="overflow-hidden">
+                                <div className="space-y-4">
+                                    <div className={`flex items-center p-4 md:p-5 border-2 rounded-xl cursor-pointer transition-all min-h-[68px] ${paymentMethod === 'cod' ? 'bg-orange-50 border-orange-500 shadow-sm' : 'border-slate-300 hover:border-orange-300'
+                                        }`} onClick={() => setPaymentMethod('cod')}>
+                                        <input
+                                            type="radio"
+                                            id="cod"
+                                            name="payment"
+                                            value="cod"
+                                            checked={paymentMethod === 'cod'}
+                                            onChange={(e) => setPaymentMethod(e.target.value)}
+                                            className="mr-4 w-5 h-5 accent-orange-600"
+                                        />
+                                        <label htmlFor="cod" className="flex-1 cursor-pointer">
+                                            <div className="font-semibold text-base md:text-lg">Cash on Delivery</div>
+                                            <div className="text-sm text-slate-600">Pay when you receive your order</div>
+                                        </label>
+                                    </div>
+                                    <div className={`flex items-center p-4 md:p-5 border-2 rounded-xl cursor-pointer transition-all min-h-[68px] ${paymentMethod === 'razorpay' ? 'bg-orange-50 border-orange-500 shadow-sm' : 'border-slate-300 hover:border-orange-300'
+                                        }`} onClick={() => setPaymentMethod('razorpay')}>
+                                        <input
+                                            type="radio"
+                                            id="razorpay"
+                                            name="payment"
+                                            value="razorpay"
+                                            checked={paymentMethod === 'razorpay'}
+                                            onChange={(e) => setPaymentMethod(e.target.value)}
+                                            className="mr-4 w-5 h-5 accent-orange-600"
+                                        />
+                                        <label htmlFor="razorpay" className="flex-1 cursor-pointer">
+                                            <div className="font-semibold text-base md:text-lg">Online Payment</div>
+                                            <div className="text-sm text-slate-600">Pay securely via Razorpay</div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Order Summary */}
+                    <div className="min-w-0 max-w-full overflow-hidden">
+                        <Card className="sticky top-20 border-2 border-slate-200 shadow-sm">
+                            <CardHeader>
+                                <CardTitle>Order Summary</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-3">
+                                    {cart.items.map((item) => (
+                                        <div key={item.id} className="flex justify-between text-sm">
+                                            <div className="flex-1">
+                                                <div className="font-medium">{item.product.name}</div>
+                                                <div className="text-muted-foreground">Qty: {item.quantity}</div>
+                                            </div>
+                                            <div className="font-medium">₹{(item.product.price * item.quantity).toFixed(2)}</div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="border-t pt-4 space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Subtotal</span>
+                                        <span>₹{calculateTotal().toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Shipping</span>
+                                        <span className="text-green-600 font-medium">Free</span>
+                                    </div>
+                                    <div className="border-t pt-2 flex justify-between font-bold text-lg">
+                                        <span>Total</span>
+                                        <span>₹{calculateTotal().toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    className="w-full bg-orange-600 hover:bg-orange-700"
+                                    size="lg"
+                                    onClick={handlePlaceOrder}
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Processing...' : 'Place Order'}
+                                </Button>
+
+                                <p className="text-xs text-center text-muted-foreground">
+                                    By placing your order, you agree to our terms and conditions
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
-            </div>
-        </motion.div>
+            </motion.div>
+        </div>
     );
 };
 
