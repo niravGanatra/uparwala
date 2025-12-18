@@ -54,8 +54,8 @@ const MainLayout = () => {
                         <Link to="/" className="text-sm font-medium hover:text-orange-600 transition-colors">Home</Link>
                         <Link to="/products" className="text-sm font-medium hover:text-orange-600 transition-colors">All Products</Link>
 
-                        {/* Top 5 Categories */}
-                        {categories.slice(0, 5).map(category => (
+                        {/* All Categories with show_in_menu = true */}
+                        {categories.map(category => (
                             <Link
                                 key={category.id}
                                 to={`/category/${category.slug}`}
