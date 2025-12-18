@@ -26,6 +26,11 @@ class Category(models.Model):
         validators=[MinValueValidator(2.00), MaxValueValidator(10.00)],
         help_text='Commission rate for products in this category (2-10%)'
     )
+    show_in_menu = models.BooleanField(
+        default=True,
+        help_text='Display this category in the navigation menu'
+    )
+
 
     class Meta:
         verbose_name_plural = 'Categories'

@@ -24,6 +24,7 @@ const AdminCategories = () => {
     const [categoryParent, setCategoryParent] = useState('');
     const [categoryDescription, setCategoryDescription] = useState('');
     const [categoryCommission, setCategoryCommission] = useState('5.00');
+    const [showInMenu, setShowInMenu] = useState(true);
 
     useEffect(() => {
         fetchCategories();
@@ -47,6 +48,7 @@ const AdminCategories = () => {
         setCategoryParent('');
         setCategoryDescription('');
         setCategoryCommission('5.00');
+        setShowInMenu(true);
         setEditingCategory(null);
     };
 
@@ -62,6 +64,7 @@ const AdminCategories = () => {
         setCategoryParent(category.parent || '');
         setCategoryDescription(category.description || '');
         setCategoryCommission(category.commission_rate || '5.00');
+        setShowInMenu(category.show_in_menu !== undefined ? category.show_in_menu : true);
         setIsEditModalOpen(true);
     };
 
@@ -79,7 +82,8 @@ const AdminCategories = () => {
                 slug: categorySlug,
                 parent: categoryParent,
                 description: categoryDescription,
-                commission_rate: categoryCommission
+                commission_rate: categoryCommission,
+                show_in_menu: showInMenu
             });
             toast.success('Category added successfully!');
             handleCloseModals();
@@ -98,7 +102,8 @@ const AdminCategories = () => {
                 slug: categorySlug,
                 parent: categoryParent,
                 description: categoryDescription,
-                commission_rate: categoryCommission
+                commission_rate: categoryCommission,
+                show_in_menu: showInMenu
             });
             toast.success('Category updated successfully!');
             handleCloseModals();
@@ -310,6 +315,19 @@ const AdminCategories = () => {
                         />
                     </div>
 
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="showInMenuAdd"
+                            checked={showInMenu}
+                            onChange={(e) => setShowInMenu(e.target.checked)}
+                            className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="showInMenuAdd" className="text-sm font-medium cursor-pointer">
+                            Show in navigation menu
+                        </label>
+                    </div>
+
                     <div className="flex gap-2 justify-end pt-4">
                         <Button type="button" variant="outline" onClick={handleCloseModals}>
                             Cancel
@@ -390,6 +408,19 @@ const AdminCategories = () => {
                             placeholder="5.00"
                             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="showInMenuEdit"
+                            checked={showInMenu}
+                            onChange={(e) => setShowInMenu(e.target.checked)}
+                            className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="showInMenuEdit" className="text-sm font-medium cursor-pointer">
+                            Show in navigation menu
+                        </label>
                     </div>
 
                     <div className="flex gap-2 justify-end pt-4">
