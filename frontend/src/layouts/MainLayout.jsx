@@ -110,54 +110,62 @@ const MainLayout = () => {
                                             <>
                                                 {/* Backdrop */}
                                                 <div
-                                                    className="fixed inset-0 z-40"
+                                                    className="fixed inset-0 bg-black/50 z-40 md:bg-transparent"
                                                     onClick={() => setShowUserMenu(false)}
                                                 />
 
-                                                {/* Dropdown Menu - Mobile Optimized */}
+                                                {/* Mobile: Full-screen modal, Desktop: Dropdown */}
                                                 <motion.div
-                                                    initial={{ opacity: 0, y: -10 }}
+                                                    initial={{ opacity: 0, y: 20 }}
                                                     animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: -10 }}
+                                                    exit={{ opacity: 0, y: 20 }}
                                                     transition={{ duration: 0.2 }}
-                                                    className="absolute right-0 mt-2 w-64 md:w-72 bg-white rounded-xl shadow-xl border-2 border-slate-200 z-50 overflow-hidden"
+                                                    className="fixed inset-x-0 bottom-0 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-80 bg-white md:rounded-xl shadow-2xl z-50 md:border-2 md:border-slate-200 rounded-t-3xl md:rounded-t-xl max-h-[80vh] md:max-h-none overflow-y-auto"
                                                 >
+                                                    {/* Mobile: Close button at top */}
+                                                    <div className="md:hidden sticky top-0 bg-white z-10 flex justify-center py-3 border-b border-slate-200">
+                                                        <div className="w-12 h-1.5 bg-slate-300 rounded-full"></div>
+                                                    </div>
+
                                                     {/* User Info Header */}
-                                                    <div className="px-5 py-4 border-b-2 border-slate-100 bg-gradient-to-r from-orange-50 to-slate-50">
-                                                        <p className="text-base font-semibold text-slate-900 truncate">{user.username}</p>
-                                                        <p className="text-sm text-slate-600 truncate">{user.email}</p>
+                                                    <div className="px-6 py-5 md:py-4 border-b-2 border-slate-100 bg-gradient-to-r from-orange-50 to-slate-50">
+                                                        <p className="text-lg md:text-base font-bold md:font-semibold text-slate-900 truncate">{user.username}</p>
+                                                        <p className="text-base md:text-sm text-slate-600 truncate mt-1">{user.email}</p>
                                                     </div>
 
                                                     {/* Menu Items */}
-                                                    <div className="py-2">
+                                                    <div className="py-3 md:py-2">
                                                         <Link
                                                             to="/orders"
-                                                            className="flex items-center px-5 py-3 text-base text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors min-h-[48px] active:bg-orange-100"
+                                                            className="flex items-center px-6 py-4 md:py-3 text-lg md:text-base text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors min-h-[56px] md:min-h-[48px] active:bg-orange-100"
                                                             onClick={() => setShowUserMenu(false)}
                                                         >
-                                                            <Package className="h-5 w-5 mr-3 flex-shrink-0" />
-                                                            <span className="font-medium">My Orders</span>
+                                                            <Package className="h-6 w-6 md:h-5 md:w-5 mr-4 md:mr-3 flex-shrink-0" />
+                                                            <span className="font-semibold md:font-medium">My Orders</span>
                                                         </Link>
 
                                                         {user.is_vendor && (
                                                             <Link
                                                                 to="/vendor/dashboard"
-                                                                className="flex items-center px-5 py-3 text-base text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors min-h-[48px] active:bg-orange-100"
+                                                                className="flex items-center px-6 py-4 md:py-3 text-lg md:text-base text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors min-h-[56px] md:min-h-[48px] active:bg-orange-100"
                                                                 onClick={() => setShowUserMenu(false)}
                                                             >
-                                                                <UserCircle className="h-5 w-5 mr-3 flex-shrink-0" />
-                                                                <span className="font-medium">Vendor Dashboard</span>
+                                                                <UserCircle className="h-6 w-6 md:h-5 md:w-5 mr-4 md:mr-3 flex-shrink-0" />
+                                                                <span className="font-semibold md:font-medium">Vendor Dashboard</span>
                                                             </Link>
                                                         )}
 
                                                         <button
                                                             onClick={handleLogout}
-                                                            className="w-full flex items-center px-5 py-3 text-base font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors min-h-[48px] active:bg-red-100 border-t-2 border-slate-100"
+                                                            className="w-full flex items-center px-6 py-4 md:py-3 text-lg md:text-base font-bold md:font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors min-h-[56px] md:min-h-[48px] active:bg-red-100 border-t-2 border-slate-100 mt-2"
                                                         >
-                                                            <LogOut className="h-5 w-5 mr-3 flex-shrink-0" />
+                                                            <LogOut className="h-6 w-6 md:h-5 md:w-5 mr-4 md:mr-3 flex-shrink-0" />
                                                             <span>Sign Out</span>
                                                         </button>
                                                     </div>
+
+                                                    {/* Mobile: Safe area padding at bottom */}
+                                                    <div className="md:hidden h-8"></div>
                                                 </motion.div>
                                             </>
                                         )}
