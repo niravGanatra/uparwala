@@ -25,6 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    username = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
@@ -39,8 +40,22 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        # Auto-generate username from email if not provided
+        username = validated_data.get('username')
+        if not username:
+            # Use email prefix as username, make it unique
+            email = validated_data['email']
+            base_username = email.split('@')[0]
+            username = base_username
+            
+            # Ensure uniqueness
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+        
         user = User.objects.create_user(
-            username=validated_data['username'],
+            username=username,
             email=validated_data['email'],
             password=validated_data['password']
         )

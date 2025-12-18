@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
-        username: '',
         email: '',
         password: '',
     });
@@ -40,16 +39,6 @@ const RegisterPage = () => {
             <form onSubmit={handleSubmit}>
                 <CardContent className="grid gap-4">
                     {error && <div className="text-red-500 text-sm text-center">{error}</div>}
-                    <div className="grid gap-2">
-                        <label htmlFor="username">Username</label>
-                        <Input
-                            id="username"
-                            type="text"
-                            value={formData.username}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
                     <div className="grid gap-2">
                         <label htmlFor="email">Email</label>
                         <Input
