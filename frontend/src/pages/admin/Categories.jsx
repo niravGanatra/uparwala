@@ -121,8 +121,13 @@ const AdminCategories = () => {
                     value={formData.name}
                     onChange={(e) => {
                         const name = e.target.value;
-                        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-                        setFormData({ ...formData, name, slug });
+                        // Only auto-generate slug for new categories (not when editing)
+                        if (!selectedCategory) {
+                            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                            setFormData({ ...formData, name, slug });
+                        } else {
+                            setFormData({ ...formData, name });
+                        }
                     }}
                     required
                     placeholder="Enter category name"
