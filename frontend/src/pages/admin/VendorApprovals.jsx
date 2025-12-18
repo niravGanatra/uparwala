@@ -252,7 +252,6 @@ const VendorApprovals = () => {
                 </div>
             )}
         </div>
-        </div >
     );
 };
 
