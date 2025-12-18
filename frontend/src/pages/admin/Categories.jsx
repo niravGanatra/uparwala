@@ -11,10 +11,25 @@ import toast from 'react-hot-toast';
 // Move CategoryForm outside to prevent recreation on every render
 const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories, selectedCategory }) => {
     const handleNameChange = useCallback((e) => {
-        // Only update name on change
         const value = e.target.value;
         setFormData(prev => ({ ...prev, name: value }));
-    }, [setFormData]);
+    }, []); // setFormData is stable, no need to include
+
+    const handleSlugChange = useCallback((e) => {
+        setFormData(prev => ({ ...prev, slug: e.target.value }));
+    }, []);
+
+    const handleParentChange = useCallback((e) => {
+        setFormData(prev => ({ ...prev, parent: e.target.value }));
+    }, []);
+
+    const handleDescriptionChange = useCallback((e) => {
+        setFormData(prev => ({ ...prev, description: e.target.value }));
+    }, []);
+
+    const handleCommissionChange = useCallback((e) => {
+        setFormData(prev => ({ ...prev, commission_rate: e.target.value }));
+    }, []);
 
     const handleNameBlur = useCallback(() => {
         // Auto-generate slug only when leaving the field, and only for new categories
@@ -22,7 +37,7 @@ const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories,
             const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
             setFormData(prev => ({ ...prev, slug }));
         }
-    }, [selectedCategory, formData.name, formData.slug, setFormData]);
+    }, [selectedCategory, formData.name, formData.slug]);
 
     return (
         <form onSubmit={onSubmit} className="space-y-4">
@@ -41,7 +56,7 @@ const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories,
                 <label className="block text-sm font-medium mb-2">Slug *</label>
                 <Input
                     value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    onChange={handleSlugChange}
                     required
                     placeholder="category-slug"
                 />
@@ -51,7 +66,7 @@ const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories,
                 <label className="block text-sm font-medium mb-2">Parent Category</label>
                 <select
                     value={formData.parent}
-                    onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
+                    onChange={handleParentChange}
                     className="w-full px-3 py-2 border rounded-lg"
                 >
                     <option value="">None (Top Level)</option>
@@ -65,7 +80,7 @@ const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories,
                 <label className="block text-sm font-medium mb-2">Description</label>
                 <textarea
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={handleDescriptionChange}
                     className="w-full px-3 py-2 border rounded-lg"
                     rows={3}
                     placeholder="Category description"
@@ -80,7 +95,7 @@ const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories,
                     min="0"
                     max="100"
                     value={formData.commission_rate}
-                    onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                    onChange={handleCommissionChange}
                     placeholder="5.00"
                 />
             </div>
