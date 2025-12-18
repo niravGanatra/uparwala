@@ -239,119 +239,124 @@ const VendorDashboard = () => {
     }
 
     return (
-        <motion.div
-            className="space-y-6"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-        >
-            {/* Status Banner */}
-            {renderStatusBanner()}
+        <div className="min-h-screen bg-slate-50">
+            <div className="max-w-7xl mx-auto px-4 py-6 md:py-8 w-full max-w-full overflow-hidden">
+                <motion.div
+                    className="space-y-6"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                >
+                    {/* Status Banner */}
+                    {renderStatusBanner()}
 
-            {/* Inactive Account Banner */}
-            {renderInactiveBanner()}
+                    {/* Inactive Account Banner */}
+                    {renderInactiveBanner()}
 
-            {/* Stats Grid - Only show if approved */}
-            {vendorStatus?.vendor_status === 'approved' && stats && (
-                <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {statsCards.map((stat, index) => (
-                            <motion.div
-                                key={index}
-                                variants={itemVariants}
-                                whileHover={{ scale: 1.05, y: -5 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <Card>
-                                    <CardContent className="p-6">
-                                        <div className="flex items-center space-x-4">
-                                            <motion.div
-                                                className={`p-3 rounded-full ${stat.bg}`}
-                                                whileHover={{ rotate: 360 }}
-                                                transition={{ duration: 0.5 }}
-                                            >
-                                                <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                                            </motion.div>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                                                <motion.h3
-                                                    className="text-2xl font-bold"
-                                                    initial={{ scale: 0 }}
-                                                    animate={{ scale: 1 }}
-                                                    transition={{ delay: index * 0.1 + 0.3, type: "spring" }}
-                                                >
-                                                    {stat.value}
-                                                </motion.h3>
-                                                {stat.subtitle && (
-                                                    <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
-                                                )}
+                    {/* Stats Grid - Only show if approved */}
+                    {vendorStatus?.vendor_status === 'approved' && stats && (
+                        <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-full overflow-hidden">
+                                {statsCards.map((stat, index) => (
+                                    <motion.div
+                                        key={index}
+                                        variants={itemVariants}
+                                        whileHover={{ scale: 1.05, y: -5 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="min-w-0 max-w-full overflow-hidden"
+                                    >
+                                        <Card className="border-2 border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                                            <CardContent className="p-5 md:p-6">
+                                                <div className="flex items-center space-x-3 md:space-x-4">
+                                                    <motion.div
+                                                        className={`p-3 md:p-4 rounded-xl flex-shrink-0 ${stat.bg}`}
+                                                        whileHover={{ rotate: 360 }}
+                                                        transition={{ duration: 0.5 }}
+                                                    >
+                                                        <stat.icon className={`h-6 w-6 md:h-7 md:w-7 ${stat.color}`} />
+                                                    </motion.div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs md:text-sm font-medium text-slate-600">{stat.title}</p>
+                                                        <motion.h3
+                                                            className="text-xl md:text-2xl font-bold truncate"
+                                                            initial={{ scale: 0 }}
+                                                            animate={{ scale: 1 }}
+                                                            transition={{ delay: index * 0.1 + 0.3, type: "spring" }}
+                                                        >
+                                                            {stat.value}
+                                                        </motion.h3>
+                                                        {stat.subtitle && (
+                                                            <p className="text-xs text-slate-500 mt-0.5 truncate">{stat.subtitle}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            {/* Wallet Balance Card */}
+                            <motion.div variants={itemVariants}>
+                                <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 shadow-sm">
+                                    <CardContent className="p-5 md:p-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-3 md:space-x-4">
+                                                <div className="p-3 md:p-4 rounded-xl bg-orange-200 flex-shrink-0">
+                                                    <Wallet className="h-6 w-6 md:h-7 md:w-7 text-orange-600" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm md:text-base font-medium text-orange-800">Wallet Balance</p>
+                                                    <h3 className="text-2xl md:text-3xl font-bold text-orange-900 truncate">
+                                                        {formatCurrency(stats.wallet.balance)}
+                                                    </h3>
+                                                </div>
                                             </div>
+                                            <TrendingUp className="h-7 w-7 md:h-8 md:w-8 text-orange-400 flex-shrink-0" />
                                         </div>
                                     </CardContent>
                                 </Card>
                             </motion.div>
-                        ))}
-                    </div>
 
-                    {/* Wallet Balance Card */}
-                    <motion.div variants={itemVariants}>
-                        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-4">
-                                        <div className="p-3 rounded-full bg-orange-200">
-                                            <Wallet className="h-6 w-6 text-orange-600" />
+                            {/* Recent Orders Placeholder */}
+                            <motion.div variants={itemVariants}>
+                                <Card className="border-2 border-slate-200 shadow-sm">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg md:text-xl">Recent Orders</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-center py-8 text-slate-600">
+                                            {stats.orders.total === 0 ? (
+                                                <p>No orders yet. Start selling to see orders here!</p>
+                                            ) : (
+                                                <p>View all orders in the Orders section.</p>
+                                            )}
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-orange-800">Wallet Balance</p>
-                                            <h3 className="text-3xl font-bold text-orange-900">
-                                                {formatCurrency(stats.wallet.balance)}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                    <TrendingUp className="h-8 w-8 text-orange-400" />
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </>
+                    )}
 
-                    {/* Recent Orders Placeholder */}
-                    <motion.div variants={itemVariants}>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Recent Orders</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-center py-8 text-muted-foreground">
-                                    {stats.orders.total === 0 ? (
-                                        <p>No orders yet. Start selling to see orders here!</p>
-                                    ) : (
-                                        <p>View all orders in the Orders section.</p>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                </>
-            )}
-
-            {/* Pending/Rejected State - Show helpful message */}
-            {vendorStatus?.vendor_status !== 'approved' && (
-                <motion.div variants={itemVariants}>
-                    <Card>
-                        <CardContent className="p-12 text-center">
-                            <AlertCircle className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold text-slate-700 mb-2">
-                                Dashboard Access Restricted
-                            </h3>
-                            <p className="text-slate-500">
-                                Full dashboard features will be available once your vendor application is approved.
-                            </p>
-                        </CardContent>
-                    </Card>
+                    {/* Pending/Rejected State - Show helpful message */}
+                    {vendorStatus?.vendor_status !== 'approved' && (
+                        <motion.div variants={itemVariants}>
+                            <Card className="border-2 border-slate-200">
+                                <CardContent className="p-8 md:p-12 text-center">
+                                    <AlertCircle className="h-12 w-12 md:h-16 md:w-16 text-slate-300 mx-auto mb-4" />
+                                    <h3 className="text-base md:text-lg font-semibold text-slate-700 mb-2">
+                                        Dashboard Access Restricted
+                                    </h3>
+                                    <p className="text-sm md:text-base text-slate-500">
+                                        Full dashboard features will be available once your vendor application is approved.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    )}
                 </motion.div>
-            )}
-        </motion.div>
+            </div>
+        </div>
     );
 };
 
