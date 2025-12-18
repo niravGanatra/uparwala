@@ -144,7 +144,7 @@ const VendorApprovals = () => {
             </div>
 
             {/* Vendors List */}
-            <Card>
+            <Card className="border-2 border-slate-200">
                 <CardHeader>
                     <CardTitle>Pending Applications</CardTitle>
                 </CardHeader>
@@ -252,6 +252,7 @@ const VendorApprovals = () => {
                 </div>
             )}
         </div>
+        </div >
     );
 };
 
