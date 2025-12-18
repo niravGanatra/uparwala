@@ -154,8 +154,8 @@ const CartPage = () => {
                                     transition={{ delay: index * 0.1 }}
                                 >
                                     <Card className={`relative overflow-hidden transition-all border-2 ${selectedItems.includes(item.id)
-                                            ? 'border-orange-500 bg-orange-50/30 shadow-md'
-                                            : 'border-slate-200 opacity-70'
+                                        ? 'border-orange-500 bg-orange-50/30 shadow-md'
+                                        : 'border-slate-200 opacity-70'
                                         }`}>
                                         {priceInfo.isDeal && (
                                             <div className="absolute top-0 left-0 bg-red-600 text-white text-xs font-bold px-3 py-1.5 z-10 rounded-br-lg">
@@ -297,6 +297,7 @@ const CartPage = () => {
                         </div>
                     </motion.div>
                 </div>
+            </div>
         </motion.div>
     );
 };
