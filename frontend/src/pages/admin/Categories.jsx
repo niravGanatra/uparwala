@@ -207,6 +207,8 @@ const AdminCategories = () => {
                                     <tr className="border-b">
                                         <th className="text-left py-3 px-4">Category</th>
                                         <th className="text-left py-3 px-4">Slug</th>
+                                        <th className="text-center py-3 px-4">Menu Order</th>
+                                        <th className="text-center py-3 px-4">Show in Menu</th>
                                         <th className="text-left py-3 px-4">Commission</th>
                                         <th className="text-right py-3 px-4">Actions</th>
                                     </tr>
@@ -221,6 +223,22 @@ const AdminCategories = () => {
                                                 )}
                                             </td>
                                             <td className="py-3 px-4 text-slate-600">{category.slug}</td>
+                                            <td className="py-3 px-4 text-center">
+                                                <span className="inline-flex items-center justify-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                                    {category.menu_order || 0}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-center">
+                                                {category.show_in_menu !== false ? (
+                                                    <span className="inline-flex items-center justify-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                                        ✓ Visible
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center justify-center bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                                        ✗ Hidden
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="py-3 px-4">{category.commission_rate}%</td>
                                             <td className="py-3 px-4">
                                                 <div className="flex gap-2 justify-end">
