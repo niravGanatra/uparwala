@@ -95,9 +95,9 @@ const HomePage = () => {
 
     return (
         <div className="min-h-screen bg-white">
-            {/* Hero Banner - Dynamic from API */}
+            {/* Hero Banner - Mobile Optimized */}
             <section
-                className="relative text-slate-900 overflow-hidden"
+                className="relative text-slate-900 overflow-hidden min-h-[50vh] md:min-h-[60vh] flex items-center"
                 style={{
                     background: homepageData.hero_banner?.background_color || 'linear-gradient(to right, #facc15, #eab308, #f59e0b)'
                 }}
@@ -109,36 +109,40 @@ const HomePage = () => {
                     <div className="absolute bottom-20 right-1/3 text-6xl">🏠</div>
                 </div>
 
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                         className="text-center"
                     >
-                        <h1 className="text-5xl md:text-7xl font-black mb-4 tracking-tight">
+                        <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black mb-3 md:mb-4 tracking-tight leading-tight">
                             {homepageData.hero_banner?.title || 'HO HO HOME SALE'}
                         </h1>
                         {homepageData.hero_banner?.subtitle && (
-                            <p className="text-xl md:text-2xl font-semibold mb-6">
+                            <p className="text-lg md:text-xl lg:text-2xl font-semibold mb-4 md:mb-6">
                                 {homepageData.hero_banner.subtitle}
                             </p>
                         )}
 
-                        {/* Search Bar */}
+                        {/* Search Bar - Mobile Optimized */}
                         <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
-                            <div className="flex gap-2 bg-white rounded-lg p-2 shadow-xl">
-                                <div className="flex-1 flex items-center px-4">
-                                    <Search className="h-5 w-5 text-slate-400 mr-2" />
+                            <div className="flex flex-col sm:flex-row gap-3 bg-white rounded-xl p-3 shadow-xl">
+                                <div className="flex-1 flex items-center px-4 py-2 sm:py-0">
+                                    <Search className="h-5 w-5 text-slate-400 mr-3 flex-shrink-0" />
                                     <input
                                         type="text"
-                                        placeholder="Search for products, categories..."
+                                        placeholder="Search products..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="flex-1 outline-none text-slate-900 placeholder-slate-400"
+                                        className="flex-1 outline-none text-base text-slate-900 placeholder-slate-400"
                                     />
                                 </div>
-                                <Button type="submit" className="rounded-md px-8 bg-yellow-600 hover:bg-yellow-700 text-white">
+                                <Button
+                                    type="submit"
+                                    size="lg"
+                                    className="rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white w-full sm:w-auto sm:px-8"
+                                >
                                     Search
                                 </Button>
                             </div>
@@ -147,10 +151,11 @@ const HomePage = () => {
                 </div>
             </section>
 
-            {/* Category Grid - Dynamic from API */}
-            <section className="py-12 bg-slate-50">
+            {/* Category Grid - Mobile Optimized */}
+            <section className="py-8 md:py-12 bg-slate-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                    <h2 className="text-2xl font-bold text-slate-900 mb-6 md:mb-8">Shop by Category</h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3 md:gap-4">
                         {homepageData.featured_categories.map((category, idx) => {
                             const IconComponent = iconMap[category.icon] || Package;
                             return (
@@ -164,17 +169,17 @@ const HomePage = () => {
                                 >
                                     <Link
                                         to={category.link_url}
-                                        className="block bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all group"
+                                        className="block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all group active:scale-95 min-h-[120px] sm:min-h-[140px]"
                                     >
-                                        <div className="aspect-square bg-slate-100 flex items-center justify-center p-4">
+                                        <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4 sm:p-6">
                                             {category.image ? (
-                                                <img src={category.image} alt={category.name} className="h-16 w-16 object-contain" />
+                                                <img src={category.image} alt={category.name} className="h-12 w-12 sm:h-16 sm:w-16 object-contain" />
                                             ) : (
-                                                <IconComponent className="h-16 w-16 text-yellow-600 group-hover:text-yellow-700 transition-colors" />
+                                                <IconComponent className="h-12 w-12 sm:h-16 sm:w-16 text-yellow-600 group-hover:text-yellow-700 transition-colors" />
                                             )}
                                         </div>
-                                        <div className="p-3 text-center">
-                                            <h3 className="text-sm font-semibold text-slate-900">{category.name}</h3>
+                                        <div className="p-2 sm:p-3 text-center">
+                                            <h3 className="text-xs sm:text-sm font-semibold text-slate-900 line-clamp-2">{category.name}</h3>
                                         </div>
                                     </Link>
                                 </motion.div>
