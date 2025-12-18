@@ -21,7 +21,8 @@ const MainLayout = () => {
     const fetchCategories = async () => {
         try {
             const response = await api.get('/products/categories/');
-            setCategories(response.data.filter(cat => !cat.parent)); // Only parent categories
+            // Only show parent categories that have show_in_menu = true
+            setCategories(response.data.filter(cat => !cat.parent && cat.show_in_menu !== false));
         } catch (error) {
             console.error('Failed to fetch categories:', error);
         }
