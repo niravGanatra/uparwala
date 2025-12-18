@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -9,7 +9,8 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 // Move CategoryForm outside to prevent recreation on every render
-const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories, selectedCategory }) => {
+// Wrap with React.memo to prevent unnecessary re-renders
+const CategoryForm = React.memo(({ formData, setFormData, onSubmit, submitText, categories, selectedCategory }) => {
     const handleNameChange = useCallback((e) => {
         const value = e.target.value;
         setFormData(prev => ({ ...prev, name: value }));
@@ -49,6 +50,7 @@ const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories,
                     onBlur={handleNameBlur}
                     required
                     placeholder="Enter category name"
+                    autoFocus
                 />
             </div>
 
@@ -105,7 +107,7 @@ const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories,
             </div>
         </form>
     );
-};
+});
 
 const AdminCategories = () => {
     const [categories, setCategories] = useState([]);
