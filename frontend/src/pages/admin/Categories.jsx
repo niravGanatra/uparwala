@@ -8,6 +8,82 @@ import { Search, Plus, Edit, Trash2, FolderTree } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
+// Move CategoryForm outside to prevent recreation on every render
+const CategoryForm = ({ formData, setFormData, onSubmit, submitText, categories, selectedCategory }) => (
+    <form onSubmit={onSubmit} className="space-y-4">
+        <div>
+            <label className="block text-sm font-medium mb-2">Category Name *</label>
+            <Input
+                value={formData.name}
+                onChange={(e) => {
+                    const name = e.target.value;
+                    // Only auto-generate slug for new categories (not when editing)
+                    if (!selectedCategory) {
+                        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                        setFormData({ ...formData, name, slug });
+                    } else {
+                        setFormData({ ...formData, name });
+                    }
+                }}
+                required
+                placeholder="Enter category name"
+            />
+        </div>
+
+        <div>
+            <label className="block text-sm font-medium mb-2">Slug *</label>
+            <Input
+                value={formData.slug}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                required
+                placeholder="category-slug"
+            />
+        </div>
+
+        <div>
+            <label className="block text-sm font-medium mb-2">Parent Category</label>
+            <select
+                value={formData.parent}
+                onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg"
+            >
+                <option value="">None (Top Level)</option>
+                {categories.filter(cat => cat.id !== selectedCategory?.id).map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+            </select>
+        </div>
+
+        <div>
+            <label className="block text-sm font-medium mb-2">Description</label>
+            <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg"
+                rows={3}
+                placeholder="Category description"
+            />
+        </div>
+
+        <div>
+            <label className="block text-sm font-medium mb-2">Commission Rate (%)</label>
+            <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={formData.commission_rate}
+                onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                placeholder="5.00"
+            />
+        </div>
+
+        <div className="flex gap-2 justify-end">
+            <Button type="submit">{submitText}</Button>
+        </div>
+    </form>
+);
+
 const AdminCategories = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -111,90 +187,6 @@ const AdminCategories = () => {
 
     const filteredCategories = categories.filter(category =>
         category.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const CategoryForm = ({ onSubmit, submitText }) => (
-        <form onSubmit={onSubmit} className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium mb-2">Category Name *</label>
-                <Input
-                    value={formData.name}
-                    onChange={(e) => {
-                        const name = e.target.value;
-                        // Only auto-generate slug for new categories (not when editing)
-                        if (!selectedCategory) {
-                            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-                            setFormData({ ...formData, name, slug });
-                        } else {
-                            setFormData({ ...formData, name });
-                        }
-                    }}
-                    required
-                    placeholder="Enter category name"
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium mb-2">Slug *</label>
-                <Input
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    required
-                    placeholder="category-slug"
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium mb-2">Parent Category</label>
-                <select
-                    value={formData.parent}
-                    onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
-                >
-                    <option value="">None (Top Level)</option>
-                    {categories.filter(cat => cat.id !== selectedCategory?.id).map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                </select>
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium mb-2">Commission Rate (%) *</label>
-                <Input
-                    type="number"
-                    step="0.01"
-                    min="2"
-                    max="10"
-                    value={formData.commission_rate}
-                    onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
-                    required
-                    placeholder="5.00"
-                />
-                <p className="text-xs text-slate-500 mt-1">Commission rate must be between 2% and 10%</p>
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
-                <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
-                    rows="3"
-                    placeholder="Category description"
-                />
-            </div>
-
-            <div className="flex gap-2 justify-end pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => {
-                    setIsAddModalOpen(false);
-                    setIsEditModalOpen(false);
-                    resetForm();
-                }}>
-                    Cancel
-                </Button>
-                <Button type="submit">{submitText}</Button>
-            </div>
-        </form>
     );
 
     const getCategoryHierarchy = (category) => {
@@ -304,13 +296,44 @@ const AdminCategories = () => {
             </Card>
 
             {/* Add Category Modal */}
-            <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Category" size="lg">
-                <CategoryForm onSubmit={handleAddCategory} submitText="Add Category" />
+            <Modal
+                isOpen={isAddModalOpen}
+                onClose={() => {
+                    setIsAddModalOpen(false);
+                    resetForm();
+                }}
+                title="Add New Category"
+                size="lg"
+            >
+                <CategoryForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    onSubmit={handleAddCategory}
+                    submitText="Add Category"
+                    categories={categories}
+                    selectedCategory={null}
+                />
             </Modal>
 
             {/* Edit Category Modal */}
-            <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Category" size="lg">
-                <CategoryForm onSubmit={handleUpdateCategory} submitText="Update Category" />
+            <Modal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    resetForm();
+                    setSelectedCategory(null);
+                }}
+                title="Edit Category"
+                size="lg"
+            >
+                <CategoryForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    onSubmit={handleUpdateCategory}
+                    submitText="Update Category"
+                    categories={categories}
+                    selectedCategory={selectedCategory}
+                />
             </Modal>
 
             {/* Delete Confirmation Dialog */}
