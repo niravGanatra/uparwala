@@ -124,7 +124,7 @@ const CartPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
         >
-            <div className="container mx-auto px-4 py-6 md:py-8">
+            <div className="max-w-7xl mx-auto px-4 py-6 md:py-8 w-full">
                 <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Shopping Cart</h1>
 
                 {/* Select All - Mobile Optimized */}

@@ -79,12 +79,12 @@ const ProductDetailPage = () => {
     return (
         <div className="min-h-screen bg-slate-50">
             <motion.div
-                className="container mx-auto px-4 py-6 md:py-8 pb-32 md:pb-8"
+                className="max-w-7xl mx-auto px-4 py-6 md:py-8 pb-32 md:pb-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
             >
-                <div className="grid lg:grid-cols-2 gap-6 md:gap-8">
+                <div className="grid lg:grid-cols-2 gap-6 md:gap-8 w-full">
 
                     {/* Product Images */}
                     <motion.div
