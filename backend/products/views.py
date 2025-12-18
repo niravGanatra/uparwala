@@ -69,7 +69,6 @@ class ProductListView(generics.ListAPIView):
         return Product.objects.filter(
             is_active=True,
             vendor__verification_status='verified',
-            vendor__is_active=True,
             vendor__user__is_active=True
         ).order_by(
             models.Case(
@@ -94,7 +93,6 @@ class ProductDetailView(generics.RetrieveAPIView):
         return Product.objects.filter(
             is_active=True,
             vendor__verification_status='verified',
-            vendor__is_active=True,
             vendor__user__is_active=True
         )
 
