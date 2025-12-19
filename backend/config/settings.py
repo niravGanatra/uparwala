@@ -23,7 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')  # Fail if not set in production
+SECRET_KEY = os.getenv('SECRET_KEY')
+
+# Check if we are running collectstatic (build phase)
+import sys
+if 'collectstatic' in sys.argv:
+    SECRET_KEY = SECRET_KEY or 'django-insecure-build-key-for-static-collection'
+
 # Fallback strictly for dev
 if not SECRET_KEY and os.getenv('DEBUG') == 'True':
     SECRET_KEY = 'django-insecure-fallback-dev-key'
