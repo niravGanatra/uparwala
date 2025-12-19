@@ -9,6 +9,7 @@ import logging
 from .models import Order
 from .shiprocket_models import ShipmentTracking, OrderTrackingStatus
 from .shiprocket_service import ShiprocketService
+from products.models import Product
 from .shiprocket_serializers import (
     ShipmentTrackingSerializer, 
     OrderTrackingStatusSerializer,
@@ -230,6 +231,79 @@ def get_tracking_history(request, order_id):
         return Response(
             {'error': 'No shipment found for this order'},
             status=status.HTTP_404_NOT_FOUND
+        )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def check_product_serviceability(request):
+    """
+    Check serviceability for a product to a delivery pincode.
+    Query Params: product_id, pincode
+    """
+    product_id = request.query_params.get('product_id')
+    delivery_pincode = request.query_params.get('pincode')
+    
+    if not product_id or not delivery_pincode:
+        return Response(
+            {'error': 'product_id and pincode are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        
+    try:
+        product = get_object_or_404(Product, id=product_id)
+        vendor = product.vendor
+        
+        if not vendor or not vendor.zip_code:
+            # Fallback to default pincode if vendor has no pincode (or admin product)
+            pickup_pincode = '400001' # Default logic, maybe improve later
+        else:
+            pickup_pincode = vendor.zip_code
+            
+        service = ShiprocketService()
+        couriers = service.check_serviceability(
+            pickup_pincode=pickup_pincode,
+            delivery_pincode=delivery_pincode,
+            weight=0.5 # Default weight, improvements: product.weight
+        )
+        
+        if not couriers:
+            return Response({'serviceable': False, 'message': 'Not serviceable'})
+            
+        # Find earliest EDD
+        # Courier object structure: {"etd": "2023-12-25", ...}
+        earliest_date = None
+        min_courier = None
+        
+        for courier in couriers:
+            etd = courier.get('etd') # Estimated Time of Delivery
+            if etd:
+                # Basic string comparison usually works for YYYY-MM-DD but Shiprocket returns various formats?
+                # Usually it is 'YYYY-MM-DD'
+                if not earliest_date or etd < earliest_date:
+                    earliest_date = etd
+                    min_courier = courier
+                    
+        return Response({
+            'serviceable': True,
+            'deliery_pincode': delivery_pincode,
+            'pickup_pincode': pickup_pincode,
+            'estimated_delivery_date': earliest_date,
+            'courier_name': min_courier.get('courier_name') if min_courier else 'Standard',
+            'couriers_count': len(couriers)
+        })
+        
+    except Exception as e:
+        logger.error(f"Serviceability check failed: {str(e)}")
+        # Check if it was because of missing config
+        if "Shiprocket configuration not found" in str(e):
+             return Response(
+                {'error': 'Shipping configuration missing'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
