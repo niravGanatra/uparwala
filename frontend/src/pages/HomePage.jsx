@@ -49,7 +49,12 @@ const HomePage = () => {
     const fetchProducts = async () => {
         try {
             const response = await api.get('/products/');
-            setProducts(response.data.slice(0, 8));
+            // Filter out out-of-stock products for trending section
+            const inStockProducts = response.data.filter(product =>
+                product.stock_status !== 'outofstock' &&
+                (product.stock === undefined || product.stock > 0)
+            );
+            setProducts(inStockProducts.slice(0, 8));
         } catch (error) {
             console.error('Failed to fetch products:', error);
         }

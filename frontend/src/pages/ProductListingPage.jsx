@@ -50,7 +50,19 @@ const ProductListingPage = () => {
             if (searchParams.get('sort')) params.append('ordering', searchParams.get('sort'));
 
             const response = await api.get(`/products/?${params.toString()}`);
-            setProducts(response.data);
+
+            // Sort products: in-stock first, out-of-stock last
+            const sortedProducts = response.data.sort((a, b) => {
+                const aOutOfStock = a.stock_status === 'outofstock' || (a.stock !== undefined && a.stock === 0);
+                const bOutOfStock = b.stock_status === 'outofstock' || (b.stock !== undefined && b.stock === 0);
+
+                // In-stock items first, out-of-stock last
+                if (aOutOfStock && !bOutOfStock) return 1; // a goes after b
+                if (!aOutOfStock && bOutOfStock) return -1; // a goes before b
+                return 0; // Keep original order for same stock status
+            });
+
+            setProducts(sortedProducts);
         } catch (error) {
             console.error('Failed to fetch products:', error);
         } finally {
