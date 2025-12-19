@@ -54,14 +54,14 @@ const ProductCard = ({ product }) => {
 
     return (
         <>
-            <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group h-[420px] flex flex-col">
+            <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group h-[480px] flex flex-col">
                 <Link to={`/products/${product.slug}`} className="flex flex-col h-full">
-                    <div className="relative h-48 bg-gray-100 flex-shrink-0">
+                    <div className="relative h-64 bg-white flex-shrink-0 p-4">
                         {product.images && product.images.length > 0 ? (
                             <img
                                 src={product.images[0].image}
                                 alt={product.name}
-                                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isOutOfStock ? 'opacity-60' : ''}`}
+                                className={`w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 ${isOutOfStock ? 'opacity-60' : ''}`}
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -83,54 +83,52 @@ const ProductCard = ({ product }) => {
                     </div>
 
                     <div className="p-4 flex flex-col flex-1">
-                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-3 h-[3rem] leading-snug">
+                        {/* Vendor/Brand Name */}
+                        {product.vendor_name && (
+                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                                {product.vendor_name}
+                            </p>
+                        )}
+
+                        {/* Product Name */}
+                        <h3 className="text-base font-semibold text-gray-900 line-clamp-2 mb-3 leading-tight">
                             {product.name}
                         </h3>
 
-                        <div className="flex items-baseline gap-2 mb-4 h-7">
-                            <span className="text-lg font-bold text-gray-900">
+                        {/* Price */}
+                        <div className="flex items-baseline gap-2 mb-4">
+                            <span className="text-2xl font-bold text-red-600">
                                 ₹{finalPrice.toFixed(2)}
                             </span>
                             {hasDiscount && (
-                                <span className="text-sm text-gray-500 line-through">
+                                <span className="text-sm text-gray-400 line-through">
                                     ₹{originalPrice.toFixed(2)}
                                 </span>
                             )}
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Single Action Button */}
                         <div className="mt-auto">
                             {isOutOfStock ? (
                                 <Button
-                                    size="sm"
+                                    size="lg"
                                     variant="outline"
-                                    className="w-full text-xs border-orange-600 text-orange-600 hover:bg-orange-50"
+                                    className="w-full text-sm font-semibold border-orange-600 text-orange-600 hover:bg-orange-50 uppercase tracking-wide"
                                     onClick={handleNotifyMe}
                                 >
-                                    <Bell className="w-3 h-3 mr-1" />
+                                    <Bell className="w-4 h-4 mr-2" />
                                     Notify Me
                                 </Button>
                             ) : (
-                                <div className="flex flex-col gap-2">
-                                    <Button
-                                        size="sm"
-                                        className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs"
-                                        onClick={handleBuyNow}
-                                        disabled={cartLoading}
-                                    >
-                                        Buy Now
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="w-full text-xs"
-                                        onClick={handleAddToCart}
-                                        disabled={cartLoading}
-                                    >
-                                        <ShoppingCart className="w-3 h-3 mr-1" />
-                                        Add to Cart
-                                    </Button>
-                                </div>
+                                <Button
+                                    size="lg"
+                                    className="w-full bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold uppercase tracking-wide"
+                                    onClick={handleAddToCart}
+                                    disabled={cartLoading}
+                                >
+                                    <ShoppingCart className="w-4 h-4 mr-2" />
+                                    Add to Cart
+                                </Button>
                             )}
                         </div>
                     </div>
