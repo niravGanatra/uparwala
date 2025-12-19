@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Package, Truck, Tag, Calendar, Download, XCircle, RefreshCw } from 'lucide-react';
-import api from '../../utils/api';
+import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 const ShipmentManager = () => {
