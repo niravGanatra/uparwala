@@ -335,7 +335,7 @@ const CheckoutPage = () => {
 
                     {/* Order Summary */}
                     <div className="min-w-0 max-w-full overflow-hidden">
-                        <Card className="sticky top-20 border-2 border-slate-200 shadow-sm">
+                        <Card className="border-2 border-slate-200 shadow-sm">
                             <CardHeader>
                                 <CardTitle>Order Summary</CardTitle>
                             </CardHeader>
