@@ -393,3 +393,45 @@ def shiprocket_webhook(request):
             {'status': 'error', 'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def cancel_shipment(request, order_id):
+    """
+    Cancel a shipment and reset order state.
+    This effectively deletes the shipment record so it can be recreated.
+    """
+    order = get_object_or_404(Order, id=order_id)
+    try:
+        shipment = ShipmentTracking.objects.get(order=order)
+        
+        # Try to cancel on Shiprocket
+        try:
+            service = ShiprocketService()
+            service.cancel_shipment(shipment)
+        except Exception as e:
+            # Even if SR fails (e.g. already deleted), we proceed to delete local record
+            # to allow reset.
+            logger.warning(f"Shiprocket cancel failed (ignoring to allow reset): {e}")
+
+        # Delete the local tracking record to allow recreation
+        shipment.delete()
+        
+        # Reset order status to PROCESSING so it appears in Pending tab
+        order.status = 'PROCESSING'
+        order.save()
+        
+        return Response({'message': 'Shipment cancelled and reset successfully'})
+        
+    except ShipmentTracking.DoesNotExist:
+        return Response(
+            {'error': 'No shipment found to cancel'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"Failed to cancel shipment: {e}")
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

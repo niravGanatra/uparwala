@@ -8,7 +8,8 @@ from .shiprocket_views import (
     get_tracking_history,
     shiprocket_webhook,
     get_all_shipments,
-    check_product_serviceability
+    check_product_serviceability,
+    cancel_shipment
 )
 
 urlpatterns = [
@@ -17,6 +18,7 @@ urlpatterns = [
     path('<int:order_id>/generate-awb/', generate_awb, name='generate-awb'),
     path('<int:order_id>/generate-label/', generate_label, name='generate-label'),
     path('<int:order_id>/schedule-pickup/', schedule_pickup, name='schedule-pickup'),
+    path('<int:order_id>/cancel-shipment/', cancel_shipment, name='cancel-shipment'),
     
     # Tracking (Customer & Admin)
     path('<int:order_id>/tracking/', get_tracking, name='get-tracking'),
