@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Eye } from 'lucide-react';
 import api from '../services/api';
+import ProductCard from './ProductCard';
 
 const RecentlyViewed = ({ limit = 10 }) => {
     const [products, setProducts] = useState([]);
@@ -31,37 +31,9 @@ const RecentlyViewed = ({ limit = 10 }) => {
                     <Eye className="w-6 h-6 text-yellow-600" />
                     Recently Viewed
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
                     {products.map((product) => (
-                        <Link
-                            key={product.id}
-                            to={`/products/${product.slug}`}
-                            className="block group"
-                        >
-                            <div className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-yellow-400 hover:shadow-xl transition-all">
-                                <div className="relative aspect-square bg-slate-50">
-                                    {product.images && product.images.length > 0 ? (
-                                        <img
-                                            src={product.images[0].image}
-                                            alt={product.name}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <span className="text-slate-400">No Image</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="p-3">
-                                    <h3 className="font-medium text-slate-900 mb-1 line-clamp-2 text-sm">
-                                        {product.name}
-                                    </h3>
-                                    <p className="text-lg font-bold text-slate-900">
-                                        ₹{product.price}
-                                    </p>
-                                </div>
-                            </div>
-                        </Link>
+                        <ProductCard key={product.id} product={product} />
                     ))}
                 </div>
             </div>
@@ -70,3 +42,4 @@ const RecentlyViewed = ({ limit = 10 }) => {
 };
 
 export default RecentlyViewed;
+
