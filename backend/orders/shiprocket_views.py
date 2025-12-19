@@ -40,9 +40,15 @@ def create_shipment(request, order_id):
     
     try:
         service = ShiprocketService()
-        shipment = service.create_order(order)
+        shipments = service.create_orders(order)
         
-        serializer = ShipmentTrackingSerializer(shipment)
+        if not shipments:
+             return Response(
+                {'error': 'No shipments created (check logs for errors)'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = ShipmentTrackingSerializer(shipments, many=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
         
     except Exception as e:
