@@ -30,9 +30,10 @@ api.interceptors.response.use(
                 // Auth Context will handle redirect if needed, or we explicitly redirect
                 // But usually we just let the error propagate so AuthContext sees it.
                 // However, for safety in SPA:
-                if (window.location.pathname !== '/login') {
-                    window.location.href = '/login';
-                }
+                // Session expired / No Refresh Token
+                // We do NOT redirect globally, because guests might trigger 401s on protected endpoints
+                // components should handle the error or ProtectedRoute should handle access.
+                return Promise.reject(refreshError);
                 return Promise.reject(refreshError);
             }
         }
