@@ -1,9 +1,17 @@
 import api from './api';
 
 export const login = async (username, password) => {
-    // Backend sets HttpOnly cookie on success
+    // Detect if input is an email
+    const isEmail = username.includes('@');
+
+    // Construct payload based on input type to avoid validation errors
+    const payload = {
+        password,
+        ...(isEmail ? { email: username } : { username: username })
+    };
+
     // dj-rest-auth login endpoint
-    const response = await api.post('/auth/login/', { email: username, username, password });
+    const response = await api.post('/auth/login/', payload);
     return response.data;
 };
 

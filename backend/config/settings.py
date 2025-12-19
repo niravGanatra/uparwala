@@ -265,7 +265,7 @@ AUTHENTICATION_BACKENDS = [
 # Allauth Settings (Modern Format - No Deprecation Warnings)
 # Allauth Settings (Modern Format)
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_VERIFICATION = 'optional' # Relaxed for dummy data compatibility
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 LOGIN_URL = 'http://localhost:5173/login'
 ACCOUNT_ADAPTER = 'users.adapters.CustomAccountAdapter'
