@@ -121,7 +121,8 @@ const MainLayout = () => {
                                                     animate={{ opacity: 1, y: 0 }}
                                                     exit={{ opacity: 0, y: 20 }}
                                                     transition={{ duration: 0.2 }}
-                                                    className="fixed inset-x-0 bottom-0 md:absolute md:inset-auto md:right-0 md:left-auto md:top-full md:mt-2 md:w-80 md:min-w-[320px] bg-white md:rounded-xl shadow-2xl z-50 md:border-2 md:border-slate-200 rounded-t-3xl md:rounded-t-xl max-h-[80vh] md:max-h-none overflow-y-auto"
+                                                    className="fixed inset-x-0 bottom-0 md:absolute md:inset-auto md:right-0 md:left-auto md:top-full md:mt-2 md:w-80 md:min-w-[320px] bg-white md:rounded-xl shadow-2xl z-50 md:border-2 md:border-slate-200 border-red-500 rounded-t-3xl md:rounded-t-xl max-h-[80vh] md:max-h-none overflow-y-auto"
+                                                    style={{ width: '320px' }} // FORCE WIDTH to debug
                                                 >
                                                     {/* Mobile: Close button at top */}
                                                     <div className="md:hidden sticky top-0 bg-white z-10 flex justify-center py-3 border-b border-slate-200">
