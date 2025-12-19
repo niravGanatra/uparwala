@@ -54,7 +54,7 @@ const ProductCard = ({ product }) => {
 
     return (
         <>
-            <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group h-[480px] flex flex-col">
+            <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group h-[540px] flex flex-col">
                 <Link to={`/products/${product.slug}`} className="flex flex-col h-full">
                     <div className="relative aspect-square bg-gray-100">
                         {product.images && product.images.length > 0 ? (
