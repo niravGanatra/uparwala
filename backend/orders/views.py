@@ -130,7 +130,14 @@ class AdminOrderListView(generics.ListAPIView):
 
     def get_queryset(self):
         # Return all orders for admin users
-        return Order.objects.all().order_by('-created_at')
+        queryset = Order.objects.all().order_by('-created_at')
+        
+        # Filter by status if provided
+        status = self.request.query_params.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+            
+        return queryset
 
 from rest_framework import viewsets
 from .models import OrderNote

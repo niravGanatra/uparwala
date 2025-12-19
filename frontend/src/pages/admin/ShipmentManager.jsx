@@ -21,7 +21,7 @@ const ShipmentManager = () => {
         setLoading(true);
         try {
             // Get orders that are paid but don't have shipments yet
-            const response = await api.get('/orders/manage/?status=PROCESSING');
+            const response = await api.get('/orders/admin/orders/?status=PROCESSING');
             const orders = response.data.results || response.data;
             setPendingOrders(orders.filter(order =>
                 order.payment_status === 'paid' && !order.shipments?.length
