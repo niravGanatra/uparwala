@@ -54,7 +54,7 @@ const ProductCard = ({ product }) => {
 
     return (
         <>
-            <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group h-[480px] flex flex-col">
+            <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group h-[520px] flex flex-col">
                 <Link to={`/products/${product.slug}`} className="flex flex-col h-full">
                     <div className="relative h-64 bg-white flex-shrink-0 p-4 flex items-center justify-center overflow-hidden">
                         {product.images && product.images.length > 0 ? (
@@ -123,14 +123,6 @@ const ProductCard = ({ product }) => {
                                 <div className="flex flex-col gap-2">
                                     <Button
                                         size="lg"
-                                        className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold uppercase tracking-wide"
-                                        onClick={handleBuyNow}
-                                        disabled={cartLoading}
-                                    >
-                                        Buy Now
-                                    </Button>
-                                    <Button
-                                        size="lg"
                                         variant="outline"
                                         className="w-full text-sm font-semibold border-slate-700 text-slate-700 hover:bg-slate-50 uppercase tracking-wide"
                                         onClick={handleAddToCart}
@@ -138,6 +130,14 @@ const ProductCard = ({ product }) => {
                                     >
                                         <ShoppingCart className="w-4 h-4 mr-2" />
                                         Add to Cart
+                                    </Button>
+                                    <Button
+                                        size="lg"
+                                        className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold uppercase tracking-wide"
+                                        onClick={handleBuyNow}
+                                        disabled={cartLoading}
+                                    >
+                                        Buy Now
                                     </Button>
                                 </div>
                             )}
