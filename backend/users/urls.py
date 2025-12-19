@@ -2,6 +2,16 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 # from .google_auth import GoogleLoginView  <-- REMOVED: Using the one in views.py
 from .views import RegisterView, UserDetailView, user_profile, GoogleLoginView
+from .admin_views import (
+    AdminUserStatsView,
+    AdminProductStatsView,
+    AdminOrderStatsView,
+    AdminUserListView,
+    AdminUserDetailView,
+    VendorApplicationListView,
+    VendorApprovalView,
+    VendorRejectionView,
+)
 from .vendor_application import VendorApplicationView, VendorStatusView
 from .address_views import (
     AddressListCreateView,
