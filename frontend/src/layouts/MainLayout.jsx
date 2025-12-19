@@ -10,6 +10,7 @@ import Footer from '../components/Footer';
 
 const MainLayout = () => {
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [categories, setCategories] = useState([]);
     const { user, logout } = useAuth();
     const { cartCount } = useCart();
@@ -121,8 +122,7 @@ const MainLayout = () => {
                                                     animate={{ opacity: 1, y: 0 }}
                                                     exit={{ opacity: 0, y: 20 }}
                                                     transition={{ duration: 0.2 }}
-                                                    className="fixed inset-x-0 bottom-0 md:absolute md:inset-auto md:right-0 md:left-auto md:top-full md:mt-2 md:w-80 md:min-w-[320px] bg-white md:rounded-xl shadow-2xl z-50 md:border-2 md:border-slate-200 border-red-500 rounded-t-3xl md:rounded-t-xl max-h-[80vh] md:max-h-none overflow-y-auto"
-                                                    style={{ width: '320px' }} // FORCE WIDTH to debug
+                                                    className="fixed inset-x-0 bottom-0 md:absolute md:inset-auto md:right-0 md:left-auto md:top-full md:mt-2 md:w-80 md:min-w-[320px] bg-white md:rounded-xl shadow-2xl z-50 md:border-2 md:border-slate-200 rounded-t-3xl md:rounded-t-xl max-h-[80vh] md:max-h-none overflow-y-auto"
                                                 >
                                                     {/* Mobile: Close button at top */}
                                                     <div className="md:hidden sticky top-0 bg-white z-10 flex justify-center py-3 border-b border-slate-200">
@@ -182,9 +182,90 @@ const MainLayout = () => {
                             )}
                         </div>
 
-                        <Button variant="ghost" size="icon" className="md:hidden">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="md:hidden"
+                            onClick={() => setShowMobileMenu(true)}
+                        >
                             <Menu className="h-5 w-5" />
                         </Button>
+
+                        {/* Mobile Navigation Menu */}
+                        <AnimatePresence>
+                            {showMobileMenu && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 bg-black/50 z-50 md:hidden"
+                                        onClick={() => setShowMobileMenu(false)}
+                                    />
+                                    <motion.div
+                                        initial={{ x: '100%' }}
+                                        animate={{ x: 0 }}
+                                        exit={{ x: '100%' }}
+                                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                                        className="fixed inset-y-0 right-0 w-[280px] bg-white shadow-2xl z-50 md:hidden flex flex-col"
+                                    >
+                                        <div className="p-4 border-b flex items-center justify-between">
+                                            <span className="font-bold text-lg">Menu</span>
+                                            <Button variant="ghost" size="icon" onClick={() => setShowMobileMenu(false)}>
+                                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </Button>
+                                        </div>
+
+                                        <div className="flex-1 overflow-y-auto py-4">
+                                            <nav className="flex flex-col space-y-1">
+                                                <Link
+                                                    to="/"
+                                                    className="px-6 py-3 text-slate-700 hover:bg-orange-50 hover:text-orange-600 font-medium"
+                                                    onClick={() => setShowMobileMenu(false)}
+                                                >
+                                                    Home
+                                                </Link>
+                                                <Link
+                                                    to="/products"
+                                                    className="px-6 py-3 text-slate-700 hover:bg-orange-50 hover:text-orange-600 font-medium"
+                                                    onClick={() => setShowMobileMenu(false)}
+                                                >
+                                                    All Products
+                                                </Link>
+
+                                                <div className="my-2 border-t border-slate-100 mx-6"></div>
+                                                <div className="px-6 py-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">
+                                                    Categories
+                                                </div>
+
+                                                {categories.map(category => (
+                                                    <Link
+                                                        key={category.id}
+                                                        to={`/category/${category.slug}`}
+                                                        className="px-6 py-3 text-slate-700 hover:bg-orange-50 hover:text-orange-600 font-medium"
+                                                        onClick={() => setShowMobileMenu(false)}
+                                                    >
+                                                        {category.name}
+                                                    </Link>
+                                                ))}
+
+                                                {user && user.is_vendor && (
+                                                    <>
+                                                        <div className="my-2 border-t border-slate-100 mx-6"></div>
+                                                        <Link
+                                                            to="/vendor/dashboard"
+                                                            className="px-6 py-3 text-slate-700 hover:bg-orange-50 hover:text-orange-600 font-medium"
+                                                            onClick={() => setShowMobileMenu(false)}
+                                                        >
+                                                            Vendor Dashboard
+                                                        </Link>
+                                                    </>
+                                                )}
+                                            </nav>
+                                        </div>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </header>
