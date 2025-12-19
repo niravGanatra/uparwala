@@ -5,6 +5,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const api = axios.create({
     baseURL: API_URL,
     withCredentials: true, // Critical: Send cookies with requests
+    xsrfCookieName: 'csrftoken',
+    xsrfHeaderName: 'X-CSRFToken',
     headers: {
         'Content-Type': 'application/json',
     },
