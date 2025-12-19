@@ -226,6 +226,81 @@ const AdminVendors = () => {
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Extended Vendor Profile Details */}
+                                {selectedVendor.vendor_profile && (
+                                    <div className="space-y-6 border-t border-slate-200 pt-6 mt-6">
+
+                                        {/* Store Address */}
+                                        <div>
+                                            <h4 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                                                <Store className="h-5 w-5 text-gray-500" /> Store Address
+                                            </h4>
+                                            <div className="bg-slate-50 p-4 rounded-lg text-sm text-slate-700 space-y-1">
+                                                <p className="font-medium">{selectedVendor.vendor_profile.store_name}</p>
+                                                <p>{selectedVendor.vendor_profile.address}</p>
+                                                <p>{selectedVendor.vendor_profile.city}, {selectedVendor.vendor_profile.state} - {selectedVendor.vendor_profile.zip_code}</p>
+                                                <p>{selectedVendor.vendor_profile.country}</p>
+                                                <p className="mt-2 text-slate-500">Phone: {selectedVendor.vendor_profile.phone}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Bank Details */}
+                                        <div>
+                                            <h4 className="text-lg font-semibold text-slate-900 mb-3">Bank Information</h4>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-slate-50 p-3 rounded">
+                                                    <label className="text-xs text-slate-500 uppercase font-bold">Bank Name</label>
+                                                    <p className="font-medium">{selectedVendor.vendor_profile.bank_name || 'N/A'}</p>
+                                                </div>
+                                                <div className="bg-slate-50 p-3 rounded">
+                                                    <label className="text-xs text-slate-500 uppercase font-bold">Account Number</label>
+                                                    <p className="font-medium">{selectedVendor.vendor_profile.bank_account_number || 'N/A'}</p>
+                                                </div>
+                                                <div className="bg-slate-50 p-3 rounded">
+                                                    <label className="text-xs text-slate-500 uppercase font-bold">IFSC Code</label>
+                                                    <p className="font-medium">{selectedVendor.vendor_profile.bank_ifsc_code || 'N/A'}</p>
+                                                </div>
+                                                <div className="bg-slate-50 p-3 rounded">
+                                                    <label className="text-xs text-slate-500 uppercase font-bold">Account Holder</label>
+                                                    <p className="font-medium">{selectedVendor.vendor_profile.bank_account_holder_name || 'N/A'}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Documents */}
+                                        <div>
+                                            <h4 className="text-lg font-semibold text-slate-900 mb-3">Documents</h4>
+                                            <div className="flex flex-wrap gap-4">
+                                                {selectedVendor.vendor_profile.cancelled_cheque ? (
+                                                    <a
+                                                        href={selectedVendor.vendor_profile.cancelled_cheque}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
+                                                    >
+                                                        📄 Cancelled Cheque
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-slate-400 italic text-sm">No Cancelled Cheque</span>
+                                                )}
+
+                                                {selectedVendor.vendor_profile.food_license_certificate ? (
+                                                    <a
+                                                        href={selectedVendor.vendor_profile.food_license_certificate}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
+                                                    >
+                                                        📜 Food License
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-slate-400 italic text-sm">No Food License</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </Modal>
