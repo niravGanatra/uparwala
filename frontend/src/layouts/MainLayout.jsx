@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { Button } from '../components/ui/button';
 import api from '../services/api';
+import Footer from '../components/Footer';
 
 const MainLayout = () => {
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -191,11 +192,7 @@ const MainLayout = () => {
                 <Outlet />
             </main>
 
-            <footer className="border-t bg-slate-50 py-8">
-                <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-                    © 2025 Uparwala. All rights reserved.
-                </div>
-            </footer>
+            <Footer />
         </div>
     );
 };
