@@ -63,6 +63,13 @@ urlpatterns = [
     
     path('vendor/my-products/', VendorProductListCreateView.as_view(), name='vendor-product-list'),
     path('vendor/my-products/<slug:slug>/', VendorProductDetailView.as_view(), name='vendor-product-detail'),
+    
+    # Wishlist (Added)
+    path('wishlist/', WishlistView.as_view(), name='wishlist'),
+    path('wishlist/<int:product_id>/', WishlistAddRemoveView.as_view(), name='wishlist-add-remove'),
+    path('wishlist/<int:product_id>/check/', WishlistCheckView.as_view(), name='wishlist-check'),
+    path('wishlist/<int:product_id>/move-to-cart/', WishlistMoveToCartView.as_view(), name='wishlist-move-to-cart'),
+
     path('admin/', AdminProductListCreateView.as_view(), name='admin-product-list-create'),
     path('admin/<int:pk>/', AdminProductDetailView.as_view(), name='admin-product-detail'),
     
