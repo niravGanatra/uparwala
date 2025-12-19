@@ -12,6 +12,20 @@ const api = axios.create({
     },
 });
 
+// Request interceptor to add Bearer token (for Google Auth and regular JWT Flow)
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
 // Response interceptor for 401 (Refresh Token)
 api.interceptors.response.use(
     (response) => response,
