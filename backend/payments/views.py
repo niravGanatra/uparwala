@@ -279,7 +279,7 @@ class PaymentWebhookView(APIView):
         payload = request.data.get('payload', {})
         
         if event == 'payment.captured':
-            payment_entity = payload.get('payment', {}).get('entity', {}):
+            payment_entity = payload.get('payment', {}).get('entity', {})
             payment_id = payment_entity.get('id')
             
             try:
