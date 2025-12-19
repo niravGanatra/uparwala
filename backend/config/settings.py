@@ -270,10 +270,10 @@ LOGIN_URL = 'http://localhost:5173/login'
 
 # New Allauth Configuration (Replaces deprecated settings)
 # Asterisk (*) means required field
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-ACCOUNT_LOGIN_METHODS = {'email'}  # Only email login, no username
-# ACCOUNT_USERNAME_REQUIRED = False # properties accessed by dj_rest_auth causng warnings, but setting them causes allauth warnings.
-# We will rely on SIGNUP_FIELDS as per allauth recommendation.
+ACCOUNT_SIGNUP_FIELDS = ['email', 'username', 'password1', 'password2']
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
 
