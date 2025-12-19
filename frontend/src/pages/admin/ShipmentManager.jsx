@@ -37,7 +37,7 @@ const ShipmentManager = () => {
         setLoading(true);
         try {
             const response = await api.get('/orders/shipments/');
-            set Shipments(response.data.results || response.data);
+            setShipments(response.data.results || response.data);
         } catch (error) {
             toast.error('Failed to load shipments');
         } finally {
@@ -139,8 +139,8 @@ const ShipmentManager = () => {
                         <button
                             onClick={() => setActiveTab('pending')}
                             className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'pending'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             <Package className="inline-block w-4 h-4 mr-2" />
@@ -149,8 +149,8 @@ const ShipmentManager = () => {
                         <button
                             onClick={() => setActiveTab('active')}
                             className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'active'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             <Truck className="inline-block w-4 h-4 mr-2" />
@@ -159,8 +159,8 @@ const ShipmentManager = () => {
                         <button
                             onClick={() => setActiveTab('completed')}
                             className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'completed'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             <XCircle className="inline-block w-4 h-4 mr-2" />
