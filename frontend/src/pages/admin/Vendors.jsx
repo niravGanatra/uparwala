@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
-import { Search, Store, Eye } from 'lucide-react';
+import { Search, Store, Eye, MapPin, Phone, CreditCard, FileText, Globe, Info, Calendar } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -22,9 +22,7 @@ const AdminVendors = () => {
         try {
             setLoading(true);
             const response = await api.get('/users/admin/users/');
-            console.log('Fetched vendors:', response.data);
             const vendorUsers = response.data.filter(user => user.is_vendor);
-            console.log('Filtered vendors:', vendorUsers);
             setVendors(vendorUsers);
         } catch (error) {
             console.error('Failed to fetch vendors:', error);
@@ -40,8 +38,6 @@ const AdminVendors = () => {
     };
 
     const handleToggleStatus = async (vendorId, currentStatus) => {
-        console.log('Toggle clicked:', { vendorId, currentStatus, newStatus: !currentStatus });
-
         // Optimistic update
         setVendors(prevVendors =>
             prevVendors.map(v =>
@@ -50,18 +46,14 @@ const AdminVendors = () => {
         );
 
         try {
-            const response = await api.patch(`/users/admin/users/${vendorId}/`, {
+            await api.patch(`/users/admin/users/${vendorId}/`, {
                 is_active: !currentStatus
             });
-            console.log('API Response:', response.data);
             toast.success(`Vendor ${!currentStatus ? 'activated' : 'deactivated'} successfully!`);
-            // Refresh to ensure data consistency
-            await fetchVendors();
+            fetchVendors();
         } catch (error) {
-            console.error('Failed to update vendor status:', error);
-            console.error('Error details:', error.response?.data);
             toast.error('Failed to update vendor status');
-            // Revert optimistic update on error
+            // Revert
             setVendors(prevVendors =>
                 prevVendors.map(v =>
                     v.id === vendorId ? { ...v, is_active: currentStatus } : v
@@ -72,8 +64,22 @@ const AdminVendors = () => {
 
     const filteredVendors = vendors.filter(vendor =>
         vendor.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vendor.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        vendor.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vendor.vendor_profile?.store_name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const getVerificationBadge = (status) => {
+        const styles = {
+            verified: 'bg-green-100 text-green-800',
+            pending: 'bg-yellow-100 text-yellow-800',
+            rejected: 'bg-red-100 text-red-800'
+        };
+        return (
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium uppercase ${styles[status] || 'bg-gray-100 text-gray-800'}`}>
+                {status || 'Pending'}
+            </span>
+        );
+    };
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -82,7 +88,7 @@ const AdminVendors = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Vendor Management</h1>
-                            <p className="text-sm md:text-base text-slate-600">Manage all vendors in the marketplace</p>
+                            <p className="text-sm md:text-base text-slate-600">Manage all vendors, verify documents, and track performance.</p>
                         </div>
                     </div>
 
@@ -92,7 +98,7 @@ const AdminVendors = () => {
                                 <div className="relative flex-1">
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                                     <Input
-                                        placeholder="Search vendors..."
+                                        placeholder="Search by store name, username, or email..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         className="pl-10"
@@ -105,61 +111,85 @@ const AdminVendors = () => {
                                 <p className="text-center py-8 text-slate-500">Loading vendors...</p>
                             ) : (
                                 <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead className="border-b">
+                                    <table className="w-full text-sm">
+                                        <thead className="border-b bg-slate-50">
                                             <tr className="text-left">
-                                                <th className="pb-3 font-semibold text-slate-900">Vendor</th>
-                                                <th className="pb-3 font-semibold text-slate-900">Email</th>
-                                                <th className="pb-3 font-semibold text-slate-900">Status</th>
-                                                <th className="pb-3 font-semibold text-slate-900">Joined</th>
-                                                <th className="pb-3 font-semibold text-slate-900">Actions</th>
+                                                <th className="px-4 py-3 font-semibold text-slate-900">Store Info</th>
+                                                <th className="px-4 py-3 font-semibold text-slate-900">Contact</th>
+                                                <th className="px-4 py-3 font-semibold text-slate-900">Location</th>
+                                                <th className="px-4 py-3 font-semibold text-slate-900">Status</th>
+                                                <th className="px-4 py-3 font-semibold text-slate-900 text-right">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredVendors.map((vendor) => (
-                                                <tr key={vendor.id} className="border-b last:border-0">
-                                                    <td className="py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                                                                <Store className="h-5 w-5 text-orange-600" />
+                                            {filteredVendors.map((vendor) => {
+                                                const profile = vendor.vendor_profile || {};
+                                                return (
+                                                    <tr key={vendor.id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
+                                                        <td className="px-4 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
+                                                                    {profile.store_logo ? (
+                                                                        <img src={profile.store_logo} alt="Logo" className="w-full h-full object-cover rounded-full" />
+                                                                    ) : (
+                                                                        <Store className="h-5 w-5 text-orange-600" />
+                                                                    )}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-semibold text-slate-900">{profile.store_name || vendor.username}</div>
+                                                                    <div className="text-xs text-slate-500">{vendor.email}</div>
+                                                                    <div className="text-xs text-slate-400">ID: {vendor.id}</div>
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <div className="font-medium">{vendor.username}</div>
-                                                                <div className="text-sm text-slate-500">ID: {vendor.id}</div>
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <div className="space-y-1">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <Phone className="h-3.5 w-3.5 text-slate-400" />
+                                                                    <span>{profile.phone || 'N/A'}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                                                    <span className="text-xs text-slate-500">Since {vendor.date_joined ? new Date(vendor.date_joined).toLocaleDateString() : 'N/A'}</span>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4">{vendor.email}</td>
-                                                    <td className="py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <button
-                                                                onClick={() => handleToggleStatus(vendor.id, vendor.is_active)}
-                                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${vendor.is_active ? 'bg-green-500' : 'bg-gray-300'
-                                                                    }`}
-                                                                role="switch"
-                                                                aria-checked={vendor.is_active}
-                                                            >
-                                                                <span
-                                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${vendor.is_active ? 'translate-x-6' : 'translate-x-1'
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                                                                <span>{profile.city || 'N/A'}</span>
+                                                            </div>
+                                                            <div className="text-xs text-slate-500 pl-5">{profile.state}</div>
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <div className="flex flex-col items-start gap-2">
+                                                                {getVerificationBadge(profile.verification_status)}
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`w-2 h-2 rounded-full ${vendor.is_active ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                                                                    <span className="text-xs text-slate-600">{vendor.is_active ? 'Active' : 'Inactive'}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-4 text-right">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <button
+                                                                    onClick={() => handleToggleStatus(vendor.id, vendor.is_active)}
+                                                                    className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${vendor.is_active
+                                                                        ? 'border-red-200 text-red-700 hover:bg-red-50'
+                                                                        : 'border-green-200 text-green-700 hover:bg-green-50'
                                                                         }`}
-                                                                />
-                                                            </button>
-                                                            <span className={`text-sm font-medium ${vendor.is_active ? 'text-green-700' : 'text-gray-500'}`}>
-                                                                {vendor.is_active ? 'Active' : 'Inactive'}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4">
-                                                        {vendor.date_joined ? new Date(vendor.date_joined).toLocaleDateString() : 'N/A'}
-                                                    </td>
-                                                    <td className="py-4">
-                                                        <Button variant="ghost" size="sm" onClick={() => handleViewVendor(vendor)}>
-                                                            <Eye className="h-4 w-4 mr-1" />
-                                                            View
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                                >
+                                                                    {vendor.is_active ? 'Deactivate' : 'Activate'}
+                                                                </button>
+                                                                <Button variant="outline" size="sm" onClick={() => handleViewVendor(vendor)}>
+                                                                    <Eye className="h-4 w-4 mr-1" />
+                                                                    View
+                                                                </Button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -167,140 +197,168 @@ const AdminVendors = () => {
                         </CardContent>
                     </Card>
 
-                    {/* View Vendor Modal */}
-                    <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Vendor Details">
+                    {/* Enhanced View Vendor Modal */}
+                    <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Vendor Profile Details">
                         {selectedVendor && (
-                            <div className="space-y-6">
-                                {/* Vendor Info */}
-                                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
-                                    <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                                        <Store className="h-8 w-8 text-orange-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold">{selectedVendor.username}</h3>
-                                        <p className="text-slate-600">{selectedVendor.email}</p>
-                                    </div>
-                                </div>
-
-                                {/* Details */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm font-medium text-slate-600">User ID</label>
-                                        <p className="text-lg font-semibold">{selectedVendor.id}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-slate-600">Status</label>
-                                        <p className="text-lg">
-                                            <span className={`px-2 py-1 rounded-full text-xs ${selectedVendor.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {selectedVendor.is_active ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-slate-600">Joined Date</label>
-                                        <p className="text-lg">
-                                            {selectedVendor.date_joined ? new Date(selectedVendor.date_joined).toLocaleDateString() : 'N/A'}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-slate-600">Last Login</label>
-                                        <p className="text-lg">
-                                            {selectedVendor.last_login ? new Date(selectedVendor.last_login).toLocaleDateString() : 'Never'}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Roles */}
-                                <div>
-                                    <label className="text-sm font-medium text-slate-600 block mb-2">Roles & Permissions</label>
-                                    <div className="flex gap-2">
-                                        {selectedVendor.is_vendor && (
-                                            <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">Vendor</span>
-                                        )}
-                                        {selectedVendor.is_customer && (
-                                            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">Customer</span>
-                                        )}
-                                        {selectedVendor.is_staff && (
-                                            <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">Admin</span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Extended Vendor Profile Details */}
-                                {selectedVendor.vendor_profile && (
-                                    <div className="space-y-6 border-t border-slate-200 pt-6 mt-6">
-
-                                        {/* Store Address */}
-                                        <div>
-                                            <h4 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                                                <Store className="h-5 w-5 text-gray-500" /> Store Address
-                                            </h4>
-                                            <div className="bg-slate-50 p-4 rounded-lg text-sm text-slate-700 space-y-1">
-                                                <p className="font-medium">{selectedVendor.vendor_profile.store_name}</p>
-                                                <p>{selectedVendor.vendor_profile.address}</p>
-                                                <p>{selectedVendor.vendor_profile.city}, {selectedVendor.vendor_profile.state} - {selectedVendor.vendor_profile.zip_code}</p>
-                                                <p>{selectedVendor.vendor_profile.country}</p>
-                                                <p className="mt-2 text-slate-500">Phone: {selectedVendor.vendor_profile.phone}</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Bank Details */}
-                                        <div>
-                                            <h4 className="text-lg font-semibold text-slate-900 mb-3">Bank Information</h4>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-slate-50 p-3 rounded">
-                                                    <label className="text-xs text-slate-500 uppercase font-bold">Bank Name</label>
-                                                    <p className="font-medium">{selectedVendor.vendor_profile.bank_name || 'N/A'}</p>
+                            <div className="space-y-8 max-h-[80vh] overflow-y-auto pr-2 pb-10">
+                                {(() => {
+                                    const p = selectedVendor.vendor_profile || {};
+                                    return (
+                                        <>
+                                            {/* Header Section */}
+                                            <div className="flex items-start gap-5 p-5 bg-slate-50 rounded-xl border border-slate-100">
+                                                <div className="w-20 h-20 bg-white rounded-lg border border-slate-200 p-1 shadow-sm shrink-0">
+                                                    {p.store_logo ? (
+                                                        <img src={p.store_logo} alt="Logo" className="w-full h-full object-cover rounded" />
+                                                    ) : (
+                                                        <Store className="w-full h-full text-slate-300 p-4" />
+                                                    )}
                                                 </div>
-                                                <div className="bg-slate-50 p-3 rounded">
-                                                    <label className="text-xs text-slate-500 uppercase font-bold">Account Number</label>
-                                                    <p className="font-medium">{selectedVendor.vendor_profile.bank_account_number || 'N/A'}</p>
-                                                </div>
-                                                <div className="bg-slate-50 p-3 rounded">
-                                                    <label className="text-xs text-slate-500 uppercase font-bold">IFSC Code</label>
-                                                    <p className="font-medium">{selectedVendor.vendor_profile.bank_ifsc_code || 'N/A'}</p>
-                                                </div>
-                                                <div className="bg-slate-50 p-3 rounded">
-                                                    <label className="text-xs text-slate-500 uppercase font-bold">Account Holder</label>
-                                                    <p className="font-medium">{selectedVendor.vendor_profile.bank_account_holder_name || 'N/A'}</p>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <h2 className="text-xl font-bold text-slate-900">{p.store_name || selectedVendor.username}</h2>
+                                                            <p className="text-slate-500 text-sm mt-1">{p.store_description || "No description provided."}</p>
+                                                        </div>
+                                                        <div className="flex flex-col items-end gap-2">
+                                                            {getVerificationBadge(p.verification_status)}
+                                                            <span className="text-xs text-slate-400">ID: {selectedVendor.id}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-4 mt-4 text-sm text-slate-600">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Globe className="w-4 h-4" />
+                                                            {p.store_slug || 'No slug'}
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Info className="w-4 h-4" />
+                                                            Commission: {p.commission_rate}% ({p.commission_type})
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* Documents */}
-                                        <div>
-                                            <h4 className="text-lg font-semibold text-slate-900 mb-3">Documents</h4>
-                                            <div className="flex flex-wrap gap-4">
-                                                {selectedVendor.vendor_profile.cancelled_cheque ? (
-                                                    <a
-                                                        href={selectedVendor.vendor_profile.cancelled_cheque}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
-                                                    >
-                                                        📄 Cancelled Cheque
-                                                    </a>
-                                                ) : (
-                                                    <span className="text-slate-400 italic text-sm">No Cancelled Cheque</span>
-                                                )}
+                                            {/* Details Grid */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                                                {selectedVendor.vendor_profile.food_license_certificate ? (
-                                                    <a
-                                                        href={selectedVendor.vendor_profile.food_license_certificate}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
-                                                    >
-                                                        📜 Food License
-                                                    </a>
-                                                ) : (
-                                                    <span className="text-slate-400 italic text-sm">No Food License</span>
-                                                )}
+                                                {/* Contact Information */}
+                                                <div className="space-y-4">
+                                                    <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                                        <MapPin className="w-5 h-5 text-blue-500" /> Location & Contact
+                                                    </h3>
+                                                    <div className="bg-white p-4 rounded-lg border border-slate-200 text-sm space-y-3 shadow-sm">
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <span className="text-slate-500">Phone:</span>
+                                                            <span className="col-span-2 font-medium">{p.phone || 'N/A'}</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <span className="text-slate-500">Email:</span>
+                                                            <span className="col-span-2 font-medium">{selectedVendor.email}</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <span className="text-slate-500">Address:</span>
+                                                            <span className="col-span-2 font-medium">{p.address || 'N/A'}</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <span className="text-slate-500">Region:</span>
+                                                            <span className="col-span-2 font-medium">
+                                                                {[p.city, p.state, p.country, p.zip_code].filter(Boolean).join(', ')}
+                                                            </span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <span className="text-slate-500">Shiprocket:</span>
+                                                            <span className="col-span-2 text-xs font-mono bg-slate-100 px-2 py-0.5 rounded w-fit">
+                                                                {p.shiprocket_pickup_location_name || 'Not Synced'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Bank Details */}
+                                                <div className="space-y-4">
+                                                    <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                                        <CreditCard className="w-5 h-5 text-green-500" /> Banking & Finance
+                                                    </h3>
+                                                    <div className="bg-white p-4 rounded-lg border border-slate-200 text-sm space-y-3 shadow-sm">
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <span className="text-slate-500">Bank Name:</span>
+                                                            <span className="col-span-2 font-medium">{p.bank_name || 'N/A'}</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <span className="text-slate-500">Account No:</span>
+                                                            <span className="col-span-2 font-medium">{p.bank_account_number || 'N/A'}</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <span className="text-slate-500">IFSC Code:</span>
+                                                            <span className="col-span-2 font-medium font-mono">{p.bank_ifsc_code || 'N/A'}</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <span className="text-slate-500">Holder:</span>
+                                                            <span className="col-span-2 font-medium">{p.bank_account_holder_name || 'N/A'}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                )}
+
+                                            {/* Documents Section */}
+                                            <div className="space-y-4">
+                                                <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                                    <FileText className="w-5 h-5 text-purple-500" /> Documents & Licenses
+                                                </h3>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+                                                        <div>
+                                                            <p className="font-medium text-slate-900">Cancelled Cheque</p>
+                                                            <p className="text-xs text-slate-500">Banking verification</p>
+                                                        </div>
+                                                        {p.cancelled_cheque ? (
+                                                            <a href={p.cancelled_cheque} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
+                                                        ) : (
+                                                            <span className="text-slate-400 text-xs italic">Not Uploaded</span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+                                                        <div>
+                                                            <p className="font-medium text-slate-900">Food License (FSSAI)</p>
+                                                            <p className="text-xs text-slate-500">{p.food_license_number || 'No number provided'}</p>
+                                                        </div>
+                                                        {p.food_license_certificate ? (
+                                                            <a href={p.food_license_certificate} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
+                                                        ) : (
+                                                            <span className="text-slate-400 text-xs italic">Not Uploaded</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* System & SEO */}
+                                            <div className="space-y-4 border-t pt-6">
+                                                <details className="group">
+                                                    <summary className="flex items-center cursor-pointer text-slate-600 hover:text-slate-900 font-medium list-none">
+                                                        <Info className="w-4 h-4 mr-2" />
+                                                        Additional System Information & SEO
+                                                        <span className="ml-auto transition transform group-open:rotate-180">▼</span>
+                                                    </summary>
+                                                    <div className="mt-4 grid grid-cols-2 gap-6 text-sm text-slate-600 bg-slate-50 p-4 rounded-lg">
+                                                        <div>
+                                                            <p className="mb-1 font-semibold">SEO Settings</p>
+                                                            <p>Title: {p.seo_title || '-'}</p>
+                                                            <p>Desc: {p.seo_description || '-'}</p>
+                                                            <p>Keywords: {p.seo_keywords || '-'}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="mb-1 font-semibold">Timestamps</p>
+                                                            <p>Joined: {new Date(selectedVendor.date_joined).toLocaleString()}</p>
+                                                            <p>Last Login: {selectedVendor.last_login ? new Date(selectedVendor.last_login).toLocaleString() : 'Never'}</p>
+                                                        </div>
+                                                    </div>
+                                                </details>
+                                            </div>
+
+                                        </>
+                                    );
+                                })()}
                             </div>
                         )}
                     </Modal>
