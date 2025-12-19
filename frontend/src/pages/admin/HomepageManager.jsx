@@ -16,38 +16,42 @@ const HomepageManager = () => {
     ];
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-slate-900 mb-2">Homepage Manager</h1>
-                <p className="text-slate-600">Customize the layout and content of your storefront</p>
-            </div>
+        <div className="min-h-screen bg-slate-50">
+            <div className="max-w-7xl mx-auto px-4 py-6 md:py-8 w-full max-w-full overflow-hidden">
+                <div className="space-y-6">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Homepage Manager</h1>
+                        <p className="text-sm md:text-base text-slate-600">Customize the layout and content of your storefront</p>
+                    </div>
 
-            {/* Tabs */}
-            <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg w-fit">
-                {tabs.map((tab) => {
-                    const Icon = tab.icon;
-                    return (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
-                                ? 'bg-white text-slate-900 shadow'
-                                : 'text-slate-500 hover:text-slate-700 hover:text-slate-900 hover:bg-slate-200'
-                                }`}
-                        >
-                            <Icon className="w-4 h-4" />
-                            {tab.label}
-                        </button>
-                    );
-                })}
-            </div>
+                    {/* Tabs */}
+                    <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg w-fit">
+                        {tabs.map((tab) => {
+                            const Icon = tab.icon;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
+                                        ? 'bg-white text-slate-900 shadow'
+                                        : 'text-slate-500 hover:text-slate-700 hover:text-slate-900 hover:bg-slate-200'
+                                        }`}
+                                >
+                                    <Icon className="w-4 h-4" />
+                                    {tab.label}
+                                </button>
+                            );
+                        })}
+                    </div>
 
-            {/* Content Content - Switcher */}
-            <div className="mt-6">
-                {activeTab === 'banners' && <BannersManager />}
-                {activeTab === 'featured' && <FeaturedManager />}
-                {activeTab === 'sections' && <SectionsManager />}
-                {activeTab === 'codes' && <CodesManager />}
+                    {/* Content Content - Switcher */}
+                    <div className="mt-6">
+                        {activeTab === 'banners' && <BannersManager />}
+                        {activeTab === 'featured' && <FeaturedManager />}
+                        {activeTab === 'sections' && <SectionsManager />}
+                        {activeTab === 'codes' && <CodesManager />}
+                    </div>
+                </div>
             </div>
         </div>
     );
