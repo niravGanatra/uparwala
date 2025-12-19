@@ -240,7 +240,7 @@ const CartPage = () => {
                         transition={{ delay: 0.3 }}
                         className="space-y-6"
                     >
-                        <Card className="sticky top-20">
+                        <Card className="border-2 border-slate-200 shadow-sm">
                             <CardHeader>
                                 <CardTitle>Order Summary</CardTitle>
                             </CardHeader>
