@@ -268,6 +268,7 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 LOGIN_URL = 'http://localhost:5173/login'
+ACCOUNT_ADAPTER = 'users.adapters.CustomAccountAdapter'
 
 # New Allauth Configuration (Replaces deprecated settings)
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username', 'password1', 'password2']
