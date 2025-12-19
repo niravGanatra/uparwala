@@ -292,33 +292,35 @@ const ShippingSettings = () => {
     const [activeTab, setActiveTab] = useState('zones');
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <Truck className="w-6 h-6" />
-                        Shipping Settings
-                    </h1>
+        <div className="min-h-screen bg-slate-50">
+            <div className="max-w-7xl mx-auto px-4 py-6 md:py-8 w-full max-w-full overflow-hidden">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                            <Truck className="w-6 h-6" />
+                            Shipping Settings
+                        </h1>
+                    </div>
                 </div>
-            </div>
 
-            {/* Tabs */}
-            <div className="flex gap-4 border-b mb-6">
-                <button
-                    className={`pb-2 px-4 font-medium ${activeTab === 'zones' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
-                    onClick={() => setActiveTab('zones')}
-                >
-                    Shipping Zones
-                </button>
-                <button
-                    className={`pb-2 px-4 font-medium ${activeTab === 'shiprocket' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
-                    onClick={() => setActiveTab('shiprocket')}
-                >
-                    Shiprocket Integration
-                </button>
-            </div>
+                {/* Tabs */}
+                <div className="flex gap-4 border-b mb-6">
+                    <button
+                        className={`pb-2 px-4 font-medium ${activeTab === 'zones' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+                        onClick={() => setActiveTab('zones')}
+                    >
+                        Shipping Zones
+                    </button>
+                    <button
+                        className={`pb-2 px-4 font-medium ${activeTab === 'shiprocket' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+                        onClick={() => setActiveTab('shiprocket')}
+                    >
+                        Shiprocket Integration
+                    </button>
+                </div>
 
-            {activeTab === 'zones' ? <ShippingZonesManager /> : <ShiprocketManager />}
+                {activeTab === 'zones' ? <ShippingZonesManager /> : <ShiprocketManager />}
+            </div>
         </div>
     );
 };
