@@ -7,7 +7,8 @@ from .shiprocket_views import (
     get_tracking,
     get_tracking_history,
     shiprocket_webhook,
-    get_all_shipments
+    get_all_shipments,
+    check_product_serviceability
 )
 
 urlpatterns = [
@@ -23,6 +24,9 @@ urlpatterns = [
     
     # Dashboard
     path('shipments/', get_all_shipments, name='get-all-shipments'),
+    
+    # Serviceability
+    path('serviceability/', check_product_serviceability, name='check-serviceability'),
 ]
 
 # Webhook URL (separate from orders)
