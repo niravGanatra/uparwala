@@ -68,7 +68,6 @@ const AdminLayout = () => {
             items: [
                 { path: '/admin/homepage', icon: LayoutDashboard, label: 'Homepage' },
                 { path: '/admin/cms-pages', icon: FileText, label: 'CMS Pages' },
-                { path: '/admin/footer', icon: Columns, label: 'Footer' },
             ]
         },
         {

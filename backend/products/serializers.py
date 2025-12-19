@@ -3,7 +3,7 @@ from .models import (
     Category, Product, ProductImage, ProductAttribute, Variation, 
     ProductDownload, ProductQuestion, ProductAnswer, RecentlyViewed, 
     ProductReview, ReviewHelpful, Wishlist, GlobalAttribute, AttributeTerm,
-    Brand, TaxSlab, FooterSection, FooterLink, FooterSocialMedia, FooterSettings
+    Brand, TaxSlab
 )
 from users.serializers import UserSerializer
 from vendors.serializers import VendorProfileSerializer
@@ -146,30 +146,3 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 class ProductListSerializer(ProductSerializer):
     """Serializer for listing products (reusing ProductSerializer for now)"""
     pass
-
-# ==================== FOOTER SERIALIZERS ====================
-
-class FooterLinkSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FooterLink
-        fields = '__all__'
-
-
-class FooterSectionSerializer(serializers.ModelSerializer):
-    links = FooterLinkSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = FooterSection
-        fields = '__all__'
-
-
-class FooterSocialMediaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FooterSocialMedia
-        fields = '__all__'
-
-
-class FooterSettingsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FooterSettings
-        fields = '__all__'
