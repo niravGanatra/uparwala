@@ -431,3 +431,34 @@ class ShiprocketService:
         except Exception as e:
             print(f"Failed to cancel shipment: {e}")
             raise
+
+    def check_serviceability(self, pickup_pincode, delivery_pincode, weight=0.5, cod=0):
+        """
+        Check serviceability between two pincodes.
+        Returns list of available couriers with EDD.
+        """
+        url = f"{self.BASE_URL}/courier/serviceability/"
+        
+        params = {
+            "pickup_postcode": pickup_pincode,
+            "delivery_postcode": delivery_pincode,
+            "weight": weight,
+            "cod": cod
+        }
+        
+        try:
+            response = requests.get(url, params=params, headers=self.get_headers())
+            # Don't raise for status immediately, SR returns 404/422 for non-serviceable sometimes
+            
+            data = response.json()
+            
+            if response.status_code == 200 and data.get('status') == 200:
+                return data.get('data', {}).get('available_courier_companies', [])
+            else:
+                # If error or not serviceable
+                print(f"Serviceability check failed: {data}")
+                return []
+                
+        except Exception as e:
+            print(f"Serviceability API failed: {e}")
+            return []
