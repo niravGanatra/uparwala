@@ -21,7 +21,8 @@ api.interceptors.response.use(
             originalRequest._retry = true;
             try {
                 // Attempt to refresh token (Backend reads httpOnly refresh cookie)
-                await axios.post(`${API_URL}/users/token/refresh/`, {}, { withCredentials: true });
+                // Use dj-rest-auth refresh endpoint which reads cookies
+                await axios.post(`${API_URL}/auth/token/refresh/`, {}, { withCredentials: true });
                 // If successful, retry original request
                 return api(originalRequest);
             } catch (refreshError) {

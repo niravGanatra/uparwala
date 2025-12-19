@@ -2,7 +2,8 @@ import api from './api';
 
 export const login = async (username, password) => {
     // Backend sets HttpOnly cookie on success
-    const response = await api.post('/users/login/', { username, password });
+    // dj-rest-auth login endpoint
+    const response = await api.post('/auth/login/', { email: username, username, password });
     return response.data;
 };
 
