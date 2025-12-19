@@ -45,6 +45,7 @@ const Checkout = () => {
     const [codMessage, setCodMessage] = useState('');
     const [couponCode, setCouponCode] = useState('');
     const [customerNote, setCustomerNote] = useState('');
+    const [policyAgreed, setPolicyAgreed] = useState(false);
     const [giftData, setGiftData] = useState(null);
 
     const setGiftOption = (option) => {
@@ -233,6 +234,11 @@ const Checkout = () => {
     const handlePlaceOrder = async () => {
         if (!selectedShippingAddress) {
             toast.error('Please select a shipping address');
+            return;
+        }
+
+        if (!policyAgreed) {
+            toast.error('Please agree to the Return & Refund Policy to continue');
             return;
         }
 
@@ -721,6 +727,23 @@ const Checkout = () => {
                         className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                         rows="2"
                     />
+                </div>
+
+
+                {/* Policy Agreement Checkbox */}
+                <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                    <div className="flex items-start gap-3">
+                        <input
+                            type="checkbox"
+                            id="policy-agree"
+                            checked={policyAgreed}
+                            onChange={(e) => setPolicyAgreed(e.target.checked)}
+                            className="mt-1 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <label htmlFor="policy-agree" className="text-sm text-slate-800">
+                            I have read and agree to the <a href="/refund-policy" target="_blank" className="text-blue-600 underline font-semibold">Return, Cancellation & Refund Policy</a> and understand that most religious products are non-returnable and non-refundable.
+                        </label>
+                    </div>
                 </div>
 
                 <div className="flex gap-4 pt-4">
