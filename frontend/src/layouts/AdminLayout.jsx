@@ -52,6 +52,7 @@ const AdminLayout = () => {
                 { path: '/admin/tax-slabs', icon: Receipt, label: 'Tax Slabs' },
                 { path: '/admin/product-moderation', icon: CheckCircle, label: 'Moderation' },
                 { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
+                { path: '/admin/shipments', icon: Package, label: 'Shipments' },
             ]
         },
         {

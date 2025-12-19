@@ -111,6 +111,16 @@ class VerifyPaymentView(APIView):
                     product.stock = 0  # Prevent negative stock
                 product.save()
             
+            
+            # Auto-create Shiprocket shipments if enabled
+            if getattr(settings, "SHIPROCKET_AUTO_CREATE", True):
+                try:
+                    from orders.shiprocket_service import ShiprocketService
+                    service = ShiprocketService()
+                    shipments = service.create_orders(order)
+                    logger.info(f"Auto-created {len(shipments)} shipments for order {order.id}")
+                except Exception as e:
+                    logger.error(f"Failed to auto-create shipments for order {order.id}: {e}")
             return Response({
                 'success': True,
                 'message': 'Payment verified successfully',
@@ -272,6 +282,16 @@ class PaymentWebhookView(APIView):
             payment_entity = payload.get('payment', {}).get('entity', {})
             payment_id = payment_entity.get('id')
             
+                
+                # Auto-create Shiprocket shipments if enabled
+                if getattr(settings, "SHIPROCKET_AUTO_CREATE", True):
+                    try:
+                        from orders.shiprocket_service import ShiprocketService
+                        service = ShiprocketService()
+                        shipments = service.create_orders(order)
+                        logger.info(f"Auto-created {len(shipments)} shipments for order {order.id}")
+                    except Exception as e:
+                        logger.error(f"Failed to auto-create shipments for order {order.id}: {e}")
             try:
                 payment = Payment.objects.get(payment_id=payment_id)
                 payment.status = 'completed'
