@@ -11,8 +11,26 @@ class ShiprocketService:
     
     def __init__(self):
         self.config = ShiprocketConfig.objects.first()
+        
+        # Auto-create config from settings if available and not in DB
+        if not self.config and hasattr(settings, 'SHIPROCKET_EMAIL') and hasattr(settings, 'SHIPROCKET_PASSWORD'):
+            email = settings.SHIPROCKET_EMAIL
+            password = settings.SHIPROCKET_PASSWORD
+            if email and password:
+                self.config = ShiprocketConfig.objects.create(
+                    email=email,
+                    password=password,
+                    is_active=True,
+                    pickup_location='Primary',
+                    pickup_address='Default Address',
+                    pickup_city='City',
+                    pickup_state='State',
+                    pickup_pincode='000000',
+                    pickup_phone='0000000000'
+                )
+                
         if not self.config:
-            raise ValueError("Shiprocket configuration not found.")
+            raise ValueError("Shiprocket configuration not found. Please configure it in admin panel or environment variables.")
 
     def get_token(self):
         """Get valid API token, refreshing if necessary"""
