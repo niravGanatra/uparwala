@@ -17,7 +17,12 @@ from .views import (
     track_product_view,
     bulk_upload_products,
     download_csv_template,
-    check_product_pincode
+    check_product_pincode,
+    FooterDataView,
+    FooterSectionViewSet,
+    FooterLinkViewSet,
+    FooterSocialMediaViewSet,
+    FooterSettingsViewSet
 )
 from .review_views import (
     ProductReviewListCreateView,
@@ -56,10 +61,20 @@ router.register(r'manage/attributes/global', GlobalAttributeViewSet, basename='a
 router.register(r'manage/attributes/terms', AttributeTermViewSet, basename='attribute-term')
 router.register(r'manage/tax-slabs', TaxSlabViewSet, basename='tax-slab')
 
+# Footer management
+router.register(r'admin/footer-sections', FooterSectionViewSet, basename='footer-section')
+router.register(r'admin/footer-links', FooterLinkViewSet, basename='footer-link')
+router.register(r'admin/footer-social', FooterSocialMediaViewSet, basename='footer-social')
+router.register(r'admin/footer-settings', FooterSettingsViewSet, basename='footer-settings')
+
 urlpatterns = [
     path('', ProductListView.as_view(), name='product-list'), # Explicit Product List at /api/products/
     path('', include(router.urls)),
     path('categories/', CategoryViewSet.as_view({'get': 'list'}), name='category-list'), # Public list
+    
+    # Footer data (public)
+    path('footer-data/', FooterDataView.as_view(), name='footer-data'),
+    
     path('vendor/my-products/', VendorProductListCreateView.as_view(), name='vendor-product-list'),
     path('vendor/my-products/<slug:slug>/', VendorProductDetailView.as_view(), name='vendor-product-detail'),
     path('admin/', AdminProductListCreateView.as_view(), name='admin-product-list-create'),
