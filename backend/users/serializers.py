@@ -1,10 +1,12 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Address
+from vendors.serializers import VendorProfileSerializer
 
 User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
+    vendor_profile = VendorProfileSerializer(read_only=True)
+
     class Meta:
         model = User
         fields = [
@@ -12,7 +14,8 @@ class UserSerializer(serializers.ModelSerializer):
             'date_joined', 'last_login',
             'vendor_status', 'vendor_application_date', 'vendor_approval_date',
             'vendor_rejection_reason', 'business_name', 'business_email',
-            'business_phone', 'business_address', 'store_description', 'tax_number'
+            'business_phone', 'business_address', 'store_description', 'tax_number',
+            'vendor_profile'
         ]
         
     def validate_email(self, value):
