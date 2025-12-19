@@ -8,20 +8,36 @@ from products.models import Product
 
 class CartDetailView(generics.RetrieveAPIView):
     serializer_class = CartSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny] # Allow guests
 
     def get_object(self):
-        cart, created = Cart.objects.get_or_create(user=self.request.user)
+        user = self.request.user
+        if user.is_authenticated:
+            cart, created = Cart.objects.get_or_create(user=user)
+        else:
+            # Create session if not exists
+            if not self.request.session.session_key:
+                self.request.session.create()
+            session_key = self.request.session.session_key
+            cart, created = Cart.objects.get_or_create(session_id=session_key, user=None)
         return cart
 
 class AddToCartView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny] # Allow guests
 
     def post(self, request):
         product_id = request.data.get('product_id')
         quantity = int(request.data.get('quantity', 1))
         
-        cart, created = Cart.objects.get_or_create(user=request.user)
+        user = request.user
+        if user.is_authenticated:
+             cart, created = Cart.objects.get_or_create(user=user)
+        else:
+             if not request.session.session_key:
+                 request.session.create()
+             session_key = request.session.session_key
+             cart, created = Cart.objects.get_or_create(session_id=session_key, user=None)
+
         product = get_object_or_404(Product, id=product_id)
 
         cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
@@ -34,10 +50,18 @@ class AddToCartView(APIView):
         return Response({'status': 'Item added to cart'}, status=status.HTTP_200_OK)
 
 class RemoveFromCartView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny] # Allow guests
 
     def delete(self, request, item_id):
-        cart = get_object_or_404(Cart, user=request.user)
+        # Identify cart for permission check
+        user = request.user
+        if user.is_authenticated:
+            cart = get_object_or_404(Cart, user=user)
+        else:
+            if not request.session.session_key:
+                 return Response({'error': 'No session'}, status=status.HTTP_400_BAD_REQUEST)
+            cart = get_object_or_404(Cart, session_id=request.session.session_key)
+
         cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
         cart_item.delete()
         return Response({'status': 'Item removed from cart'}, status=status.HTTP_200_OK)

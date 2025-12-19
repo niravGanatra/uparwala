@@ -6,7 +6,8 @@ from .shiprocket_models import ShiprocketConfig, ShipmentTracking, OrderTracking
 from .package_models import OrderPackage, PackageItem
 
 class Cart(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart', null=True, blank=True)
+    session_id = models.CharField(max_length=40, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class CartItem(models.Model):

@@ -92,11 +92,8 @@ export const CartProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        // Fetch cart on mount if user is logged in
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            fetchCart();
-        }
+        // Fetch cart on mount (now supports guests via cookies)
+        fetchCart();
     }, []);
 
     return (
