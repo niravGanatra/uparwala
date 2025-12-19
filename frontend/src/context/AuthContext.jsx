@@ -9,32 +9,34 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const initAuth = async () => {
-            const token = localStorage.getItem('access_token');
-            if (token) {
-                try {
-                    const userData = await getCurrentUser();
-                    setUser(userData);
-                } catch (error) {
-                    console.error('Failed to fetch user:', error);
-                }
+            try {
+                // Always try to fetch user. Cookie will be sent if it exists.
+                const userData = await getCurrentUser();
+                setUser(userData);
+            } catch (error) {
+                // Expected if not logged in
+                // console.log('User not logged in');
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         initAuth();
     }, []);
 
     const login = async (username, password) => {
+        // Backend key exchange (sets cookies)
         const data = await apiLogin(username, password);
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
+        // data might contain tokens, but we ignore them and fetch user profile
+        // forcing a profile fetch to verify the cookie was actually set
         const userData = await getCurrentUser();
         setUser(userData);
-        return userData; // Return user data for redirect logic
+        return userData;
     };
 
-    const logout = () => {
-        apiLogout();
+    const logout = async () => {
+        await apiLogout();
         setUser(null);
+        window.location.href = '/login';
     };
 
     return (
