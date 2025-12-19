@@ -54,9 +54,9 @@ const ProductCard = ({ product }) => {
 
     return (
         <>
-            <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group h-[540px] flex flex-col">
-                <Link to={`/products/${product.slug}`} className="flex flex-col h-full">
-                    <div className="relative aspect-square bg-gray-100">
+            <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group flex flex-col">
+                <Link to={`/products/${product.slug}`} className="flex flex-col">
+                    <div className="relative h-64 bg-gray-100 flex-shrink-0">
                         {product.images && product.images.length > 0 ? (
                             <img
                                 src={product.images[0].image}
