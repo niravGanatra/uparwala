@@ -86,171 +86,173 @@ const VendorApprovals = () => {
     };
 
     return (
-        <div className="p-6">
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900">Vendor Approvals</h1>
-                <p className="text-gray-600 mt-1">Review and manage vendor applications</p>
-            </div>
+        <div className="min-h-screen bg-slate-50">
+            <div className="max-w-7xl mx-auto px-4 py-6 md:py-8 w-full max-w-full overflow-hidden">
+                <div className="mb-6">
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Vendor Approvals</h1>
+                    <p className="text-sm md:text-base text-gray-600 mt-1">Review and manage vendor applications</p>
+                </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Pending</p>
-                                <p className="text-2xl font-bold text-orange-600">{stats.pending}</p>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Pending</p>
+                                    <p className="text-2xl font-bold text-orange-600">{stats.pending}</p>
+                                </div>
+                                <Clock className="h-8 w-8 text-orange-600" />
                             </div>
-                            <Clock className="h-8 w-8 text-orange-600" />
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
 
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Approved</p>
-                                <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Approved</p>
+                                    <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
+                                </div>
+                                <CheckCircle className="h-8 w-8 text-green-600" />
                             </div>
-                            <CheckCircle className="h-8 w-8 text-green-600" />
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
 
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Rejected</p>
-                                <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Rejected</p>
+                                    <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
+                                </div>
+                                <XCircle className="h-8 w-8 text-red-600" />
                             </div>
-                            <XCircle className="h-8 w-8 text-red-600" />
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
 
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Total</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Total</p>
+                                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                                </div>
+                                <AlertCircle className="h-8 w-8 text-gray-600" />
                             </div>
-                            <AlertCircle className="h-8 w-8 text-gray-600" />
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-            {/* Vendors List */}
-            <Card className="border-2 border-slate-200">
-                <CardHeader>
-                    <CardTitle>Pending Applications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {loading ? (
-                        <div className="text-center py-8">
-                            <p className="text-gray-600">Loading applications...</p>
-                        </div>
-                    ) : vendors.length === 0 ? (
-                        <div className="text-center py-8">
-                            <p className="text-gray-600">No pending applications</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {vendors.map(vendor => (
-                                <div key={vendor.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-semibold text-gray-900">{vendor.store_name}</h3>
-                                            <div className="mt-2 space-y-1 text-sm text-gray-600">
-                                                <div className="flex items-center gap-2">
-                                                    <Mail className="h-4 w-4" />
-                                                    <span>{vendor.user_email}</span>
+                {/* Vendors List */}
+                <Card className="border-2 border-slate-200">
+                    <CardHeader>
+                        <CardTitle>Pending Applications</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {loading ? (
+                            <div className="text-center py-8">
+                                <p className="text-gray-600">Loading applications...</p>
+                            </div>
+                        ) : vendors.length === 0 ? (
+                            <div className="text-center py-8">
+                                <p className="text-gray-600">No pending applications</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {vendors.map(vendor => (
+                                    <div key={vendor.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1">
+                                                <h3 className="text-lg font-semibold text-gray-900">{vendor.store_name}</h3>
+                                                <div className="mt-2 space-y-1 text-sm text-gray-600">
+                                                    <div className="flex items-center gap-2">
+                                                        <Mail className="h-4 w-4" />
+                                                        <span>{vendor.user_email}</span>
+                                                    </div>
+                                                    {vendor.phone && (
+                                                        <div className="flex items-center gap-2">
+                                                            <Phone className="h-4 w-4" />
+                                                            <span>{vendor.phone}</span>
+                                                        </div>
+                                                    )}
+                                                    {vendor.city && vendor.state && (
+                                                        <div className="flex items-center gap-2">
+                                                            <MapPin className="h-4 w-4" />
+                                                            <span>{vendor.city}, {vendor.state}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                {vendor.phone && (
-                                                    <div className="flex items-center gap-2">
-                                                        <Phone className="h-4 w-4" />
-                                                        <span>{vendor.phone}</span>
-                                                    </div>
+                                                {vendor.store_description && (
+                                                    <p className="mt-2 text-sm text-gray-700">{vendor.store_description}</p>
                                                 )}
-                                                {vendor.city && vendor.state && (
-                                                    <div className="flex items-center gap-2">
-                                                        <MapPin className="h-4 w-4" />
-                                                        <span>{vendor.city}, {vendor.state}</span>
-                                                    </div>
-                                                )}
+                                                <p className="mt-2 text-xs text-gray-500">
+                                                    Applied on: {new Date(vendor.created_at).toLocaleDateString()}
+                                                </p>
                                             </div>
-                                            {vendor.store_description && (
-                                                <p className="mt-2 text-sm text-gray-700">{vendor.store_description}</p>
-                                            )}
-                                            <p className="mt-2 text-xs text-gray-500">
-                                                Applied on: {new Date(vendor.created_at).toLocaleDateString()}
-                                            </p>
-                                        </div>
 
-                                        <div className="flex gap-2 ml-4">
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleApprove(vendor.id, vendor.store_name)}
-                                                className="bg-green-600 hover:bg-green-700"
-                                            >
-                                                <CheckCircle className="h-4 w-4 mr-1" />
-                                                Approve
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="destructive"
-                                                onClick={() => openRejectModal(vendor)}
-                                            >
-                                                <XCircle className="h-4 w-4 mr-1" />
-                                                Reject
-                                            </Button>
+                                            <div className="flex gap-2 ml-4">
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleApprove(vendor.id, vendor.store_name)}
+                                                    className="bg-green-600 hover:bg-green-700"
+                                                >
+                                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                                    Approve
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onClick={() => openRejectModal(vendor)}
+                                                >
+                                                    <XCircle className="h-4 w-4 mr-1" />
+                                                    Reject
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
-            {/* Reject Modal */}
-            {showRejectModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold mb-4">Reject Vendor Application</h3>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Please provide a reason for rejecting "{selectedVendor?.store_name}"
-                        </p>
-                        <textarea
-                            value={rejectionReason}
-                            onChange={(e) => setRejectionReason(e.target.value)}
-                            className="w-full border rounded-md p-2 min-h-[100px] mb-4"
-                            placeholder="Enter rejection reason..."
-                        />
-                        <div className="flex gap-2 justify-end">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setShowRejectModal(false);
-                                    setSelectedVendor(null);
-                                    setRejectionReason('');
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="destructive"
-                                onClick={handleReject}
-                            >
-                                Reject Vendor
-                            </Button>
+                {/* Reject Modal */}
+                {showRejectModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                            <h3 className="text-lg font-semibold mb-4">Reject Vendor Application</h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Please provide a reason for rejecting "{selectedVendor?.store_name}"
+                            </p>
+                            <textarea
+                                value={rejectionReason}
+                                onChange={(e) => setRejectionReason(e.target.value)}
+                                className="w-full border rounded-md p-2 min-h-[100px] mb-4"
+                                placeholder="Enter rejection reason..."
+                            />
+                            <div className="flex gap-2 justify-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setShowRejectModal(false);
+                                        setSelectedVendor(null);
+                                        setRejectionReason('');
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={handleReject}
+                                >
+                                    Reject Vendor
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };
