@@ -230,3 +230,186 @@ class ShiprocketService:
                 print(f"Exception creating Shiprocket order: {e}")
 
         return created_shipments
+
+    def generate_awb(self, shipment: ShipmentTracking, courier_id=None):
+        """
+        Generate AWB (Air Waybill) for a shipment.
+        If courier_id not provided, Shiprocket will assign the recommended courier.
+        """
+        url = f"{self.BASE_URL}/courier/assign/awb"
+        
+        payload = {
+            "shipment_id": shipment.shiprocket_shipment_id
+        }
+        
+        # If specific courier requested
+        if courier_id:
+            payload["courier_id"] = courier_id
+        
+        try:
+            response = requests.post(url, json=payload, headers=self.get_headers())
+            response.raise_for_status()
+            data = response.json()
+            
+            # Update shipment with AWB details
+            if data.get('awb_assign_status') == 1 or data.get('response'):
+                awb_data = data.get('response', {})
+                shipment.awb_code = awb_data.get('data', {}).get('awb_code') or data.get('awb_code', '')
+                shipment.courier_name = awb_data.get('data', {}).get('courier_name') or data.get('courier_name', '')
+                shipment.courier_id = awb_data.get('data', {}).get('courier_company_id') or courier_id
+                shipment.save()
+                
+                print(f"AWB Generated: {shipment.awb_code} for {shipment.courier_name}")
+                return shipment
+            else:
+                raise ValueError(f"AWB generation failed: {data}")
+                
+        except Exception as e:
+            print(f"Failed to generate AWB: {e}")
+            raise
+
+    def generate_label(self, shipment: ShipmentTracking):
+        """
+        Generate shipping label for a shipment.
+        Returns the label URL.
+        """
+        url = f"{self.BASE_URL}/courier/generate/label"
+        
+        payload = {
+            "shipment_id": [shipment.shiprocket_shipment_id]
+        }
+        
+        try:
+            response = requests.post(url, json=payload, headers=self.get_headers())
+            response.raise_for_status()
+            data = response.json()
+            
+            # Extract label URL
+            label_url = data.get('label_url') or data.get('label_created', '')
+            
+            if label_url:
+                shipment.label_url = label_url
+                shipment.save()
+                print(f"Label generated: {label_url}")
+                return label_url
+            else:
+                raise ValueError(f"Label generation failed: {data}")
+                
+        except Exception as e:
+            print(f"Failed to generate label: {e}")
+            raise
+
+    def schedule_pickup(self, shipment: ShipmentTracking):
+        """
+        Schedule courier pickup for a shipment.
+        Returns pickup details.
+        """
+        url = f"{self.BASE_URL}/courier/generate/pickup"
+        
+        payload = {
+            "shipment_id": [shipment.shiprocket_shipment_id]
+        }
+        
+        try:
+            response = requests.post(url, json=payload, headers=self.get_headers())
+            response.raise_for_status()
+            data = response.json()
+            
+            # Extract pickup token
+            if data.get('pickup_status') == 1 or data.get('response'):
+                pickup_token = data.get('response', {}).get('pickup_token_number') or data.get('pickup_token_number', '')
+                
+                shipment.pickup_scheduled = True
+                shipment.pickup_token_number = pickup_token
+                shipment.save()
+                
+                print(f"Pickup scheduled: Token {pickup_token}")
+                return data
+            else:
+                raise ValueError(f"Pickup scheduling failed: {data}")
+                
+        except Exception as e:
+            print(f"Failed to schedule pickup: {e}")
+            raise
+
+    def get_tracking(self, shipment_id):
+        """
+        Get tracking information for a shipment.
+        Creates/updates OrderTrackingStatus records.
+        Returns tracking data.
+        """
+        url = f"{self.BASE_URL}/courier/track/shipment/{shipment_id}"
+        
+        try:
+            response = requests.get(url, headers=self.get_headers())
+            response.raise_for_status()
+            data = response.json()
+            
+            # Parse tracking data
+            tracking_data = data.get('tracking_data', {})
+            shipment_track = tracking_data.get('shipment_track', [])
+            
+            # Find shipment
+            try:
+                shipment = ShipmentTracking.objects.get(shiprocket_shipment_id=shipment_id)
+                
+                # Update current status
+                if shipment_track and len(shipment_track) > 0:
+                    latest = shipment_track[0]
+                    shipment.current_status = latest.get('current_status', '')
+                    shipment.save()
+                    
+                    # Create tracking status entries
+                    for track in shipment_track:
+                        OrderTrackingStatus.objects.update_or_create(
+                            shipment=shipment,
+                            timestamp=timezone.datetime.fromisoformat(track.get('date', '').replace('Z', '+00:00')),
+                            defaults={
+                                'order': shipment.order,
+                                'status': track.get('activity', ''),
+                                'location': track.get('location', ''),
+                                'description': track.get('activity', ''),
+                                'shiprocket_status': track.get('sr-status', ''),
+                                'courier_status': track.get('current_status', '')
+                            }
+                        )
+                
+                return tracking_data
+                
+            except ShipmentTracking.DoesNotExist:
+                print(f"Shipment not found: {shipment_id}")
+                return tracking_data
+                
+        except Exception as e:
+            print(f"Failed to get tracking: {e}")
+            raise
+
+    def cancel_shipment(self, shipment: ShipmentTracking):
+        """
+        Cancel a shipment in Shiprocket.
+        """
+        url = f"{self.BASE_URL}/orders/cancel"
+        
+        payload = {
+            "ids": [shipment.shiprocket_order_id]
+        }
+        
+        try:
+            response = requests.post(url, json=payload, headers=self.get_headers())
+            response.raise_for_status()
+            data = response.json()
+            
+            # Update shipment status
+            shipment.current_status = "Cancelled"
+            shipment.save()
+            
+            # Update order status
+            shipment.order.status = 'cancelled'
+            shipment.order.save()
+            
+            print(f"Shipment cancelled: {shipment.shiprocket_order_id}")
+            return data
+            
+        except Exception as e:
+            print(f"Failed to cancel shipment: {e}")
+            raise
