@@ -107,7 +107,7 @@ const ProductCard = ({ product }) => {
                             )}
                         </div>
 
-                        {/* Single Action Button */}
+                        {/* Dual Action Buttons - Vertically Stacked */}
                         <div className="mt-auto">
                             {isOutOfStock ? (
                                 <Button
@@ -120,15 +120,26 @@ const ProductCard = ({ product }) => {
                                     Notify Me
                                 </Button>
                             ) : (
-                                <Button
-                                    size="lg"
-                                    className="w-full bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold uppercase tracking-wide"
-                                    onClick={handleAddToCart}
-                                    disabled={cartLoading}
-                                >
-                                    <ShoppingCart className="w-4 h-4 mr-2" />
-                                    Add to Cart
-                                </Button>
+                                <div className="flex flex-col gap-2">
+                                    <Button
+                                        size="lg"
+                                        className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold uppercase tracking-wide"
+                                        onClick={handleBuyNow}
+                                        disabled={cartLoading}
+                                    >
+                                        Buy Now
+                                    </Button>
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        className="w-full text-sm font-semibold border-slate-700 text-slate-700 hover:bg-slate-50 uppercase tracking-wide"
+                                        onClick={handleAddToCart}
+                                        disabled={cartLoading}
+                                    >
+                                        <ShoppingCart className="w-4 h-4 mr-2" />
+                                        Add to Cart
+                                    </Button>
+                                </div>
                             )}
                         </div>
                     </div>
