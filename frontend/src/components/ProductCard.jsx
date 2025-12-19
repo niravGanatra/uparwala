@@ -56,12 +56,12 @@ const ProductCard = ({ product }) => {
         <>
             <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group h-[480px] flex flex-col">
                 <Link to={`/products/${product.slug}`} className="flex flex-col h-full">
-                    <div className="relative h-64 bg-white flex-shrink-0 p-4">
+                    <div className="relative h-64 bg-white flex-shrink-0 p-4 flex items-center justify-center overflow-hidden">
                         {product.images && product.images.length > 0 ? (
                             <img
                                 src={product.images[0].image}
                                 alt={product.name}
-                                className={`w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 ${isOutOfStock ? 'opacity-60' : ''}`}
+                                className={`max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300 ${isOutOfStock ? 'opacity-60' : ''}`}
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400">
