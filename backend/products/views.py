@@ -242,15 +242,47 @@ def download_csv_template(request):
 @permission_classes([permissions.AllowAny])
 def check_product_pincode(request, slug):
     """
-    Check if a product is deliverable to a specific pincode.
-    Logic:
-    1. Check if pincode is in Global ServiceablePincode list.
-    2. Check if pincode is in Vendor's serviceable_pincodes list.
+    Check if a product is deliverable to a specific pincode using Shiprocket.
     """
-    from orders.utils import is_pincode_servicable
     pincode = request.query_params.get('pincode')
     if not pincode:
         return Response({'available': False, 'message': 'Pincode is required'}, status=status.HTTP_400_BAD_REQUEST)
     
     product = get_object_or_404(Product, slug=slug)
+    
+    try:
+        from orders.shiprocket_service import ShiprocketService
+        service = ShiprocketService()
+        
+        # Get Pickup Pincode from Vendor
+        vendor = product.vendor
+        pickup_pincode = '400001' # Default fallback
+        
+        if vendor and vendor.zip_code:
+            pickup_pincode = vendor.zip_code
+            
+        # Check serviceability
+        couriers = service.check_serviceability(pickup_pincode, pincode)
+        
+        if couriers:
+            # Find earliest delivery date
+            earliest_date = None
+            for c in couriers:
+                etd = c.get('etd')
+                if etd:
+                    if not earliest_date or etd < earliest_date:
+                        earliest_date = etd
+            
+            # Format date friendly if possible, but YYYY-MM-DD is fine
+            msg = f"Delivery by {earliest_date}" if earliest_date else "Serviceable"
+            return Response({'available': True, 'message': msg})
+        else:
+             return Response({'available': False, 'message': 'Not serviceable'})
+
+    except Exception as e:
+        print(f"Serviceability check error: {e}")
+        # Return false but maybe distinct message if config error
+        if "Shiprocket configuration not found" in str(e):
+             return Response({'available': False, 'message': 'Configuration Error'})
+        return Response({'available': False, 'message': 'Not serviceable'})
     
