@@ -227,6 +227,22 @@ def get_tracking_history(request, order_id):
         )
 
 
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_all_shipments(request):
+    """Get all shipments for admin dashboard"""
+    try:
+        shipments = ShipmentTracking.objects.all().order_by('-created_at')
+        serializer = ShipmentTrackingSerializer(shipments, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Failed to fetch shipments: {str(e)}")
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def shiprocket_webhook(request):

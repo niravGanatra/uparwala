@@ -6,7 +6,8 @@ from .shiprocket_views import (
     schedule_pickup,
     get_tracking,
     get_tracking_history,
-    shiprocket_webhook
+    shiprocket_webhook,
+    get_all_shipments
 )
 
 urlpatterns = [
@@ -19,6 +20,9 @@ urlpatterns = [
     # Tracking (Customer & Admin)
     path('<int:order_id>/tracking/', get_tracking, name='get-tracking'),
     path('<int:order_id>/tracking-history/', get_tracking_history, name='tracking-history'),
+    
+    # Dashboard
+    path('shipments/', get_all_shipments, name='get-all-shipments'),
 ]
 
 # Webhook URL (separate from orders)
