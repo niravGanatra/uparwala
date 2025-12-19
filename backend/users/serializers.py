@@ -5,6 +5,7 @@ from vendors.serializers import VendorProfileSerializer
 
 User = get_user_model()
 
+class UserSerializer(serializers.ModelSerializer):
     vendor_profile = VendorProfileSerializer(read_only=True)
 
     class Meta:
