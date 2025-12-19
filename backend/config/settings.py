@@ -299,8 +299,8 @@ REST_AUTH = {
     'JWT_AUTH_COOKIE': 'access_token',
     'JWT_AUTH_REFRESH_COOKIE': 'refresh_token',
     'JWT_AUTH_HTTPONLY': True,
-    'JWT_AUTH_SAMESITE': 'Lax',  # 'None' if cross-site but requires Secure=True
-    'JWT_AUTH_SECURE': not DEBUG, # True in production
+    'JWT_AUTH_SAMESITE': 'None',  # Create cross-site cookies
+    'JWT_AUTH_SECURE': True,      # Required for SameSite=None
 }
 
 # Custom User Model
