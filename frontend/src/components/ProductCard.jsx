@@ -54,8 +54,8 @@ const ProductCard = ({ product }) => {
 
     return (
         <>
-            <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group">
-                <Link to={`/products/${product.slug}`} className="block">
+            <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all overflow-hidden group h-[480px] flex flex-col">
+                <Link to={`/products/${product.slug}`} className="flex flex-col h-full">
                     <div className="relative aspect-square bg-gray-100">
                         {product.images && product.images.length > 0 ? (
                             <img
@@ -82,8 +82,8 @@ const ProductCard = ({ product }) => {
                         )}
                     </div>
 
-                    <div className="p-4 flex flex-col h-[180px]">
-                        <h3 className="text-sm font-medium text-gray-900 line-clamp-3 mb-3 h-[4.5rem] leading-snug">
+                    <div className="p-4 flex flex-col flex-1">
+                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-3 h-[3rem] leading-snug">
                             {product.name}
                         </h3>
 
@@ -111,24 +111,24 @@ const ProductCard = ({ product }) => {
                                     Notify Me
                                 </Button>
                             ) : (
-                                <div className="flex gap-2">
+                                <div className="flex flex-col gap-2">
                                     <Button
                                         size="sm"
-                                        variant="outline"
-                                        className="flex-1 text-xs"
-                                        onClick={handleAddToCart}
-                                        disabled={cartLoading}
-                                    >
-                                        <ShoppingCart className="w-3 h-3 mr-1" />
-                                        Add
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        className="flex-1 bg-orange-600 hover:bg-orange-700 text-white text-xs"
+                                        className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs"
                                         onClick={handleBuyNow}
                                         disabled={cartLoading}
                                     >
                                         Buy Now
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full text-xs"
+                                        onClick={handleAddToCart}
+                                        disabled={cartLoading}
+                                    >
+                                        <ShoppingCart className="w-3 h-3 mr-1" />
+                                        Add to Cart
                                     </Button>
                                 </div>
                             )}
