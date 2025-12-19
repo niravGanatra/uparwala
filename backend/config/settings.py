@@ -263,17 +263,15 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Allauth Settings (Modern Format - No Deprecation Warnings)
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+# Allauth Settings (Modern Format)
+ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 LOGIN_URL = 'http://localhost:5173/login'
 
 # New Allauth Configuration (Replaces deprecated settings)
-# Asterisk (*) means required field
-ACCOUNT_SIGNUP_FIELDS = ['email', 'username', 'password1', 'password2']
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username', 'password1', 'password2']
+ACCOUNT_LOGIN_METHODS = {'email', 'username'}
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
 
