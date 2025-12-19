@@ -82,12 +82,12 @@ const ProductCard = ({ product }) => {
                         )}
                     </div>
 
-                    <div className="p-4">
-                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem]">
+                    <div className="p-4 flex flex-col h-[180px]">
+                        <h3 className="text-sm font-medium text-gray-900 line-clamp-3 mb-3 h-[4.5rem] leading-snug">
                             {product.name}
                         </h3>
 
-                        <div className="flex items-baseline gap-2 mb-3">
+                        <div className="flex items-baseline gap-2 mb-4 h-7">
                             <span className="text-lg font-bold text-gray-900">
                                 ₹{finalPrice.toFixed(2)}
                             </span>
@@ -99,38 +99,40 @@ const ProductCard = ({ product }) => {
                         </div>
 
                         {/* Action Buttons */}
-                        {isOutOfStock ? (
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full text-xs border-orange-600 text-orange-600 hover:bg-orange-50"
-                                onClick={handleNotifyMe}
-                            >
-                                <Bell className="w-3 h-3 mr-1" />
-                                Notify Me
-                            </Button>
-                        ) : (
-                            <div className="flex gap-2">
+                        <div className="mt-auto">
+                            {isOutOfStock ? (
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-xs"
-                                    onClick={handleAddToCart}
-                                    disabled={cartLoading}
+                                    className="w-full text-xs border-orange-600 text-orange-600 hover:bg-orange-50"
+                                    onClick={handleNotifyMe}
                                 >
-                                    <ShoppingCart className="w-3 h-3 mr-1" />
-                                    Add
+                                    <Bell className="w-3 h-3 mr-1" />
+                                    Notify Me
                                 </Button>
-                                <Button
-                                    size="sm"
-                                    className="flex-1 bg-orange-600 hover:bg-orange-700 text-white text-xs"
-                                    onClick={handleBuyNow}
-                                    disabled={cartLoading}
-                                >
-                                    Buy Now
-                                </Button>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 text-xs"
+                                        onClick={handleAddToCart}
+                                        disabled={cartLoading}
+                                    >
+                                        <ShoppingCart className="w-3 h-3 mr-1" />
+                                        Add
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        className="flex-1 bg-orange-600 hover:bg-orange-700 text-white text-xs"
+                                        onClick={handleBuyNow}
+                                        disabled={cartLoading}
+                                    >
+                                        Buy Now
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </Link>
             </div>
