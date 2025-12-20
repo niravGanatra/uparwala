@@ -256,57 +256,63 @@ const ProductForm = ({
             </div>
 
             <div className="flex flex-wrap gap-4 pt-2 border-t">
-                <label className="flex items-center gap-2">
+                <label htmlFor="manage_stock" className="flex items-center gap-2 cursor-pointer">
                     <input
+                        id="manage_stock"
                         type="checkbox"
-                        checked={formData.manage_stock}
+                        checked={!!formData.manage_stock}
                         onChange={(e) => setFormData({ ...formData, manage_stock: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
                     />
                     <span className="text-sm">Manage stock</span>
                 </label>
-                <label className="flex items-center gap-2">
+                <label htmlFor="featured" className="flex items-center gap-2 cursor-pointer">
                     <input
+                        id="featured"
                         type="checkbox"
-                        checked={formData.featured}
+                        checked={!!formData.featured}
                         onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
                     />
                     <span className="text-sm">Featured</span>
                 </label>
-                <label className="flex items-center gap-2">
+                <label htmlFor="is_active" className="flex items-center gap-2 cursor-pointer">
                     <input
+                        id="is_active"
                         type="checkbox"
-                        checked={formData.is_active}
+                        checked={!!formData.is_active}
                         onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
                     />
                     <span className="text-sm">Active</span>
                 </label>
-                <label className="flex items-center gap-2">
+                <label htmlFor="is_returnable" className="flex items-center gap-2 cursor-pointer">
                     <input
+                        id="is_returnable"
                         type="checkbox"
-                        checked={formData.is_returnable}
+                        checked={!!formData.is_returnable}
                         onChange={(e) => setFormData({ ...formData, is_returnable: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
                     />
                     <span className="text-sm">Returnable</span>
                 </label>
-                <label className="flex items-center gap-2">
+                <label htmlFor="is_exchangeable" className="flex items-center gap-2 cursor-pointer">
                     <input
+                        id="is_exchangeable"
                         type="checkbox"
-                        checked={formData.is_exchangeable}
+                        checked={!!formData.is_exchangeable}
                         onChange={(e) => setFormData({ ...formData, is_exchangeable: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
                     />
                     <span className="text-sm">Exchangeable</span>
                 </label>
-                <label className="flex items-center gap-2">
+                <label htmlFor="virtual" className="flex items-center gap-2 cursor-pointer">
                     <input
+                        id="virtual"
                         type="checkbox"
-                        checked={formData.virtual}
+                        checked={!!formData.virtual}
                         onChange={(e) => setFormData({ ...formData, virtual: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
                     />
                     <span className="text-sm">Virtual</span>
                 </label>
