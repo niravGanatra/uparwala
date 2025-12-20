@@ -297,7 +297,8 @@ const ServiceabilityManager = () => {
                                         type="checkbox"
                                         checked={selectedIds.length === pincodes.length && pincodes.length > 0}
                                         onChange={toggleSelectAll}
-                                        className="rounded border-slate-300 w-4 h-4 text-blue-600 focus:ring-blue-500"
+                                        className="w-5 h-5 accent-blue-600 cursor-pointer align-middle"
+                                        style={{ appearance: 'auto', margin: 0 }}
                                     />
                                 </th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">Pincode</th>
@@ -323,12 +324,13 @@ const ServiceabilityManager = () => {
                             ) : (
                                 pincodes.map((pin) => (
                                     <tr key={pin.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-4 py-4 w-10">
+                                        <td className="px-4 py-4 w-10 text-center">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedIds.includes(pin.id)}
                                                 onChange={() => toggleSelect(pin.id)}
-                                                className="rounded border-slate-300 w-4 h-4 text-blue-600 focus:ring-blue-500"
+                                                className="w-5 h-5 accent-blue-600 cursor-pointer align-middle"
+                                                style={{ appearance: 'auto', margin: 0 }}
                                             />
                                         </td>
                                         <td className="px-6 py-4 font-mono font-medium text-slate-700">
