@@ -27,50 +27,84 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
     filterset_fields = ['state', 'city', 'is_serviceable', 'is_cod_available', 'zone']
     search_fields = ['pincode', 'city', 'state']
     
-    def list(self, request, *args, **kwargs):
+    @action(detail=False, methods=['post'])
+    def bulk_load(self, request):
         """
-        Override list to auto-fetch from data.gov.in if search query is provided
-        and no results found in database
+        Load pincodes in bulk from data.gov.in (one-time operation)
         """
-        # Get the search query before calling super()
-        search_query = request.query_params.get('search', '').strip()
+        limit = request.data.get('limit', 1000)
         
-        # First, try the normal list
-        response = super().list(request, *args, **kwargs)
+        count = self._bulk_fetch_from_datagovin(limit)
         
-        # Check if we should fetch from API
-        # response.data for paginated results is: {'count': X, 'results': [...]}
-        should_fetch = False
-        if search_query:
-            if isinstance(response.data, dict):
-                # Paginated response
-                if response.data.get('count', 0) == 0:
-                    should_fetch = True
-            elif isinstance(response.data, list):
-                # Non-paginated response
-                if len(response.data) == 0:
-                    should_fetch = True
+        return Response({
+            'message': f'Loaded {count} pincodes from data.gov.in',
+            'total_in_db': ShiprocketPincode.objects.count()
+        })
+    
+    def _bulk_fetch_from_datagovin(self, limit=1000):
+        """Bulk fetch pincodes from data.gov.in"""
+        import requests
         
-        if should_fetch:
-            # Try to fetch from data.gov.in
-            self._fetch_from_datagovin(search_query)
-            # Re-run the query after fetching
-            response = super().list(request, *args, **kwargs)
+        api_key = '579b464db66ec23bdd000001f17ca38f88df4c4a6449db80d254a78f'
+        url = 'https://api.data.gov.in/resource/6176ee09-3d56-4a3b-8115-21841576b2f6'
         
-        return response
+        count = 0
+        batch_size = 100
+        
+        try:
+            for offset in range(0, limit, batch_size):
+                params = {
+                    'api-key': api_key,
+                    'format': 'json',
+                    'offset': offset,
+                    'limit': min(batch_size, limit - offset)
+                }
+                
+                response = requests.get(url, params=params, timeout=30)
+                records = response.json().get('records', [])
+                
+                if not records:
+                    break
+                
+                for record in records:
+                    pincode = str(int(record.get('pincode', 0)))
+                    if len(pincode) == 6:
+                        obj, created = ShiprocketPincode.objects.get_or_create(
+                            pincode=pincode,
+                            defaults={
+                                'city': record.get('Districtname', 'Unknown'),
+                                'state': record.get('statename', 'Unknown'),
+                                'zone': self._get_zone(record.get('statename', '')),
+                                'is_serviceable': True,
+                                'is_cod_available': True,
+                            }
+                        )
+                        if created:
+                            count += 1
+        except Exception as e:
+            print(f"Error bulk fetching: {e}")
+        
+        return count
     
     def _fetch_from_datagovin(self, query):
-        """Helper to fetch pincodes from data.gov.in"""
+        """Helper to fetch specific pincodes from data.gov.in (for refresh)"""
         import requests
         
         api_key = '579b464db66ec23bdd000001f17ca38f88df4c4a6449db80d254a78f'
         url = 'https://api.data.gov.in/resource/6176ee09-3d56-4a3b-8115-21841576b2f6'
         
         try:
+            # Determine filter type
+            if query.isdigit():
+                filter_str = f"pincode:{query}"
+            else:
+                filter_str = f"Districtname:{query}"
+            
             params = {
                 'api-key': api_key,
                 'format': 'json',
-                'filters': f"(pincode:{query})" if query.isdigit() else f"(Districtname:{query})",
+                'filters[0][field]': filter_str.split(':')[0],
+                'filters[0][value]': filter_str.split(':')[1],
                 'limit': 100
             }
             
@@ -80,7 +114,7 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
             for record in records:
                 pincode = str(int(record.get('pincode', 0)))
                 if len(pincode) == 6:
-                    ShiprocketPincode.objects.get_or_create(
+                    ShiprocketPincode.objects.update_or_create(
                         pincode=pincode,
                         defaults={
                             'city': record.get('Districtname', 'Unknown'),
