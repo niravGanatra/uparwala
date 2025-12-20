@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Layout, Award } from 'lucide-react';
+import { Plus, Trash2, Layout, Award, Edit } from 'lucide-react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,8 @@ const SectionsManager = () => {
     // Modals
     const [showHostingModal, setShowHostingModal] = useState(false);
     const [showPremiumModal, setShowPremiumModal] = useState(false);
+    const [editingHosting, setEditingHosting] = useState(null);
+    const [editingPremium, setEditingPremium] = useState(null);
 
     // Form Data
     const [hostingForm, setHostingForm] = useState({
@@ -80,16 +82,37 @@ const SectionsManager = () => {
         });
 
         try {
-            await api.post('/homepage/hosting/', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            toast.success('Hosting item added');
+            if (editingHosting) {
+                await api.put(`/homepage/hosting/${editingHosting.id}/`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success('Hosting item updated');
+            } else {
+                await api.post('/homepage/hosting/', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success('Hosting item added');
+            }
             setShowHostingModal(false);
+            setEditingHosting(null);
             fetchSections();
             setHostingForm({ name: '', image: null, emoji: '', link_url: '', is_active: true });
         } catch (error) {
-            toast.error('Failed to add item');
+            toast.error(editingHosting ? 'Failed to update item' : 'Failed to add item');
         }
+    };
+
+    const handleEditHosting = (item) => {
+        setEditingHosting(item);
+        setHostingForm({
+            name: item.name,
+            image: null,
+            emoji: item.emoji || '',
+            link_url: item.link_url,
+            is_active: item.is_active
+        });
+        setLinkType(item.link_url?.startsWith('/category') ? 'category' : 'custom');
+        setShowHostingModal(true);
     };
 
     const handleDeleteHosting = async (id) => {
@@ -112,16 +135,39 @@ const SectionsManager = () => {
         });
 
         try {
-            await api.post('/homepage/premium/', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            toast.success('Premium section added');
+            if (editingPremium) {
+                await api.put(`/homepage/premium/${editingPremium.id}/`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success('Premium section updated');
+            } else {
+                await api.post('/homepage/premium/', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success('Premium section added');
+            }
             setShowPremiumModal(false);
+            setEditingPremium(null);
             fetchSections();
             setPremiumForm({ title: '', subtitle: '', image: null, icon: '', link_url: '', position: 'left', is_active: true });
         } catch (error) {
-            toast.error('Failed to add section');
+            toast.error(editingPremium ? 'Failed to update section' : 'Failed to add section');
         }
+    };
+
+    const handleEditPremium = (item) => {
+        setEditingPremium(item);
+        setPremiumForm({
+            title: item.title,
+            subtitle: item.subtitle || '',
+            image: null,
+            icon: item.icon || '',
+            link_url: item.link_url,
+            position: item.position || 'left',
+            is_active: item.is_active
+        });
+        setLinkType(item.link_url?.startsWith('/category') ? 'category' : 'custom');
+        setShowPremiumModal(true);
     };
 
     const handleDeletePremium = async (id) => {
@@ -215,7 +261,13 @@ const SectionsManager = () => {
                             <img src={getImageUrl(item.image)} alt={item.name} className="w-full h-32 object-cover rounded mb-2" />
                             <h4 className="font-medium text-sm">{item.name}</h4>
                             <p className="text-xs text-gray-500 mt-1">{item.emoji}</p>
-                            <div className="mt-2 flex justify-end">
+                            <div className="mt-2 flex justify-end gap-1">
+                                <button
+                                    onClick={() => handleEditHosting(item)}
+                                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                </button>
                                 <button
                                     onClick={() => handleDeleteHosting(item.id)}
                                     className="p-1 text-red-600 hover:bg-red-50 rounded"
@@ -254,6 +306,12 @@ const SectionsManager = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
+                                    onClick={() => handleEditPremium(item)}
+                                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                </button>
+                                <button
                                     onClick={() => handleDeletePremium(item.id)}
                                     className="p-1 text-red-600 hover:bg-red-50 rounded"
                                 >
@@ -270,7 +328,7 @@ const SectionsManager = () => {
             {showHostingModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-                        <div className="p-6 border-b"><h2 className="text-xl font-bold">Add Hosting Item</h2></div>
+                        <div className="p-6 border-b"><h2 className="text-xl font-bold">{editingHosting ? 'Edit' : 'Add'} Hosting Item</h2></div>
                         <form onSubmit={handleCreateHosting} className="p-6 space-y-4">
                             <input type="text" placeholder="Name" className="w-full border rounded px-3 py-2"
                                 value={hostingForm.name} onChange={e => setHostingForm({ ...hostingForm, name: e.target.value })} required />
@@ -280,12 +338,12 @@ const SectionsManager = () => {
                             {renderLinkInput(hostingForm, setHostingForm)}
 
                             <div>
-                                <label className="block text-sm mb-1">Image</label>
-                                <input type="file" onChange={e => handleImageChange(e, setHostingForm, hostingForm)} className="w-full" required />
+                                <label className="block text-sm mb-1">Image {editingHosting && '(Leave empty to keep current)'}</label>
+                                <input type="file" onChange={e => handleImageChange(e, setHostingForm, hostingForm)} className="w-full" {...(!editingHosting && { required: true })} />
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
-                                <button type="button" onClick={() => setShowHostingModal(false)} className="px-4 py-2 border rounded">Cancel</button>
-                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Create</button>
+                                <button type="button" onClick={() => { setShowHostingModal(false); setEditingHosting(null); }} className="px-4 py-2 border rounded">Cancel</button>
+                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">{editingHosting ? 'Update' : 'Create'}</button>
                             </div>
                         </form>
                     </div>
@@ -296,7 +354,7 @@ const SectionsManager = () => {
             {showPremiumModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-                        <div className="p-6 border-b"><h2 className="text-xl font-bold">Add Premium Section</h2></div>
+                        <div className="p-6 border-b"><h2 className="text-xl font-bold">{editingPremium ? 'Edit' : 'Add'} Premium Section</h2></div>
                         <form onSubmit={handleCreatePremium} className="p-6 space-y-4">
                             <input type="text" placeholder="Title" className="w-full border rounded px-3 py-2"
                                 value={premiumForm.title} onChange={e => setPremiumForm({ ...premiumForm, title: e.target.value })} required />
@@ -311,12 +369,12 @@ const SectionsManager = () => {
                             </select>
 
                             <div>
-                                <label className="block text-sm mb-1">Background Image</label>
-                                <input type="file" onChange={e => handleImageChange(e, setPremiumForm, premiumForm)} className="w-full" required />
+                                <label className="block text-sm mb-1">Background Image {editingPremium && '(Leave empty to keep current)'}</label>
+                                <input type="file" onChange={e => handleImageChange(e, setPremiumForm, premiumForm)} className="w-full" {...(!editingPremium && { required: true })} />
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
-                                <button type="button" onClick={() => setShowPremiumModal(false)} className="px-4 py-2 border rounded">Cancel</button>
-                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Create</button>
+                                <button type="button" onClick={() => { setShowPremiumModal(false); setEditingPremium(null); }} className="px-4 py-2 border rounded">Cancel</button>
+                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">{editingPremium ? 'Update' : 'Create'}</button>
                             </div>
                         </form>
                     </div>
