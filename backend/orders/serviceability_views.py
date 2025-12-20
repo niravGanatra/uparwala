@@ -32,11 +32,26 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
         Override list to auto-fetch from data.gov.in if search query is provided
         and no results found in database
         """
+        # Get the search query before calling super()
+        search_query = request.query_params.get('search', '').strip()
+        
+        # First, try the normal list
         response = super().list(request, *args, **kwargs)
         
-        # If search query provided and no results, fetch from API
-        search_query = request.query_params.get('search', '').strip()
-        if search_query and response.data.get('count', 0) == 0:
+        # Check if we should fetch from API
+        # response.data for paginated results is: {'count': X, 'results': [...]}
+        should_fetch = False
+        if search_query:
+            if isinstance(response.data, dict):
+                # Paginated response
+                if response.data.get('count', 0) == 0:
+                    should_fetch = True
+            elif isinstance(response.data, list):
+                # Non-paginated response
+                if len(response.data) == 0:
+                    should_fetch = True
+        
+        if should_fetch:
             # Try to fetch from data.gov.in
             self._fetch_from_datagovin(search_query)
             # Re-run the query after fetching
