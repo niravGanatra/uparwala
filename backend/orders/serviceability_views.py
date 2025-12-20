@@ -27,6 +27,90 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
     filterset_fields = ['state', 'city', 'is_serviceable', 'is_cod_available', 'zone']
     search_fields = ['pincode', 'city', 'state']
     
+    def list(self, request, *args, **kwargs):
+        """
+        Override list to auto-fetch from data.gov.in if search query is provided
+        and no results found in database
+        """
+        response = super().list(request, *args, **kwargs)
+        
+        # If search query provided and no results, fetch from API
+        search_query = request.query_params.get('search', '').strip()
+        if search_query and response.data.get('count', 0) == 0:
+            # Try to fetch from data.gov.in
+            self._fetch_from_datagovin(search_query)
+            # Re-run the query after fetching
+            response = super().list(request, *args, **kwargs)
+        
+        return response
+    
+    def _fetch_from_datagovin(self, query):
+        """Helper to fetch pincodes from data.gov.in"""
+        import requests
+        
+        api_key = '579b464db66ec23bdd000001f17ca38f88df4c4a6449db80d254a78f'
+        url = 'https://api.data.gov.in/resource/6176ee09-3d56-4a3b-8115-21841576b2f6'
+        
+        try:
+            params = {
+                'api-key': api_key,
+                'format': 'json',
+                'filters': f"(pincode:{query})" if query.isdigit() else f"(Districtname:{query})",
+                'limit': 100
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            records = response.json().get('records', [])
+            
+            for record in records:
+                pincode = str(int(record.get('pincode', 0)))
+                if len(pincode) == 6:
+                    ShiprocketPincode.objects.get_or_create(
+                        pincode=pincode,
+                        defaults={
+                            'city': record.get('Districtname', 'Unknown'),
+                            'state': record.get('statename', 'Unknown'),
+                            'zone': self._get_zone(record.get('statename', '')),
+                            'is_serviceable': True,
+                            'is_cod_available': True,
+                        }
+                    )
+        except Exception as e:
+            print(f"Error fetching from data.gov.in: {e}")
+    
+    def _get_zone(self, state):
+        """Map states to zones"""
+        zones = {
+            'North': ['Delhi', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 
+                     'Punjab', 'Rajasthan', 'Uttarakhand', 'Chandigarh'],
+            'South': ['Andhra Pradesh', 'Karnataka', 'Kerala', 'Tamil Nadu', 
+                     'Telangana', 'Puducherry', 'Lakshadweep'],
+            'East': ['Bihar', 'Jharkhand', 'Odisha', 'West Bengal', 
+                    'Andaman and Nicobar Islands'],
+            'West': ['Goa', 'Gujarat', 'Maharashtra', 'Dadra and Nagar Haveli', 
+                    'Daman and Diu'],
+            'Central': ['Chhattisgarh', 'Madhya Pradesh', 'Uttar Pradesh'],
+            'Northeast': ['Arunachal Pradesh', 'Assam', 'Manipur', 'Meghalaya', 
+                         'Mizoram', 'Nagaland', 'Sikkim', 'Tripura']
+        }
+        for zone, states in zones.items():
+            if state in states:
+                return zone
+        return ''
+    
+    @action(detail=False, methods=['post'])
+    def refresh(self, request):
+        """
+        Refresh pincode data from data.gov.in for specific search
+        """
+        search_query = request.data.get('search', '').strip()
+        if not search_query:
+            return Response({'error': 'Search query required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        self._fetch_from_datagovin(search_query)
+        
+        return Response({'message': f'Refreshed data for: {search_query}'})
+    
     @action(detail=False, methods=['post'])
     def bulk_update_status(self, request):
         """

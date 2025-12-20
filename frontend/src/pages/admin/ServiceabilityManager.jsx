@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Save, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Filter, Save, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import api from '../../services/api';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 const ServiceabilityManager = () => {
     const [pincodes, setPincodes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -51,6 +52,25 @@ const ServiceabilityManager = () => {
         }
     };
 
+    const handleRefresh = async () => {
+        if (!search.trim()) {
+            toast.error('Enter a pincode or city name to refresh');
+            return;
+        }
+
+        setRefreshing(true);
+        try {
+            await api.post('/orders/admin/serviceability/refresh/', { search: search.trim() });
+            toast.success('Data refreshed from data.gov.in!');
+            fetchPincodes(); // Reload the list
+        } catch (error) {
+            console.error('Refresh failed:', error);
+            toast.error('Failed to refresh data');
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
     const handleSearch = (e) => {
         setSearch(e.target.value);
         setPage(1); // Reset to page 1 on search
@@ -80,7 +100,7 @@ const ServiceabilityManager = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800">Serviceability Manager</h1>
-                    <p className="text-slate-500">Manage delivery zones and COD availability</p>
+                    <p className="text-slate-500">Search pincodes - auto-fetched from data.gov.in</p>
                 </div>
             </div>
 
@@ -96,6 +116,15 @@ const ServiceabilityManager = () => {
                         className="pl-10"
                     />
                 </div>
+
+                <Button
+                    onClick={handleRefresh}
+                    disabled={refreshing || !search.trim()}
+                    className="bg-orange-600 hover:bg-orange-700 text-white whitespace-nowrap"
+                >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                    {refreshing ? 'Fetching...' : 'Refresh from API'}
+                </Button>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                     <span className="text-sm font-medium text-slate-700 whitespace-nowrap">Status:</span>
