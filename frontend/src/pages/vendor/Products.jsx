@@ -31,7 +31,10 @@ const VendorProducts = () => {
         stock: '',
         category: '',
         brand: '',
+        brand: '',
         is_active: true,
+        is_returnable: false,
+        is_exchangeable: false,
         // Dimensions
         length: '',
         width: '',
@@ -153,6 +156,8 @@ const VendorProducts = () => {
         appendIf('category', formData.category);
         appendIf('brand', formData.brand);
         productData.append('is_active', formData.is_active);
+        productData.append('is_returnable', formData.is_returnable);
+        productData.append('is_exchangeable', formData.is_exchangeable);
         productData.append('manage_stock', formData.manage_stock);
         productData.append('virtual', formData.virtual);
         productData.append('downloadable', formData.downloadable);
@@ -193,6 +198,7 @@ const VendorProducts = () => {
                 name: '', description: '', short_description: '', sku: '',
                 price: '', regular_price: '', sale_price: '', stock: '',
                 category: '', brand: '', is_active: true,
+                is_returnable: false, is_exchangeable: false,
                 length: '', width: '', height: '', weight: '',
                 tax_status: 'taxable', tax_class: '',
                 manage_stock: true, stock_status: 'instock', backorders: 'no', low_stock_threshold: '',
@@ -560,6 +566,7 @@ const VendorProducts = () => {
                                         checked={formData.is_active}
                                         onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                                         id="is-active"
+                                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
                                     />
                                     <label htmlFor="is-active" className="text-sm">Active</label>
                                 </div>
@@ -569,8 +576,29 @@ const VendorProducts = () => {
                                         checked={formData.manage_stock}
                                         onChange={(e) => setFormData({ ...formData, manage_stock: e.target.checked })}
                                         id="manage-stock"
+                                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
                                     />
                                     <label htmlFor="manage-stock" className="text-sm">Manage Stock</label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.is_returnable}
+                                        onChange={(e) => setFormData({ ...formData, is_returnable: e.target.checked })}
+                                        id="is-returnable"
+                                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
+                                    />
+                                    <label htmlFor="is-returnable" className="text-sm">Returnable</label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.is_exchangeable}
+                                        onChange={(e) => setFormData({ ...formData, is_exchangeable: e.target.checked })}
+                                        id="is-exchangeable"
+                                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
+                                    />
+                                    <label htmlFor="is-exchangeable" className="text-sm">Exchangeable</label>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <input
@@ -578,6 +606,7 @@ const VendorProducts = () => {
                                         checked={formData.virtual}
                                         onChange={(e) => setFormData({ ...formData, virtual: e.target.checked })}
                                         id="virtual"
+                                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
                                     />
                                     <label htmlFor="virtual" className="text-sm">Virtual</label>
                                 </div>

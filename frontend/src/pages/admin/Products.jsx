@@ -41,6 +41,8 @@ const AdminProducts = () => {
         weight: '',
         featured: false,
         is_active: true,
+        is_returnable: false,
+        is_exchangeable: false,
         // Dimensions
         length: '',
         width: '',
@@ -145,6 +147,8 @@ const AdminProducts = () => {
             weight: product.weight || '',
             featured: product.featured || false,
             is_active: product.is_active !== undefined ? product.is_active : true,
+            is_returnable: product.is_returnable || false,
+            is_exchangeable: product.is_exchangeable || false,
 
             // New fields
             length: product.length || '',
@@ -217,6 +221,8 @@ const AdminProducts = () => {
             weight: '',
             featured: false,
             is_active: true,
+            is_returnable: false,
+            is_exchangeable: false,
             length: '',
             width: '',
             height: '',
