@@ -261,7 +261,7 @@ const ProductForm = ({
                         type="checkbox"
                         checked={formData.manage_stock}
                         onChange={(e) => setFormData({ ...formData, manage_stock: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
                     />
                     <span className="text-sm">Manage stock</span>
                 </label>
@@ -270,7 +270,7 @@ const ProductForm = ({
                         type="checkbox"
                         checked={formData.featured}
                         onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
                     />
                     <span className="text-sm">Featured</span>
                 </label>
@@ -279,7 +279,7 @@ const ProductForm = ({
                         type="checkbox"
                         checked={formData.is_active}
                         onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
                     />
                     <span className="text-sm">Active</span>
                 </label>
@@ -288,7 +288,7 @@ const ProductForm = ({
                         type="checkbox"
                         checked={formData.is_returnable}
                         onChange={(e) => setFormData({ ...formData, is_returnable: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
                     />
                     <span className="text-sm">Returnable</span>
                 </label>
@@ -297,7 +297,7 @@ const ProductForm = ({
                         type="checkbox"
                         checked={formData.is_exchangeable}
                         onChange={(e) => setFormData({ ...formData, is_exchangeable: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
                     />
                     <span className="text-sm">Exchangeable</span>
                 </label>
@@ -306,7 +306,7 @@ const ProductForm = ({
                         type="checkbox"
                         checked={formData.virtual}
                         onChange={(e) => setFormData({ ...formData, virtual: e.target.checked })}
-                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600"
                     />
                     <span className="text-sm">Virtual</span>
                 </label>
