@@ -305,6 +305,45 @@ const ServiceabilityManager = () => {
                     </div>
                 </div>
             </div>
+
+            {/* CSV Paste Modal */}
+            {showPasteModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4">
+                        <h2 className="text-xl font-bold mb-4">Paste CSV Data</h2>
+                        <p className="text-sm text-slate-600 mb-4">
+                            Paste your CSV data below (format: pincode,district,statename)
+                        </p>
+                        <textarea
+                            value={csvText}
+                            onChange={(e) => setCsvText(e.target.value)}
+                            className="w-full h-64 border border-slate-300 rounded-lg p-3 font-mono text-sm"
+                            placeholder="pincode,district,statename
+110001,New Delhi,Delhi
+400001,Mumbai,Maharashtra
+..."
+                        />
+                        <div className="flex justify-end gap-2 mt-4">
+                            <Button
+                                onClick={() => {
+                                    setShowPasteModal(false);
+                                    setCsvText('');
+                                }}
+                                variant="outline"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handlePasteCSV}
+                                disabled={pasting || !csvText.trim()}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                                {pasting ? 'Importing...' : 'Import'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
