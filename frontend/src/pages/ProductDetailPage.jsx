@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-import { ShoppingCart, Heart, Bell } from 'lucide-react';
+import { ShoppingCart, Heart, Bell, RotateCcw, RefreshCw } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -209,6 +209,24 @@ const ProductDetailPage = () => {
                                 </Button>
                             </div>
                         </div>
+
+                        {/* Returns & Exchange */}
+                        {(product.is_returnable || product.is_exchangeable) && (
+                            <div className="flex gap-4">
+                                {product.is_returnable && (
+                                    <div className="flex items-center gap-2 text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+                                        <RotateCcw className="h-5 w-5" />
+                                        <span className="text-sm font-medium">Returnable</span>
+                                    </div>
+                                )}
+                                {product.is_exchangeable && (
+                                    <div className="flex items-center gap-2 text-blue-700 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                                        <RefreshCw className="h-5 w-5" />
+                                        <span className="text-sm font-medium">Exchangeable</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Action Buttons - Mobile Optimized */}
                         <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">

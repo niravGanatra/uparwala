@@ -283,6 +283,22 @@ const ProductForm = ({
                 <label className="flex items-center gap-2">
                     <input
                         type="checkbox"
+                        checked={formData.is_returnable}
+                        onChange={(e) => setFormData({ ...formData, is_returnable: e.target.checked })}
+                    />
+                    <span className="text-sm">Returnable</span>
+                </label>
+                <label className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={formData.is_exchangeable}
+                        onChange={(e) => setFormData({ ...formData, is_exchangeable: e.target.checked })}
+                    />
+                    <span className="text-sm">Exchangeable</span>
+                </label>
+                <label className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
                         checked={formData.virtual}
                         onChange={(e) => setFormData({ ...formData, virtual: e.target.checked })}
                     />

@@ -209,6 +209,10 @@ class Product(models.Model):
     catalog_visibility = models.CharField(max_length=20, choices=CATALOG_VISIBILITY_CHOICES, default='visible')
     purchase_note = models.TextField(blank=True, help_text='Note to customer after purchase')
     
+    # Returns & Exchanges
+    is_returnable = models.BooleanField(default=False, help_text='Product can be returned')
+    is_exchangeable = models.BooleanField(default=False, help_text='Product can be exchanged')
+    
     # Additional Product Information (Phase 3)
     manufacturing_country = models.CharField(max_length=100, blank=True, help_text='Country of manufacture')
     whats_in_box = models.TextField(blank=True, help_text='List items included in the package')
