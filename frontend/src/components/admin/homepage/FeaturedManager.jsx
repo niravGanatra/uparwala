@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Tag, Star, Clock } from 'lucide-react';
+import { Plus, Trash2, Tag, Star, Clock, Edit } from 'lucide-react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 
@@ -15,6 +15,8 @@ const FeaturedManager = () => {
     // Modals
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [showDealModal, setShowDealModal] = useState(false);
+    const [editingCategory, setEditingCategory] = useState(null);
+    const [editingDeal, setEditingDeal] = useState(null);
 
     // Forms
     const [catForm, setCatForm] = useState({
@@ -85,16 +87,38 @@ const FeaturedManager = () => {
         Object.keys(catForm).forEach(key => formData.append(key, catForm[key]));
 
         try {
-            await api.post('/homepage/categories/', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            toast.success('Category added');
+            if (editingCategory) {
+                await api.put(`/homepage/categories/${editingCategory.id}/`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success('Category updated');
+            } else {
+                await api.post('/homepage/categories/', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success('Category added');
+            }
             setShowCategoryModal(false);
+            setEditingCategory(null);
             fetchFeaturedContent();
             setCatForm({ name: '', image: null, icon: '', link_url: '', priority: 0, is_active: true });
         } catch (error) {
-            toast.error('Failed to add category');
+            toast.error(editingCategory ? 'Failed to update category' : 'Failed to add category');
         }
+    };
+
+    const handleEditCategory = (cat) => {
+        setEditingCategory(cat);
+        setCatForm({
+            name: cat.name,
+            image: null,
+            icon: cat.icon || '',
+            link_url: cat.link_url,
+            priority: cat.priority || 0,
+            is_active: cat.is_active
+        });
+        setLinkType(cat.link_url?.startsWith('/category') ? 'category' : 'custom');
+        setShowCategoryModal(true);
     };
 
     const handleDeleteCategory = async (id) => {
@@ -112,14 +136,33 @@ const FeaturedManager = () => {
     const handleCreateDeal = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/homepage/deals/', dealForm);
-            toast.success('Deal created');
+            if (editingDeal) {
+                await api.put(`/homepage/deals/${editingDeal.id}/`, dealForm);
+                toast.success('Deal updated');
+            } else {
+                await api.post('/homepage/deals/', dealForm);
+                toast.success('Deal created');
+            }
             setShowDealModal(false);
+            setEditingDeal(null);
             fetchFeaturedContent();
             setDealForm({ product_id: '', discount_percentage: '', start_date: '', end_date: '', priority: 0, is_active: true });
         } catch (error) {
-            toast.error('Failed to create deal');
+            toast.error(editingDeal ? 'Failed to update deal' : 'Failed to create deal');
         }
+    };
+
+    const handleEditDeal = (deal) => {
+        setEditingDeal(deal);
+        setDealForm({
+            product_id: deal.product?.id || '',
+            discount_percentage: deal.discount_percentage,
+            start_date: deal.start_date,
+            end_date: deal.end_date,
+            priority: deal.priority || 0,
+            is_active: deal.is_active
+        });
+        setShowDealModal(true);
     };
 
     const handleDeleteDeal = async (id) => {
@@ -208,6 +251,12 @@ const FeaturedManager = () => {
                             <h4 className="font-medium text-sm">{cat.name}</h4>
                             <div className="mt-2 flex justify-center gap-2">
                                 <button
+                                    onClick={() => handleEditCategory(cat)}
+                                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                </button>
+                                <button
                                     onClick={() => handleDeleteCategory(cat.id)}
                                     className="p-1 text-red-600 hover:bg-red-50 rounded"
                                 >
@@ -256,6 +305,12 @@ const FeaturedManager = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
+                                    onClick={() => handleEditDeal(deal)}
+                                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                </button>
+                                <button
                                     onClick={() => handleDeleteDeal(deal.id)}
                                     className="p-1 text-red-600 hover:bg-red-50 rounded"
                                 >
@@ -272,7 +327,7 @@ const FeaturedManager = () => {
             {showCategoryModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-                        <div className="p-6 border-b"><h2 className="text-xl font-bold">Add Featured Category</h2></div>
+                        <div className="p-6 border-b"><h2 className="text-xl font-bold">{editingCategory ? 'Edit' : 'Add'} Featured Category</h2></div>
                         <form onSubmit={handleCreateCategory} className="p-6 space-y-4">
                             <input type="text" placeholder="Display Name" className="w-full border rounded px-3 py-2"
                                 value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} required />
@@ -282,12 +337,12 @@ const FeaturedManager = () => {
                             {renderLinkInput()}
 
                             <div>
-                                <label className="block text-sm mb-1">Image</label>
-                                <input type="file" onChange={handleImageChange} className="w-full" required />
+                                <label className="block text-sm mb-1">Image {editingCategory && '(Leave empty to keep current)'}</label>
+                                <input type="file" onChange={handleImageChange} className="w-full" {... (!editingCategory && { required: true })} />
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
-                                <button type="button" onClick={() => setShowCategoryModal(false)} className="px-4 py-2 border rounded">Cancel</button>
-                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Create</button>
+                                <button type="button" onClick={() => { setShowCategoryModal(false); setEditingCategory(null); }} className="px-4 py-2 border rounded">Cancel</button>
+                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">{editingCategory ? 'Update' : 'Create'}</button>
                             </div>
                         </form>
                     </div>
@@ -298,7 +353,7 @@ const FeaturedManager = () => {
             {showDealModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-                        <div className="p-6 border-b"><h2 className="text-xl font-bold">Add Deal of the Day</h2></div>
+                        <div className="p-6 border-b"><h2 className="text-xl font-bold">{editingDeal ? 'Edit' : 'Add'} Deal of the Day</h2></div>
                         <form onSubmit={handleCreateDeal} className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1">Select Product</label>
@@ -350,8 +405,8 @@ const FeaturedManager = () => {
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4">
-                                <button type="button" onClick={() => setShowDealModal(false)} className="px-4 py-2 border rounded">Cancel</button>
-                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Create</button>
+                                <button type="button" onClick={() => { setShowDealModal(false); setEditingDeal(null); }} className="px-4 py-2 border rounded">Cancel</button>
+                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">{editingDeal ? 'Update' : 'Create'}</button>
                             </div>
                         </form>
                     </div>
