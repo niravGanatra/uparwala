@@ -47,6 +47,7 @@ const Checkout = () => {
     const [customerNote, setCustomerNote] = useState('');
     const [policyAgreed, setPolicyAgreed] = useState(false);
     const [giftData, setGiftData] = useState(null);
+    const [isAddressLocked, setIsAddressLocked] = useState(false);
 
     const setGiftOption = (option) => {
         setGiftData(option);
@@ -223,6 +224,7 @@ const Checkout = () => {
                 pincode: '',
                 is_default: false
             });
+            setIsAddressLocked(false); // Unlock form after adding
         } catch (error) {
             console.error('Failed to add address:', error);
             toast.error('Failed to add address');
@@ -243,6 +245,7 @@ const Checkout = () => {
                         state: response.data.state,
                         state_code: response.data.state_code || prev.state_code
                     }));
+                    setIsAddressLocked(true);
                     toast.success('City & State Auto-filled!');
                 }
             } catch (error) {
@@ -529,15 +532,34 @@ const Checkout = () => {
                     <input type="text" placeholder="Address Line 1" value={addressForm.address_line1} onChange={(e) => setAddressForm({ ...addressForm, address_line1: e.target.value })} className="input-field w-full" required />
                     <input type="text" placeholder="Address Line 2 (Optional)" value={addressForm.address_line2} onChange={(e) => setAddressForm({ ...addressForm, address_line2: e.target.value })} className="input-field w-full" />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input type="text" placeholder="City" value={addressForm.city} onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })} className="input-field" required />
-                        <input type="text" placeholder="State" value={addressForm.state} onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })} className="input-field" required />
+                        <input
+                            type="text"
+                            placeholder="City"
+                            value={addressForm.city}
+                            onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                            className={`input-field ${isAddressLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                            readOnly={isAddressLocked}
+                            required
+                        />
+                        <input
+                            type="text"
+                            placeholder="State"
+                            value={addressForm.state}
+                            onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
+                            className={`input-field ${isAddressLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                            readOnly={isAddressLocked}
+                            required
+                        />
                         <input type="text" placeholder="State Code (e.g., DL)" value={addressForm.state_code} onChange={(e) => setAddressForm({ ...addressForm, state_code: e.target.value.toUpperCase() })} className="input-field" maxLength={2} required />
                     </div>
                     <input
                         type="text"
                         placeholder="Pincode"
                         value={addressForm.pincode}
-                        onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                        onChange={(e) => {
+                            setAddressForm({ ...addressForm, pincode: e.target.value });
+                            setIsAddressLocked(false);
+                        }}
                         onBlur={handlePincodeBlur}
                         className="input-field w-full"
                         required

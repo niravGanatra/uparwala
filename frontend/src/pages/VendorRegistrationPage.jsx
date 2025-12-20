@@ -39,6 +39,7 @@ const VendorRegistrationPage = () => {
     });
     const [loading, setLoading] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [isAddressLocked, setIsAddressLocked] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -48,6 +49,11 @@ const VendorRegistrationPage = () => {
             [name]: type === 'checkbox' ? checked :
                 type === 'file' ? files[0] : value
         }));
+
+        // Reset lock if user edits pincode manually
+        if (name === 'zip_code') {
+            setIsAddressLocked(false);
+        }
     };
 
     const handlePincodeBlur = async () => {
@@ -259,6 +265,8 @@ const VendorRegistrationPage = () => {
                                                     value={formData.city}
                                                     onChange={handleChange}
                                                     required
+                                                    readOnly={isAddressLocked}
+                                                    className={isAddressLocked ? "bg-gray-100 cursor-not-allowed" : ""}
                                                     placeholder="City"
                                                 />
                                             </div>
@@ -269,6 +277,8 @@ const VendorRegistrationPage = () => {
                                                     value={formData.state}
                                                     onChange={handleChange}
                                                     required
+                                                    readOnly={isAddressLocked}
+                                                    className={isAddressLocked ? "bg-gray-100 cursor-not-allowed" : ""}
                                                     placeholder="State"
                                                 />
                                             </div>
