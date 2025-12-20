@@ -235,6 +235,15 @@ const ServiceabilityManager = () => {
                         <Save className="h-4 w-4 mr-2" />
                         Paste CSV
                     </Button>
+                    <Button
+                        onClick={handleBulkDelete}
+                        disabled={deleting || selectedIds.length === 0}
+                        className={`${selectedIds.length > 0 ? 'bg-red-600 hover:bg-red-700' : 'bg-slate-300 cursor-not-allowed'} text-white transition-colors`}
+                        title={selectedIds.length === 0 ? "Select items to delete" : "Delete selected items"}
+                    >
+                        <XCircle className={`h-4 w-4 mr-2 ${deleting ? 'animate-spin' : ''}`} />
+                        {deleting ? 'Deleting...' : `Delete (${selectedIds.length})`}
+                    </Button>
                 </div>
             </div>
 
@@ -275,21 +284,7 @@ const ServiceabilityManager = () => {
             </div>
 
             {/* Bulk Actions */}
-            {selectedIds.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
-                    <span className="text-sm text-red-700">
-                        {selectedIds.length} pincode(s) selected
-                    </span>
-                    <Button
-                        onClick={handleBulkDelete}
-                        disabled={deleting}
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                    >
-                        <XCircle className={`h-4 w-4 mr-2 ${deleting ? 'animate-spin' : ''}`} />
-                        {deleting ? 'Deleting...' : 'Delete Selected'}
-                    </Button>
-                </div>
-            )}
+
 
             {/* Data Table */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
