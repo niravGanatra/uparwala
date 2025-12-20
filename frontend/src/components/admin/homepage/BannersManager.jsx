@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, Image, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Trash2, Save, Image, ArrowUp, ArrowDown, Edit } from 'lucide-react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 
@@ -13,6 +13,7 @@ const BannersManager = () => {
     // UI States
     const [showHeroModal, setShowHeroModal] = useState(false);
     const [showPromoModal, setShowPromoModal] = useState(false);
+    const [editingBanner, setEditingBanner] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [linkType, setLinkType] = useState('category'); // category | custom
 
@@ -56,14 +57,29 @@ const BannersManager = () => {
     const closeModal = () => {
         setShowHeroModal(false);
         setShowPromoModal(false);
+        setEditingBanner(null);
         setSelectedFile(null);
         setLinkType('category');
+    };
+
+    const handleEditBanner = (banner, type) => {
+        setEditingBanner({ ...banner, type });
+        if (type === 'hero') {
+            setShowHeroModal(true);
+        } else {
+            setShowPromoModal(true);
+            setLinkType(banner.link_url?.startsWith('/category') ? 'category' : 'custom');
+        }
     };
 
     const handleCreateBanner = async (e, type) => {
         e.preventDefault();
         try {
-            const endpoint = type === 'hero' ? '/homepage/banners/' : '/homepage/promotions/';
+            const isEditing = !!editingBanner;
+            const endpoint = type === 'hero'
+                ? (isEditing ? `/homepage/banners/${editingBanner.id}/` : '/homepage/banners/')
+                : (isEditing ? `/homepage/promotions/${editingBanner.id}/` : '/homepage/promotions/');
+
             const formData = new FormData(e.target);
 
             // Handle active checkbox explicitly
@@ -77,16 +93,23 @@ const BannersManager = () => {
                 formData.append('background_image', selectedFile);
             }
 
-            await api.post(endpoint, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            if (isEditing) {
+                await api.put(endpoint, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success('Banner updated');
+            } else {
+                await api.post(endpoint, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success('Banner created');
+            }
 
-            toast.success('Banner created');
             closeModal();
             fetchData();
         } catch (error) {
             console.error(error);
-            toast.error('Failed to create banner');
+            toast.error(editingBanner ? 'Failed to update banner' : 'Failed to create banner');
         }
     };
 
@@ -118,6 +141,12 @@ const BannersManager = () => {
                                 <span className={`px-2 py-1 text-xs rounded ${banner.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>
                                     {banner.is_active ? 'Active' : 'Inactive'}
                                 </span>
+                                <button
+                                    onClick={() => handleEditBanner(banner, 'hero')}
+                                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                </button>
                                 <button
                                     onClick={() => handleDeleteBanner('hero', banner.id)}
                                     className="p-1 text-red-600 hover:bg-red-50 rounded"
@@ -154,12 +183,20 @@ const BannersManager = () => {
                                     <h4 className="font-medium">{banner.title}</h4>
                                     <p className="text-sm text-gray-500">{banner.discount_text}</p>
                                 </div>
-                                <button
-                                    onClick={() => handleDeleteBanner('promo', banner.id)}
-                                    className="p-1 text-red-600 hover:bg-red-50 rounded"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="flex gap-1">
+                                    <button
+                                        onClick={() => handleEditBanner(banner, 'promo')}
+                                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteBanner('promo', banner.id)}
+                                        className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -172,19 +209,24 @@ const BannersManager = () => {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
                         <div className="flex justify-between items-center p-6 border-b">
-                            <h2 className="text-xl font-bold">{showHeroModal ? 'Add Hero Slide' : 'Add Promotion'}</h2>
+                            <h2 className="text-xl font-bold">
+                                {editingBanner
+                                    ? (showHeroModal ? 'Edit Hero Slide' : 'Edit Promotion')
+                                    : (showHeroModal ? 'Add Hero Slide' : 'Add Promotion')
+                                }
+                            </h2>
                             <button onClick={closeModal}><Plus className="w-5 h-5 rotate-45 text-gray-400" /></button>
                         </div>
                         <form onSubmit={(e) => handleCreateBanner(e, showHeroModal ? 'hero' : 'promo')} className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1">Title</label>
-                                <input name="title" type="text" className="w-full border rounded px-3 py-2" required />
+                                <input name="title" type="text" defaultValue={editingBanner?.title || ''} className="w-full border rounded px-3 py-2" required />
                             </div>
 
                             {showHeroModal && (
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Subtitle</label>
-                                    <input name="subtitle" type="text" className="w-full border rounded px-3 py-2" />
+                                    <input name="subtitle" type="text" defaultValue={editingBanner?.subtitle || ''} className="w-full border rounded px-3 py-2" />
                                 </div>
                             )}
 
@@ -192,7 +234,7 @@ const BannersManager = () => {
                                 <>
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Discount Text</label>
-                                        <input name="discount_text" type="text" placeholder="e.g. UPTO 50% OFF" className="w-full border rounded px-3 py-2" required />
+                                        <input name="discount_text" type="text" defaultValue={editingBanner?.discount_text || ''} placeholder="e.g. UPTO 50% OFF" className="w-full border rounded px-3 py-2" required />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Link Destination</label>
@@ -222,6 +264,7 @@ const BannersManager = () => {
                                         {linkType === 'category' ? (
                                             <select
                                                 name="link_url"
+                                                defaultValue={editingBanner?.link_url || ''}
                                                 className="w-full border rounded px-3 py-2"
                                                 required
                                             >
@@ -236,6 +279,7 @@ const BannersManager = () => {
                                             <input
                                                 name="link_url"
                                                 type="text"
+                                                defaultValue={editingBanner?.link_url || ''}
                                                 placeholder="/products/..."
                                                 className="w-full border rounded px-3 py-2"
                                                 required
@@ -244,7 +288,7 @@ const BannersManager = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Position</label>
-                                        <select name="position" className="w-full border rounded px-3 py-2">
+                                        <select name="position" defaultValue={editingBanner?.position || 'large_left'} className="w-full border rounded px-3 py-2">
                                             <option value="large_left">Large Left</option>
                                             <option value="large_right">Large Right</option>
                                             <option value="side">Side Banner</option>
@@ -266,17 +310,19 @@ const BannersManager = () => {
 
                             <div>
                                 <label className="block text-sm font-medium mb-1">Background Color (Fallback)</label>
-                                <input name="background_color" type="color" defaultValue="#eab308" className="w-full h-10 border rounded px-1 py-1" />
+                                <input name="background_color" type="color" defaultValue={editingBanner?.background_color || '#eab308'} className="w-full h-10 border rounded px-1 py-1" />
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <input name="is_active" type="checkbox" defaultChecked id="active_ch" className="w-4 h-4" />
+                                <input name="is_active" type="checkbox" defaultChecked={editingBanner?.is_active !== false} id="active_ch" className="w-4 h-4" />
                                 <label htmlFor="active_ch">Active</label>
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4">
                                 <button type="button" onClick={closeModal} className="px-4 py-2 border rounded">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Create</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    {editingBanner ? 'Update' : 'Create'}
+                                </button>
                             </div>
                         </form>
                     </div>
