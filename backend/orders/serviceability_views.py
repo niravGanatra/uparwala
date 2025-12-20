@@ -2,10 +2,17 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from .shiprocket_models import ShiprocketPincode
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import serializers
+
+
+class ServiceabilityPagination(PageNumberPagination):
+    page_size = 50
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 class ShiprocketPincodeSerializer(serializers.ModelSerializer):
@@ -23,6 +30,7 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
     queryset = ShiprocketPincode.objects.all().order_by('state', 'city', 'pincode')
     serializer_class = ShiprocketPincodeSerializer
     permission_classes = [permissions.IsAdminUser]
+    pagination_class = ServiceabilityPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['state', 'city', 'is_serviceable', 'is_cod_available', 'zone']
     search_fields = ['pincode', 'city', 'state']
@@ -128,22 +136,21 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
             print(f"Error fetching from data.gov.in: {e}")
     
     def _get_zone(self, state):
-        """Map states to zones"""
+        """Map states to zones (case-insensitive)"""
+        # Normalize state name to Title Case for matching
+        state_normalized = state.strip().title()
+        
         zones = {
-            'North': ['Delhi', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 
-                     'Punjab', 'Rajasthan', 'Uttarakhand', 'Chandigarh'],
-            'South': ['Andhra Pradesh', 'Karnataka', 'Kerala', 'Tamil Nadu', 
-                     'Telangana', 'Puducherry', 'Lakshadweep'],
-            'East': ['Bihar', 'Jharkhand', 'Odisha', 'West Bengal', 
-                    'Andaman and Nicobar Islands'],
-            'West': ['Goa', 'Gujarat', 'Maharashtra', 'Dadra and Nagar Haveli', 
-                    'Daman and Diu'],
+            'East': ['Andaman And Nicobar Islands', 'Bihar', 'Jharkhand', 'Odisha', 'West Bengal'],
+            'South': ['Andhra Pradesh', 'Karnataka', 'Kerala', 'Tamil Nadu', 'Telangana', 'Puducherry', 'Lakshadweep'],
+            'North': ['Delhi', 'Haryana', 'Himachal Pradesh', 'Jammu And Kashmir', 'Punjab', 'Rajasthan', 'Uttarakhand', 'Chandigarh'],
+            'West': ['Goa', 'Gujarat', 'Maharashtra', 'Dadra And Nagar Haveli', 'Daman And Diu'],
             'Central': ['Chhattisgarh', 'Madhya Pradesh', 'Uttar Pradesh'],
-            'Northeast': ['Arunachal Pradesh', 'Assam', 'Manipur', 'Meghalaya', 
-                         'Mizoram', 'Nagaland', 'Sikkim', 'Tripura']
+            'Northeast': ['Arunachal Pradesh', 'Assam', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura']
         }
+        
         for zone, states in zones.items():
-            if state in states:
+            if state_normalized in states:
                 return zone
         return ''
     
