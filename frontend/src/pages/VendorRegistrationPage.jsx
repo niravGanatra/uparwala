@@ -18,7 +18,11 @@ const VendorRegistrationPage = () => {
         business_name: '',
         business_email: '',
         business_phone: '',
+        business_phone: '',
         business_address: '',
+        city: '',
+        state: '',
+        zip_code: '',
         store_description: '',
         tax_number: '',
         // Compliance
@@ -44,6 +48,25 @@ const VendorRegistrationPage = () => {
             [name]: type === 'checkbox' ? checked :
                 type === 'file' ? files[0] : value
         }));
+    };
+
+    const handlePincodeBlur = async () => {
+        if (formData.zip_code?.length === 6) {
+            try {
+                const response = await api.get(`/orders/pincode/details/${formData.zip_code}/`);
+                if (response.data) {
+                    setFormData(prev => ({
+                        ...prev,
+                        city: response.data.city,
+                        state: response.data.state
+                    }));
+                    toast.success('Address details found!');
+                }
+            } catch (error) {
+                console.error('Failed to fetch pincode details:', error);
+                // Don't show error to user as they can fill manual
+            }
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -210,8 +233,43 @@ const VendorRegistrationPage = () => {
                                                     value={formData.business_address}
                                                     onChange={handleChange}
                                                     required
-                                                    placeholder="Full business address"
+                                                    placeholder="Shop No, Street, Building..."
                                                     className="w-full pl-10 p-2 border rounded-lg min-h-[80px]"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium mb-2">Pincode *</label>
+                                                <Input
+                                                    name="zip_code"
+                                                    value={formData.zip_code}
+                                                    onChange={handleChange}
+                                                    onBlur={handlePincodeBlur}
+                                                    required
+                                                    placeholder="000000"
+                                                    maxLength={6}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-2">City *</label>
+                                                <Input
+                                                    name="city"
+                                                    value={formData.city}
+                                                    onChange={handleChange}
+                                                    required
+                                                    placeholder="City"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-2">State *</label>
+                                                <Input
+                                                    name="state"
+                                                    value={formData.state}
+                                                    onChange={handleChange}
+                                                    required
+                                                    placeholder="State"
                                                 />
                                             </div>
                                         </div>

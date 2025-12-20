@@ -48,6 +48,9 @@ class VendorApplicationView(APIView):
                 store_name=user.business_name or f"{user.username}'s Store",
                 phone=user.business_phone,
                 address=user.business_address,
+                city=request.data.get('city', ''),
+                state=request.data.get('state', ''),
+                zip_code=request.data.get('zip_code', ''),
                 store_description=user.store_description,
                 verification_status='pending',
                 

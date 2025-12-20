@@ -462,3 +462,29 @@ class ShiprocketService:
         except Exception as e:
             print(f"Serviceability API failed: {e}")
             return []
+
+    def get_postcode_details(self, postcode):
+        """
+        Get City and State details for a pincode (Open API).
+        """
+        url = f"{self.BASE_URL}/open/postcode/details"
+        params = {"postcode": postcode}
+        
+        try:
+            # Open API does not need auth headers usually, but we can pass them just in case or use standard requests
+            # The URL provided by user: https://apiv2.shiprocket.in/v1/external/open/postcode/details
+            # It seems it might be a public open endpoint.
+            
+            response = requests.get(url, params=params)
+            # If it requires auth, we can use self.get_headers(). 
+            # User said "open", let's try without auth first as verified by curl.
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    return data.get('postcode_details', {})
+            
+            return None
+        except Exception as e:
+            print(f"Postcode lookup failed: {e}")
+            return None

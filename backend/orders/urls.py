@@ -7,7 +7,7 @@ from .views import (
 )
 from .checkout_views import CheckoutView
 from .logistics_views import CODPincodeViewSet, GiftOptionViewSet
-from .serviceability_views import AdminServiceabilityViewSet, PublicServiceabilityCheckView
+from .serviceability_views import AdminServiceabilityViewSet, PublicServiceabilityCheckView, PublicPostcodeDetailsView
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -31,6 +31,7 @@ urlpatterns = [
     
     # Serviceability Check
     path('serviceability/check/<str:pincode>/', PublicServiceabilityCheckView.as_view(), name='serviceability-check'),
+    path('pincode/details/<str:pincode>/', PublicPostcodeDetailsView.as_view(), name='pincode-details'),
     
     # COD and Gift Options
     path('check-cod/', views.check_cod_availability, name='check-cod'),

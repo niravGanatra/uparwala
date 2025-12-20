@@ -231,6 +231,26 @@ const Checkout = () => {
         }
     };
 
+    const handlePincodeBlur = async (e) => {
+        const pin = e.target.value;
+        if (pin && pin.length === 6) {
+            try {
+                const response = await api.get(`/orders/pincode/details/${pin}/`);
+                if (response.data) {
+                    setAddressForm(prev => ({
+                        ...prev,
+                        city: response.data.city,
+                        state: response.data.state,
+                        state_code: response.data.state_code || prev.state_code
+                    }));
+                    toast.success('City & State Auto-filled!');
+                }
+            } catch (error) {
+                console.error('Auto-fill pcode failed:', error);
+            }
+        }
+    };
+
     const handlePlaceOrder = async () => {
         if (!selectedShippingAddress) {
             toast.error('Please select a shipping address');
@@ -513,7 +533,16 @@ const Checkout = () => {
                         <input type="text" placeholder="State" value={addressForm.state} onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })} className="input-field" required />
                         <input type="text" placeholder="State Code (e.g., DL)" value={addressForm.state_code} onChange={(e) => setAddressForm({ ...addressForm, state_code: e.target.value.toUpperCase() })} className="input-field" maxLength={2} required />
                     </div>
-                    <input type="text" placeholder="Pincode" value={addressForm.pincode} onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value })} className="input-field w-full" required />
+                    <input
+                        type="text"
+                        placeholder="Pincode"
+                        value={addressForm.pincode}
+                        onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                        onBlur={handlePincodeBlur}
+                        className="input-field w-full"
+                        required
+                        maxLength={6}
+                    />
 
                     <div className="flex items-center gap-2 mt-2">
                         <input type="checkbox" id="default" checked={addressForm.is_default} onChange={(e) => setAddressForm({ ...addressForm, is_default: e.target.checked })} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" />

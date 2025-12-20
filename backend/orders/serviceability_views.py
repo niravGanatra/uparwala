@@ -488,3 +488,38 @@ class PublicServiceabilityCheckView(APIView):
                 'serviceable': False,
                 'message': 'Unable to verify pincode.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PublicPostcodeDetailsView(APIView):
+    """
+    Public API to get City/State for a pincode (Proxy to Shiprocket)
+    """
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request, pincode):
+        if not pincode or len(pincode) != 6:
+            return Response({'error': 'Invalid Pincode'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            from .shiprocket_service import ShiprocketService
+            service = ShiprocketService()
+            # 1. Check Local DB first (Faster)
+            local = ShiprocketPincode.objects.filter(pincode=pincode).first()
+            if local and local.city and local.state and local.city != 'Unknown':
+                 return Response({
+                    'postcode': local.pincode,
+                    'city': local.city,
+                    'state': local.state,
+                    'country': "India"
+                 })
+                 
+            # 2. Check Shiprocket API
+            details = service.get_postcode_details(pincode)
+            
+            if details:
+                return Response(details)
+            else:
+                return Response({'error': 'Pincode details not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+             print(f"Postcode Details Error: {e}")
+             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
