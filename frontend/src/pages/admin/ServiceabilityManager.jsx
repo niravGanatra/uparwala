@@ -10,6 +10,9 @@ const ServiceabilityManager = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [showPasteModal, setShowPasteModal] = useState(false);
+    const [csvText, setCsvText] = useState('');
+    const [pasting, setPasting] = useState(false);
     const [search, setSearch] = useState('');
     const fileInputRef = useRef(null);
     const [page, setPage] = useState(1);
@@ -140,9 +143,9 @@ const ServiceabilityManager = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800">Serviceability Manager</h1>
-                    <p className="text-slate-500">Upload CSV or search pincode database</p>
+                    <p className="text-slate-500">Upload CSV, paste data, or search database</p>
                 </div>
-                <div>
+                <div className="flex gap-2">
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -156,7 +159,14 @@ const ServiceabilityManager = () => {
                         className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
                         <Upload className={`h-4 w-4 mr-2 ${uploading ? 'animate-spin' : ''}`} />
-                        {uploading ? 'Uploading...' : 'Import CSV'}
+                        {uploading ? 'Uploading...' : 'Upload CSV'}
+                    </Button>
+                    <Button
+                        onClick={() => setShowPasteModal(true)}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                        <Save className="h-4 w-4 mr-2" />
+                        Paste CSV
                     </Button>
                 </div>
             </div>
