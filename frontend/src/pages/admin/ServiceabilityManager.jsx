@@ -34,17 +34,18 @@ const ServiceabilityManager = () => {
 
             const response = await api.get('/orders/admin/serviceability/', { params });
 
-            setPincodes(response.data.results);
-            // Calculate total pages (assuming standard DRF pagination: count / 100)
-            // Or if page_size is customizable. Default usually 100 in our setup?
-            // Actually standard DRF returns 'count', 'next', 'previous', 'results'.
-            // Let's assume page size is 50 or 100.
-            const totalCount = response.data.count;
-            setTotalPages(Math.ceil(totalCount / 50)); // Assuming 50 page size for now
+            // Handle response with defaults for empty/malformed data
+            const results = response.data?.results || [];
+            const totalCount = response.data?.count || 0;
+
+            setPincodes(results);
+            setTotalPages(Math.max(1, Math.ceil(totalCount / 50))); // Ensure at least 1 page
 
         } catch (error) {
             console.error('Failed to fetch pincodes:', error);
-            // toast.error('Failed to load serviceability data');
+            setPincodes([]); // Set empty array on error
+            setTotalPages(1);
+            toast.error('Failed to load serviceability data');
         } finally {
             setLoading(false);
         }
@@ -153,8 +154,8 @@ const ServiceabilityManager = () => {
                                             <button
                                                 onClick={() => toggleStatus(pin.id, 'is_serviceable', pin.is_serviceable)}
                                                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${pin.is_serviceable
-                                                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                                        : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                    : 'bg-red-100 text-red-700 hover:bg-red-200'
                                                     }`}
                                             >
                                                 {pin.is_serviceable ? (
