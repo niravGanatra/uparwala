@@ -11,6 +11,8 @@ const ServiceabilityManager = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [showPasteModal, setShowPasteModal] = useState(false);
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [deleting, setDeleting] = useState(false);
     const [csvText, setCsvText] = useState('');
     const [pasting, setPasting] = useState(false);
     const [search, setSearch] = useState('');
@@ -142,6 +144,48 @@ const ServiceabilityManager = () => {
         setPage(1); // Reset to page 1 on search
     };
 
+    const toggleSelectAll = () => {
+        if (selectedIds.length === pincodes.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(pincodes.map(p => p.id));
+        }
+    };
+
+    const toggleSelect = (id) => {
+        if (selectedIds.includes(id)) {
+            setSelectedIds(selectedIds.filter(sid => sid !== id));
+        } else {
+            setSelectedIds([...selectedIds, id]);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) {
+            toast.error('No pincodes selected');
+            return;
+        }
+
+        if (!window.confirm(`Delete ${selectedIds.length} selected pincodes?`)) {
+            return;
+        }
+
+        setDeleting(true);
+        try {
+            await api.post('/orders/admin/serviceability/bulk_delete/', {
+                ids: selectedIds
+            });
+            toast.success(`Deleted ${selectedIds.length} pincodes`);
+            setSelectedIds([]);
+            fetchPincodes();
+        } catch (error) {
+            console.error('Bulk delete failed:', error);
+            toast.error('Failed to delete pincodes');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     const toggleStatus = async (id, field, currentValue) => {
         // Optimistic Update
         const updatedList = pincodes.map(item =>
@@ -230,12 +274,37 @@ const ServiceabilityManager = () => {
                 </div>
             </div>
 
+            {/* Bulk Actions */}
+            {selectedIds.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                    <span className="text-sm text-red-700">
+                        {selectedIds.length} pincode(s) selected
+                    </span>
+                    <Button
+                        onClick={handleBulkDelete}
+                        disabled={deleting}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                        <XCircle className={`h-4 w-4 mr-2 ${deleting ? 'animate-spin' : ''}`} />
+                        {deleting ? 'Deleting...' : 'Delete Selected'}
+                    </Button>
+                </div>
+            )}
+
             {/* Data Table */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
+                                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-12">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.length === pincodes.length && pincodes.length > 0}
+                                        onChange={toggleSelectAll}
+                                        className="rounded border-slate-300"
+                                    />
+                                </th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">Pincode</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">City / State</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">Zone</th>
@@ -259,6 +328,14 @@ const ServiceabilityManager = () => {
                             ) : (
                                 pincodes.map((pin) => (
                                     <tr key={pin.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(pin.id)}
+                                                onChange={() => toggleSelect(pin.id)}
+                                                className="rounded border-slate-300"
+                                            />
+                                        </td>
                                         <td className="px-6 py-4 font-mono font-medium text-slate-700">
                                             {pin.pincode}
                                         </td>
