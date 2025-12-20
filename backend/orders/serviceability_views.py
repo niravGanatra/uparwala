@@ -156,6 +156,26 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        """
+        Delete multiple pincodes by IDs
+        """
+        ids = request.data.get('ids', [])
+        
+        if not ids:
+            return Response({'error': 'No IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            count, _ = ShiprocketPincode.objects.filter(id__in=ids).delete()
+            
+            return Response({
+                'message': f'Deleted {count} pincodes',
+                'deleted': count
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['post'])
     def bulk_load(self, request):
         """
         Load new pincodes from data.gov.in (skips existing ones)
