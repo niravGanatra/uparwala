@@ -69,12 +69,12 @@ const Footer = () => {
                         <div>
                             <h4 className="text-white font-semibold mb-2 text-sm">Registered Office Address</h4>
                             <address className="text-xs leading-relaxed not-italic">
-                                Uparwala Internet Pvt Ltd,<br />
-                                Buildings Alyssa, Begonia &<br />
-                                Clove Embassy Tech Village,<br />
-                                Outer Ring Road, Devarabeesanahalli Village,<br />
-                                Bengaluru, 560103,<br />
-                                Karnataka, India<br />
+                                Uparwala Traders LLP,<br />
+                                11, Kohinoor Society,<br />
+                                Vijay Nagar Road,<br />
+                                Naranpura,<br />
+                                Ahmedabad, 380013,<br />
+                                Gujarat, India<br />
                                 <span className="inline-block mt-2">CIN: U51109KA2012PTC066107</span><br />
                                 <span>Telephone: <a href="tel:0448447878" className="hover:text-white">044-8447878</a></span>
                             </address>
