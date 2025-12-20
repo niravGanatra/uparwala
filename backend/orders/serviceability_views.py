@@ -38,61 +38,86 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def bulk_load(self, request):
         """
-        Load pincodes in bulk from data.gov.in (one-time operation)
+        Load new pincodes from data.gov.in (skips existing ones)
+        Automatically finds where to start fetching
         """
         limit = request.data.get('limit', 1000)
         
-        count = self._bulk_fetch_from_datagovin(limit)
+        # Get existing pincodes to skip them
+        existing_pincodes = set(ShiprocketPincode.objects.values_list('pincode', flat=True))
+        
+        new_count = self._bulk_fetch_from_datagovin(limit, existing_pincodes)
         
         return Response({
-            'message': f'Loaded {count} pincodes from data.gov.in',
-            'total_in_db': ShiprocketPincode.objects.count()
+            'message': f'Loaded {new_count} NEW pincodes from data.gov.in',
+            'total_in_db': ShiprocketPincode.objects.count(),
+            'previously_existed': len(existing_pincodes)
         })
     
-    def _bulk_fetch_from_datagovin(self, limit=1000):
-        """Bulk fetch pincodes from data.gov.in"""
+    def _bulk_fetch_from_datagovin(self, limit=1000, existing_pincodes=None):
+        """Bulk fetch pincodes from data.gov.in, skipping existing ones"""
         import requests
+        
+        if existing_pincodes is None:
+            existing_pincodes = set()
         
         api_key = '579b464db66ec23bdd000001f17ca38f88df4c4a6449db80d254a78f'
         url = 'https://api.data.gov.in/resource/6176ee09-3d56-4a3b-8115-21841576b2f6'
         
-        count = 0
+        new_count = 0
         batch_size = 100
+        offset = 0
+        max_offset = 50000  # Safety limit to prevent infinite loops
         
         try:
-            for offset in range(0, limit, batch_size):
+            while new_count < limit and offset < max_offset:
                 params = {
                     'api-key': api_key,
                     'format': 'json',
                     'offset': offset,
-                    'limit': min(batch_size, limit - offset)
+                    'limit': batch_size
                 }
                 
                 response = requests.get(url, params=params, timeout=30)
                 records = response.json().get('records', [])
                 
                 if not records:
-                    break
+                    break  # No more data available
                 
                 for record in records:
                     pincode = str(int(record.get('pincode', 0)))
-                    if len(pincode) == 6:
-                        obj, created = ShiprocketPincode.objects.get_or_create(
-                            pincode=pincode,
-                            defaults={
-                                'city': record.get('Districtname', 'Unknown'),
-                                'state': record.get('statename', 'Unknown'),
-                                'zone': self._get_zone(record.get('statename', '')),
-                                'is_serviceable': True,
-                                'is_cod_available': True,
-                            }
-                        )
-                        if created:
-                            count += 1
+                    
+                    if len(pincode) != 6:
+                        continue  # Invalid pincode
+                    
+                    if pincode in existing_pincodes:
+                        continue  # Already exists, skip
+                    
+                    if new_count >= limit:
+                        break  # Reached our target
+                    
+                    # Create new pincode
+                    obj, created = ShiprocketPincode.objects.get_or_create(
+                        pincode=pincode,
+                        defaults={
+                            'city': record.get('Districtname', 'Unknown'),
+                            'state': record.get('statename', 'Unknown'),
+                            'zone': self._get_zone(record.get('statename', '')),
+                            'is_serviceable': True,
+                            'is_cod_available': True,
+                        }
+                    )
+                    
+                    if created:
+                        new_count += 1
+                        existing_pincodes.add(pincode)  # Track for this session
+                
+                offset += batch_size
+                
         except Exception as e:
             print(f"Error bulk fetching: {e}")
         
-        return count
+        return new_count
     
     def _fetch_from_datagovin(self, query):
         """Helper to fetch specific pincodes from data.gov.in (for refresh)"""
