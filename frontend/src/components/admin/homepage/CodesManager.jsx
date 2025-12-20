@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, X, Tag } from 'lucide-react';
+import { Plus, Trash2, Save, X, Tag, Edit } from 'lucide-react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 
@@ -8,6 +8,7 @@ const CodesManager = () => {
     const [coupons, setCoupons] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editingCoupon, setEditingCoupon] = useState(null);
 
     // Data for selectors
     const [products, setProducts] = useState([]);
@@ -93,9 +94,15 @@ const CodesManager = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/promotions/coupons/', formData);
-            toast.success('Coupon created successfully');
+            if (editingCoupon) {
+                await api.put(`/promotions/coupons/${editingCoupon.id}/`, formData);
+                toast.success('Coupon updated successfully');
+            } else {
+                await api.post('/promotions/coupons/', formData);
+                toast.success('Coupon created successfully');
+            }
             setShowModal(false);
+            setEditingCoupon(null);
             fetchCoupons();
             setFormData({
                 code: '',
@@ -112,8 +119,26 @@ const CodesManager = () => {
             });
         } catch (error) {
             console.error(error);
-            toast.error('Failed to create coupon');
+            toast.error(editingCoupon ? 'Failed to update coupon' : 'Failed to create coupon');
         }
+    };
+
+    const handleEdit = (coupon) => {
+        setEditingCoupon(coupon);
+        setFormData({
+            code: coupon.code,
+            description: coupon.description,
+            discount_type: coupon.discount_type,
+            discount_value: coupon.discount_value,
+            min_purchase_amount: coupon.min_purchase_amount || '0',
+            valid_from: coupon.valid_from?.slice(0, 16) || '',
+            valid_to: coupon.valid_to?.slice(0, 16) || '',
+            is_active: coupon.is_active,
+            applicability_type: coupon.applicability_type,
+            specific_products: coupon.specific_products || [],
+            specific_categories: coupon.specific_categories || []
+        });
+        setShowModal(true);
     };
 
     return (
@@ -177,12 +202,20 @@ const CodesManager = () => {
                                     </button>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button
-                                        onClick={() => handleDelete(coupon.id)}
-                                        className="text-red-600 hover:bg-red-50 p-1 rounded"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    <div className="flex justify-end gap-1">
+                                        <button
+                                            onClick={() => handleEdit(coupon)}
+                                            className="text-blue-600 hover:bg-blue-50 p-1 rounded"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(coupon.id)}
+                                            className="text-red-600 hover:bg-red-50 p-1 rounded"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -194,8 +227,8 @@ const CodesManager = () => {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-lg my-8">
                         <div className="flex justify-between items-center p-6 border-b">
-                            <h2 className="text-xl font-bold">Create New Coupon</h2>
-                            <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400" /></button>
+                            <h2 className="text-xl font-bold">{editingCoupon ? 'Edit' : 'Create New'} Coupon</h2>
+                            <button onClick={() => { setShowModal(false); setEditingCoupon(null); }}><X className="w-5 h-5 text-gray-400" /></button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
@@ -346,8 +379,8 @@ const CodesManager = () => {
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border rounded">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Create Coupon</button>
+                                <button type="button" onClick={() => { setShowModal(false); setEditingCoupon(null); }} className="px-4 py-2 border rounded">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">{editingCoupon ? 'Update' : 'Create'} Coupon</button>
                             </div>
                         </form>
                     </div>
