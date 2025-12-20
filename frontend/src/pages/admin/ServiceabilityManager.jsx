@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, Filter, Save, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, Filter, Save, CheckCircle, XCircle, RefreshCw, Upload } from 'lucide-react';
 import api from '../../services/api';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -9,8 +9,9 @@ const ServiceabilityManager = () => {
     const [pincodes, setPincodes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [bulkLoading, setBulkLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [search, setSearch] = useState('');
+    const fileInputRef = useRef(null);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
@@ -80,17 +81,33 @@ const ServiceabilityManager = () => {
         }
     };
 
-    const handleBulkLoad = async () => {
-        setBulkLoading(true);
+    const handleFileUpload = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        if (!file.name.endsWith('.csv')) {
+            toast.error('Please upload a CSV file');
+            return;
+        }
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+
         try {
-            const response = await api.post('/orders/admin/serviceability/bulk_load/', { limit: 1000 });
+            const response = await api.post('/orders/admin/serviceability/upload_csv/', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
             toast.success(response.data.message);
             fetchPincodes(); // Reload the list
         } catch (error) {
-            console.error('Bulk load failed:', error);
-            toast.error('Failed to load pincodes');
+            console.error('CSV upload failed:', error);
+            toast.error('Failed to upload CSV');
         } finally {
-            setBulkLoading(false);
+            setUploading(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''; // Reset file input
+            }
         }
     };
 
@@ -123,16 +140,25 @@ const ServiceabilityManager = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800">Serviceability Manager</h1>
-                    <p className="text-slate-500">Manage delivery zones - search database or load from data.gov.in</p>
+                    <p className="text-slate-500">Upload CSV or search pincode database</p>
                 </div>
-                <Button
-                    onClick={handleBulkLoad}
-                    disabled={bulkLoading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${bulkLoading ? 'animate-spin' : ''}`} />
-                    {bulkLoading ? 'Loading...' : 'Load All Pincodes'}
-                </Button>
+                <div>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".csv"
+                        onChange={handleFileUpload}
+                        style={{ display: 'none' }}
+                    />
+                    <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                        <Upload className={`h-4 w-4 mr-2 ${uploading ? 'animate-spin' : ''}`} />
+                        {uploading ? 'Uploading...' : 'Import CSV'}
+                    </Button>
+                </div>
             </div>
 
             {/* Filters */}

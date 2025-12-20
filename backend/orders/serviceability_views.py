@@ -36,6 +36,69 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
     search_fields = ['pincode', 'city', 'state']
     
     @action(detail=False, methods=['post'])
+    def upload_csv(self, request):
+        """
+        Upload and import CSV file
+        """
+        import csv
+        import io
+        
+        csv_file = request.FILES.get('file')
+        if not csv_file:
+            return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not csv_file.name.endswith('.csv'):
+            return Response({'error': 'File must be CSV format'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Read and decode CSV
+            file_data = csv_file.read().decode('utf-8')
+            reader = csv.DictReader(io.StringIO(file_data))
+            
+            imported = 0
+            skipped = 0
+            
+            # Get existing pincodes for faster lookup
+            existing_pincodes = set(ShiprocketPincode.objects.values_list('pincode', flat=True))
+            
+            for row in reader:
+                pincode = str(row.get('pincode', '')).strip()
+                
+                if not pincode or len(pincode) != 6 or not pincode.isdigit():
+                    skipped += 1
+                    continue
+                
+                if pincode in existing_pincodes:
+                    skipped += 1
+                    continue
+                
+                # Create new pincode
+                district = row.get('district', 'Unknown').strip()
+                state = row.get('statename', 'Unknown').strip()
+                
+                ShiprocketPincode.objects.create(
+                    pincode=pincode,
+                    city=district if district else 'Unknown',
+                    state=state if state else 'Unknown',
+                    zone=self._get_zone(state),
+                    is_serviceable=True,
+                    is_cod_available=True,
+                )
+                
+                imported += 1
+                existing_pincodes.add(pincode)
+            
+            return Response({
+                'message': f'Imported {imported} pincodes, skipped {skipped}',
+                'imported': imported,
+                'skipped': skipped,
+                'total_in_db': ShiprocketPincode.objects.count()
+            })
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['post'])
     def bulk_load(self, request):
         """
         Load new pincodes from data.gov.in (skips existing ones)
