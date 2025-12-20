@@ -292,12 +292,12 @@ const ServiceabilityManager = () => {
                     <table className="w-full text-left">
                         <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-12">
+                                <th className="px-4 py-4 text-sm font-semibold text-slate-700 w-10">
                                     <input
                                         type="checkbox"
                                         checked={selectedIds.length === pincodes.length && pincodes.length > 0}
                                         onChange={toggleSelectAll}
-                                        className="rounded border-slate-300"
+                                        className="rounded border-slate-300 w-4 h-4 text-blue-600 focus:ring-blue-500"
                                     />
                                 </th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">Pincode</th>
@@ -310,25 +310,25 @@ const ServiceabilityManager = () => {
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
                                         Loading data...
                                     </td>
                                 </tr>
                             ) : pincodes.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
                                         No pincodes found matching your search.
                                     </td>
                                 </tr>
                             ) : (
                                 pincodes.map((pin) => (
                                     <tr key={pin.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-4 w-10">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedIds.includes(pin.id)}
                                                 onChange={() => toggleSelect(pin.id)}
-                                                className="rounded border-slate-300"
+                                                className="rounded border-slate-300 w-4 h-4 text-blue-600 focus:ring-blue-500"
                                             />
                                         </td>
                                         <td className="px-6 py-4 font-mono font-medium text-slate-700">
