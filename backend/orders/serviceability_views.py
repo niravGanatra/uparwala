@@ -4,15 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from .shiprocket_models import ShiprocketPincode
-from .serializers import ShiprocketPincodeSerializer # Need to create this serializer first!
 from django_filters.rest_framework import DjangoFilterBackend
-
-# We need a serializer first, probably inside this file or orders/serializers.py
-# I'll include the serializer inline for simplicity or update imports later.
-
 from rest_framework import serializers
 
+
 class ShiprocketPincodeSerializer(serializers.ModelSerializer):
+    """Serializer for Shiprocket Pincode management"""
     class Meta:
         model = ShiprocketPincode
         fields = '__all__'
