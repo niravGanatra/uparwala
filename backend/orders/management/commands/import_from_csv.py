@@ -23,16 +23,37 @@ class Command(BaseCommand):
             action='store_true',
             help='Skip pincodes that already exist in database'
         )
+        parser.add_argument(
+            '--clear',
+            action='store_true',
+            help='Clear all existing pincodes before import (DESTRUCTIVE!)'
+        )
+        parser.add_argument(
+            '--batch-size',
+            type=int,
+            default=1000,
+            help='Number of records to commit per batch (default: 1000)'
+        )
 
     def handle(self, *args, **options):
         csv_file = options['csv_file']
         skip_existing = options['skip_existing']
+        clear_data = options['clear']
+        batch_size = options['batch_size']
         
         self.stdout.write(self.style.SUCCESS('=' * 70))
         self.stdout.write(self.style.SUCCESS('CSV PINCODE IMPORT'))
         self.stdout.write(self.style.SUCCESS('=' * 70))
         self.stdout.write(f'File: {csv_file}')
-        self.stdout.write(f'Skip existing: {skip_existing}\n')
+        self.stdout.write(f'Skip existing: {skip_existing}')
+        self.stdout.write(f'Batch size: {batch_size}')
+        
+        # Clear existing data if requested
+        if clear_data:
+            self.stdout.write(self.style.WARNING('\n⚠️  CLEARING ALL EXISTING PINCODES...'))
+            count = ShiprocketPincode.objects.count()
+            ShiprocketPincode.objects.all().delete()
+            self.stdout.write(self.style.WARNING(f'✓ Deleted {count} existing pincodes\n'))
         
         # Load existing pincodes if needed
         existing_pincodes = set()
@@ -46,6 +67,7 @@ class Command(BaseCommand):
         imported = 0
         skipped = 0
         errors = 0
+        batch = []
         
         try:
             with open(csv_file, 'r', encoding='utf-8') as f:
@@ -76,27 +98,24 @@ class Command(BaseCommand):
                         district = row.get('district', 'Unknown').strip()
                         state = row.get('statename', 'Unknown').strip()
                         
-                        # Create or update
-                        obj, created = ShiprocketPincode.objects.update_or_create(
+                        # Add to batch
+                        batch.append(ShiprocketPincode(
                             pincode=pincode,
-                            defaults={
-                                'city': district if district else 'Unknown',
-                                'state': state if state else 'Unknown',
-                                'zone': self._get_zone(state),
-                                'is_serviceable': True,
-                                'is_cod_available': True,
-                            }
-                        )
+                            city=district if district else 'Unknown',
+                            state=state if state else 'Unknown',
+                            zone=self._get_zone(state),
+                            is_serviceable=True,
+                            is_cod_available=True,
+                        ))
                         
-                        if created:
-                            imported += 1
-                            existing_pincodes.add(pincode)
-                            
-                            # Progress update every 1000 records
-                            if imported % 1000 == 0:
-                                self.stdout.write(f'Imported {imported} pincodes...')
-                        else:
-                            skipped += 1
+                        existing_pincodes.add(pincode)
+                        
+                        # Commit batch when it reaches batch_size
+                        if len(batch) >= batch_size:
+                            ShiprocketPincode.objects.bulk_create(batch, ignore_conflicts=True)
+                            imported += len(batch)
+                            batch = []
+                            self.stdout.write(f'✓ Imported {imported} pincodes...')
                         
                     except Exception as e:
                         errors += 1
@@ -104,6 +123,12 @@ class Command(BaseCommand):
                             self.stdout.write(self.style.ERROR(
                                 f'Row {row_num} error: {e}'
                             ))
+                
+                # Commit remaining batch
+                if batch:
+                    ShiprocketPincode.objects.bulk_create(batch, ignore_conflicts=True)
+                    imported += len(batch)
+                    self.stdout.write(f'✓ Imported {imported} pincodes...')
         
         except FileNotFoundError:
             self.stdout.write(self.style.ERROR(f'File not found: {csv_file}'))
