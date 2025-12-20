@@ -114,6 +114,29 @@ const ServiceabilityManager = () => {
         }
     };
 
+    const handlePasteCSV = async () => {
+        if (!csvText.trim()) {
+            toast.error('Please paste CSV data');
+            return;
+        }
+
+        setPasting(true);
+        try {
+            const response = await api.post('/orders/admin/serviceability/paste_csv/', {
+                csv_data: csvText
+            });
+            toast.success(response.data.message);
+            setCsvText('');
+            setShowPasteModal(false);
+            fetchPincodes();
+        } catch (error) {
+            console.error('CSV paste failed:', error);
+            toast.error(error.response?.data?.error || 'Failed to import CSV data');
+        } finally {
+            setPasting(false);
+        }
+    };
+
     const handleSearch = (e) => {
         setSearch(e.target.value);
         setPage(1); // Reset to page 1 on search

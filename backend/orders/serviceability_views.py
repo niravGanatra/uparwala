@@ -99,6 +99,63 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['post'])
+    def paste_csv(self, request):
+        """
+        Import CSV data from pasted text
+        """
+        import csv
+        import io
+        
+        csv_data = request.data.get('csv_data', '')
+        if not csv_data.strip():
+            return Response({'error': 'No CSV data provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Parse CSV from string
+            reader = csv.DictReader(io.StringIO(csv_data))
+            
+            imported = 0
+            skipped = 0
+            
+            # Get existing pincodes
+            existing_pincodes = set(ShiprocketPincode.objects.values_list('pincode', flat=True))
+            
+            for row in reader:
+                pincode = str(row.get('pincode', '')).strip()
+                
+                if not pincode or len(pincode) != 6 or not pincode.isdigit():
+                    skipped += 1
+                    continue
+                
+                if pincode in existing_pincodes:
+                    skipped += 1
+                    continue
+                
+                district = row.get('district', 'Unknown').strip()
+                state = row.get('statename', '').strip() or row.get('state', 'Unknown').strip()
+                
+                ShiprocketPincode.objects.create(
+                    pincode=pincode,
+                    city=district if district else 'Unknown',
+                    state=state if state else 'Unknown',
+                    zone=self._get_zone(state),
+                    is_serviceable=True,
+                    is_cod_available=True,
+                )
+                
+                imported += 1
+                existing_pincodes.add(pincode)
+            
+            return Response({
+                'message': f'Imported {imported} pincodes, skipped {skipped}',
+                'imported': imported,
+                'skipped': skipped
+            })
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['post'])
     def bulk_load(self, request):
         """
         Load new pincodes from data.gov.in (skips existing ones)
