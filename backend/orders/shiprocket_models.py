@@ -88,3 +88,32 @@ class OrderTrackingStatus(models.Model):
     
     def __str__(self):
         return f"{self.order.order_number} - {self.status} at {self.timestamp}"
+
+
+class ShiprocketPincode(models.Model):
+    """
+    Master list of all Pincodes supported by Shiprocket.
+    Used for local serviceability validation before API calls.
+    """
+    # Core Data
+    pincode = models.CharField(max_length=10, unique=True, db_index=True)
+    city = models.CharField(max_length=100, db_index=True)
+    state = models.CharField(max_length=100, db_index=True)
+    zone = models.CharField(max_length=10, blank=True, help_text="East, West, North, South")
+    
+    # Flags
+    is_serviceable = models.BooleanField(default=True, db_index=True)
+    is_cod_available = models.BooleanField(default=True)
+    
+    # Metadata
+    last_synced_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['state', 'city']),
+        ]
+        verbose_name = "Serviceable Pincode Master"
+        verbose_name_plural = "Serviceable Pincode Masters"
+
+    def __str__(self):
+        return f"{self.pincode} - {self.city}, {self.state}"

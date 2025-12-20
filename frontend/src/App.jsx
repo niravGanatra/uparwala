@@ -63,6 +63,7 @@ import CMSPages from './pages/admin/CMSPages';
 import HomepageManager from './pages/admin/HomepageManager';
 import TaxSlabs from './pages/admin/TaxSlabs';
 import ShipmentManager from './pages/admin/ShipmentManager';
+import ServiceabilityManager from './pages/admin/ServiceabilityManager';
 
 // Phase 7: NEW Analytics Dashboards
 import VendorDashboard from './pages/VendorDashboard';
@@ -156,6 +157,7 @@ function App() {
                 <Route path="categories" element={<AdminCategories />} />
                 <Route path="tax-slabs" element={<TaxSlabs />} />
                 <Route path="shipments" element={<ShipmentManager />} />
+                <Route path="serviceability" element={<ServiceabilityManager />} />
                 <Route path="cms-pages" element={<CMSPages />} />
                 <Route path="homepage" element={<HomepageManager />} />
               </Route>

@@ -19,7 +19,8 @@ import {
     UserCheck,
     FolderTree,
     Receipt,
-    Columns
+    Columns,
+    Map
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
@@ -53,6 +54,7 @@ const AdminLayout = () => {
                 { path: '/admin/product-moderation', icon: CheckCircle, label: 'Moderation' },
                 { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
                 { path: '/admin/shipments', icon: Package, label: 'Shipments' },
+                { path: '/admin/serviceability', icon: Map, label: 'Delivery Zones' },
             ]
         },
         {

@@ -7,6 +7,7 @@ from .views import (
 )
 from .checkout_views import CheckoutView
 from .logistics_views import CODPincodeViewSet, GiftOptionViewSet
+from .serviceability_views import AdminServiceabilityViewSet, PublicServiceabilityCheckView
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -14,6 +15,7 @@ router.register(r'notes', OrderNoteViewSet, basename='order-note')
 router.register(r'shiprocket-config', ShiprocketConfigViewSet, basename='shiprocket-config')
 router.register(r'admin/cod-pincodes', CODPincodeViewSet, basename='admin-cod-pincodes')
 router.register(r'admin/gift-options', GiftOptionViewSet, basename='admin-gift-options')
+router.register(r'admin/serviceability', AdminServiceabilityViewSet, basename='admin-serviceability')
 
 urlpatterns = [
     path('manage/', include(router.urls)), # /api/orders/manage/notes/
@@ -26,6 +28,9 @@ urlpatterns = [
     path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
     path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),
     path('admin/orders/', AdminOrderListView.as_view(), name='admin-order-list'),
+    
+    # Serviceability Check
+    path('serviceability/check/<str:pincode>/', PublicServiceabilityCheckView.as_view(), name='serviceability-check'),
     
     # COD and Gift Options
     path('check-cod/', views.check_cod_availability, name='check-cod'),
