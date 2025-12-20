@@ -9,6 +9,7 @@ const ServiceabilityManager = () => {
     const [pincodes, setPincodes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [bulkLoading, setBulkLoading] = useState(false);
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -71,6 +72,20 @@ const ServiceabilityManager = () => {
         }
     };
 
+    const handleBulkLoad = async () => {
+        setBulkLoading(true);
+        try {
+            const response = await api.post('/orders/admin/serviceability/bulk_load/', { limit: 1000 });
+            toast.success(response.data.message);
+            fetchPincodes(); // Reload the list
+        } catch (error) {
+            console.error('Bulk load failed:', error);
+            toast.error('Failed to load pincodes');
+        } finally {
+            setBulkLoading(false);
+        }
+    };
+
     const handleSearch = (e) => {
         setSearch(e.target.value);
         setPage(1); // Reset to page 1 on search
@@ -100,8 +115,16 @@ const ServiceabilityManager = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800">Serviceability Manager</h1>
-                    <p className="text-slate-500">Search pincodes - auto-fetched from data.gov.in</p>
+                    <p className="text-slate-500">Manage delivery zones - search database or load from data.gov.in</p>
                 </div>
+                <Button
+                    onClick={handleBulkLoad}
+                    disabled={bulkLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${bulkLoading ? 'animate-spin' : ''}`} />
+                    {bulkLoading ? 'Loading...' : 'Load All Pincodes'}
+                </Button>
             </div>
 
             {/* Filters */}
