@@ -36,9 +36,17 @@ const ServiceabilityManager = () => {
 
             const response = await api.get('/orders/admin/serviceability/', { params });
 
-            // Handle response with defaults for empty/malformed data
-            const results = response.data?.results || [];
-            const totalCount = response.data?.count || 0;
+            // Handle both paginated and non-paginated responses  
+            let results, totalCount;
+            if (Array.isArray(response.data)) {
+                // Non-paginated: API returns array directly
+                results = response.data;
+                totalCount = results.length;
+            } else {
+                // Paginated: {count, results}
+                results = response.data?.results || [];
+                totalCount = response.data?.count || 0;
+            }
 
             setPincodes(results);
             setTotalPages(Math.max(1, Math.ceil(totalCount / 50))); // Ensure at least 1 page
