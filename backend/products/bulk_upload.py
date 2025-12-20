@@ -77,6 +77,8 @@ def process_product_csv(csv_file, vendor):
                         'width': Decimal(row['width']) if row.get('width') else None,
                         'height': Decimal(row['height']) if row.get('height') else None,
                         'is_active': True,
+                        'is_returnable': str(row.get('is_returnable', '')).lower() in ('true', '1', 'yes'),
+                        'is_exchangeable': str(row.get('is_exchangeable', '')).lower() in ('true', '1', 'yes'),
                     }
                 )
                 
@@ -138,6 +140,7 @@ def generate_csv_template():
     headers = [
         'name', 'sku', 'description', 'short_description', 'category_slug',
         'regular_price', 'sale_price', 'stock', 'weight', 'length', 'width', 'height',
+        'is_returnable', 'is_exchangeable',
         'image_url', 'attributes'
     ]
     writer.writerow(headers)
