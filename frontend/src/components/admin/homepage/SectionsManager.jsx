@@ -245,7 +245,7 @@ const SectionsManager = () => {
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                         <Layout className="w-5 h-5 text-purple-500" />
-                        Hosting Essentials
+                        Pooja Essentials
                     </h3>
                     <button
                         onClick={() => setShowHostingModal(true)}
@@ -277,7 +277,7 @@ const SectionsManager = () => {
                             </div>
                         </div>
                     ))}
-                    {hosting.length === 0 && <p className="col-span-4 text-center text-gray-500 py-4">No items in Hosting Essentials</p>}
+                    {hosting.length === 0 && <p className="col-span-4 text-center text-gray-500 py-4">No items in Pooja Essentials</p>}
                 </div>
             </div>
 
