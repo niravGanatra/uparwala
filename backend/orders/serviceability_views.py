@@ -38,12 +38,13 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def upload_csv(self, request):
         """
-        Upload and import CSV file
+        Upload and import CSV file with BULK support (Fast Import)
         """
         import csv
         import io
         
         csv_file = request.FILES.get('file')
+        
         if not csv_file:
             return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -55,14 +56,28 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
             file_data = csv_file.read().decode('utf-8')
             reader = csv.DictReader(io.StringIO(file_data))
             
-            imported = 0
-            skipped = 0
+            # Normalize headers (lowercase, strip)
+            # This is tricky with DictReader as keys are fixed. 
+            # We will just be flexible in our get calls.
             
-            # Get existing pincodes for faster lookup
+            pincodes_to_create = []
             existing_pincodes = set(ShiprocketPincode.objects.values_list('pincode', flat=True))
             
+            total_rows = 0
+            new_records = 0
+            skipped = 0
+            
+            # Batch size for bulk_create
+            BATCH_SIZE = 5000
+            
+            print("Starting CSV processing...")
+            
             for row in reader:
-                pincode = str(row.get('pincode', '')).strip()
+                total_rows += 1
+                
+                # Flexible column mapping
+                # Try various common header names
+                pincode = (row.get('pincode') or row.get('Pincode') or row.get('PINCODE') or '').strip()
                 
                 if not pincode or len(pincode) != 6 or not pincode.isdigit():
                     skipped += 1
@@ -72,30 +87,48 @@ class AdminServiceabilityViewSet(viewsets.ModelViewSet):
                     skipped += 1
                     continue
                 
-                # Create new pincode
-                district = row.get('district', 'Unknown').strip()
-                state = row.get('statename', 'Unknown').strip()
+                # New Pincode Found!
+                district = (row.get('district') or row.get('District') or row.get('City') or row.get('city') or 'Unknown').strip()
+                state = (row.get('statename') or row.get('StateName') or row.get('State') or row.get('state') or 'Unknown').strip()
+                division = (row.get('divisionname') or row.get('DivisionName') or row.get('Division') or row.get('division') or '').strip()
                 
-                ShiprocketPincode.objects.create(
-                    pincode=pincode,
-                    city=district if district else 'Unknown',
-                    state=state if state else 'Unknown',
-                    zone=self._get_zone(state),
-                    is_serviceable=True,
-                    is_cod_available=True,
+                # Determine Zone if possible
+                zone = self._get_zone(state)
+                
+                pincodes_to_create.append(
+                    ShiprocketPincode(
+                        pincode=pincode,
+                        city=district,
+                        state=state,
+                        division_name=division,
+                        zone=zone,
+                        is_serviceable=True,
+                        is_cod_available=True
+                    )
                 )
                 
-                imported += 1
-                existing_pincodes.add(pincode)
+                existing_pincodes.add(pincode) # Prevent duplicates within the same file
+                new_records += 1
+                
+                # Process in chunks to save memory
+                if len(pincodes_to_create) >= BATCH_SIZE:
+                    ShiprocketPincode.objects.bulk_create(pincodes_to_create, ignore_conflicts=True)
+                    pincodes_to_create = []
+                    print(f"Processed {total_rows} rows...")
+            
+            # Create remaining
+            if pincodes_to_create:
+                ShiprocketPincode.objects.bulk_create(pincodes_to_create, ignore_conflicts=True)
             
             return Response({
-                'message': f'Imported {imported} pincodes, skipped {skipped}',
-                'imported': imported,
+                'message': f'Processed {total_rows} rows. Imported {new_records} new pincodes. Skipped {skipped} duplicates/invalid.',
+                'imported': new_records,
                 'skipped': skipped,
                 'total_in_db': ShiprocketPincode.objects.count()
             })
             
         except Exception as e:
+            print(f"Import Error: {e}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['post'])

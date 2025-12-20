@@ -99,6 +99,7 @@ class ShiprocketPincode(models.Model):
     pincode = models.CharField(max_length=10, unique=True, db_index=True)
     city = models.CharField(max_length=100, db_index=True)
     state = models.CharField(max_length=100, db_index=True)
+    division_name = models.CharField(max_length=100, blank=True, help_text="Division Name from CSV", db_index=True)
     zone = models.CharField(max_length=10, blank=True, help_text="East, West, North, South")
     
     # Flags

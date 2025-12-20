@@ -302,6 +302,7 @@ const ServiceabilityManager = () => {
                                     />
                                 </th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">Pincode</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-slate-700">Division</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">City / State</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">Zone</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-700 text-center">Serviceable</th>
@@ -311,13 +312,13 @@ const ServiceabilityManager = () => {
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan="7" className="px-6 py-12 text-center text-slate-500">
                                         Loading data...
                                     </td>
                                 </tr>
                             ) : pincodes.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan="7" className="px-6 py-12 text-center text-slate-500">
                                         No pincodes found matching your search.
                                     </td>
                                 </tr>
@@ -335,6 +336,9 @@ const ServiceabilityManager = () => {
                                         </td>
                                         <td className="px-6 py-4 font-mono font-medium text-slate-700">
                                             {pin.pincode}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-slate-600">
+                                            {pin.division_name || '-'}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="font-medium text-slate-800">{pin.city}</div>
