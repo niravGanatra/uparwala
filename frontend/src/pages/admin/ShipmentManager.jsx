@@ -21,15 +21,25 @@ const ShipmentManager = () => {
     const fetchPendingOrders = async () => {
         setLoading(true);
         try {
-            // Get orders that are paid but don't have shipments yet
-            const response = await api.get('/orders/admin/orders/?status=PROCESSING');
-            const orders = response.data.results || response.data;
-            // Separate prepaid orders and COD orders
+            // Get all orders that need shipping (PENDING and PROCESSING)
+            const [pendingRes, processingRes] = await Promise.all([
+                api.get('/orders/admin/orders/?status=PENDING'),
+                api.get('/orders/admin/orders/?status=PROCESSING')
+            ]);
+            const pendingData = pendingRes.data.results || pendingRes.data;
+            const processingData = processingRes.data.results || processingRes.data;
+            const orders = [...pendingData, ...processingData];
+
+            // Separate prepaid orders (paid online, not COD) and COD orders
             const prepaid = orders.filter(order =>
-                order.payment_status === 'paid' && order.payment_method !== 'cod' && !order.shipments?.length
+                order.payment_status === 'paid' &&
+                order.payment_method !== 'cod' &&
+                !order.shipments?.length
             );
+            // COD orders can have payment_status 'cod' or 'pending' with payment_method 'cod'
             const cod = orders.filter(order =>
-                order.payment_method === 'cod' && !order.shipments?.length
+                (order.payment_method === 'cod' || order.payment_status === 'cod') &&
+                !order.shipments?.length
             );
             setPendingOrders(prepaid);
             setCodOrders(cod);
