@@ -665,6 +665,7 @@ const AdminProducts = () => {
                     {/* Add Product Modal */}
                     <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Product" size="xl">
                         <ProductForm
+                            idPrefix="add_product"
                             formData={formData}
                             setFormData={setFormData}
                             imageFiles={imageFiles}
@@ -681,6 +682,7 @@ const AdminProducts = () => {
                     {/* Edit Product Modal */}
                     <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Product" size="xl">
                         <ProductForm
+                            idPrefix="edit_product"
                             formData={formData}
                             setFormData={setFormData}
                             imageFiles={imageFiles}
