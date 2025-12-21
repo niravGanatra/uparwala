@@ -6,21 +6,14 @@ import {
     FileText, Plus, Edit, Trash2, Save, X, Eye, Globe, CheckCircle
 } from 'lucide-react';
 
-// Dynamically import ReactQuill only on client side
-let ReactQuill = null;
-if (typeof window !== 'undefined') {
-    import('react-quill').then((mod) => {
-        ReactQuill = mod.default;
-    });
-    import('react-quill/dist/quill.snow.css');
-}
+// Note: react-quill is not compatible with React 19 (uses deprecated findDOMNode)
+// Using a simple textarea for HTML content instead
 
 const CMSPages = () => {
     const [pages, setPages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingPage, setEditingPage] = useState(null);
-    const [editorReady, setEditorReady] = useState(false);
 
     // Form states
     const [formData, setFormData] = useState({
@@ -34,16 +27,6 @@ const CMSPages = () => {
 
     useEffect(() => {
         fetchPages();
-        // Load editor after mount
-        if (typeof window !== 'undefined') {
-            import('react-quill').then((mod) => {
-                ReactQuill = mod.default;
-                setEditorReady(true);
-            }).catch(err => {
-                console.error('Failed to load editor:', err);
-                toast.error('Failed to load text editor');
-            });
-        }
     }, []);
 
     const fetchPages = async () => {
@@ -138,14 +121,36 @@ const CMSPages = () => {
         setEditingPage(null);
     };
 
-    const modules = {
-        toolbar: [
-            [{ 'header': [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-            ['link', 'image'],
-            ['clean']
-        ],
+    // Helper to insert HTML tags
+    const insertTag = (tag, content = '') => {
+        const textarea = document.getElementById('cms-content-editor');
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = formData.content.substring(start, end);
+        const before = formData.content.substring(0, start);
+        const after = formData.content.substring(end);
+
+        let newContent;
+        if (tag === 'h2' || tag === 'h3' || tag === 'p') {
+            newContent = `${before}<${tag}>${selectedText || content}</${tag}>${after}`;
+        } else if (tag === 'ul' || tag === 'ol') {
+            newContent = `${before}<${tag}>\n  <li>${selectedText || 'Item'}</li>\n</${tag}>${after}`;
+        } else if (tag === 'strong' || tag === 'em') {
+            newContent = `${before}<${tag}>${selectedText}</${tag}>${after}`;
+        } else if (tag === 'a') {
+            const url = prompt('Enter URL:');
+            if (url) {
+                newContent = `${before}<a href="${url}">${selectedText || url}</a>${after}`;
+            } else {
+                return;
+            }
+        } else {
+            newContent = `${before}<${tag}>${selectedText}</${tag}>${after}`;
+        }
+
+        setFormData({ ...formData, content: newContent });
     };
 
     return (
@@ -300,20 +305,26 @@ const CMSPages = () => {
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                                 Content
                                             </label>
-                                            <div className="h-96 mb-12">
-                                                {editorReady && ReactQuill ? (
-                                                    <ReactQuill
-                                                        value={formData.content}
-                                                        onChange={(content) => setFormData({ ...formData, content })}
-                                                        modules={modules}
-                                                        className="h-full"
-                                                    />
-                                                ) : (
-                                                    <div className="h-full bg-gray-100 rounded flex items-center justify-center text-gray-500">
-                                                        Loading editor...
-                                                    </div>
-                                                )}
+                                            {/* Simple toolbar */}
+                                            <div className="flex flex-wrap gap-1 mb-2 p-2 bg-gray-100 rounded-t border border-b-0">
+                                                <button type="button" onClick={() => insertTag('h2')} className="px-2 py-1 text-xs bg-white border rounded hover:bg-gray-50">H2</button>
+                                                <button type="button" onClick={() => insertTag('h3')} className="px-2 py-1 text-xs bg-white border rounded hover:bg-gray-50">H3</button>
+                                                <button type="button" onClick={() => insertTag('p')} className="px-2 py-1 text-xs bg-white border rounded hover:bg-gray-50">P</button>
+                                                <span className="border-l mx-1"></span>
+                                                <button type="button" onClick={() => insertTag('strong')} className="px-2 py-1 text-xs bg-white border rounded hover:bg-gray-50 font-bold">B</button>
+                                                <button type="button" onClick={() => insertTag('em')} className="px-2 py-1 text-xs bg-white border rounded hover:bg-gray-50 italic">I</button>
+                                                <span className="border-l mx-1"></span>
+                                                <button type="button" onClick={() => insertTag('ul')} className="px-2 py-1 text-xs bg-white border rounded hover:bg-gray-50">• List</button>
+                                                <button type="button" onClick={() => insertTag('ol')} className="px-2 py-1 text-xs bg-white border rounded hover:bg-gray-50">1. List</button>
+                                                <button type="button" onClick={() => insertTag('a')} className="px-2 py-1 text-xs bg-white border rounded hover:bg-gray-50">Link</button>
                                             </div>
+                                            <textarea
+                                                id="cms-content-editor"
+                                                value={formData.content}
+                                                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                                className="w-full h-80 px-3 py-2 border rounded-b font-mono text-sm resize-none"
+                                                placeholder="Enter HTML content here... Use the toolbar above to insert tags."
+                                            />
                                         </div>
                                     </div>
 
