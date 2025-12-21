@@ -1,5 +1,6 @@
 import requests
 import json
+import re
 from django.utils import timezone
 from django.conf import settings
 from .shiprocket_models import ShiprocketConfig, ShipmentTracking, OrderTrackingStatus
@@ -77,6 +78,26 @@ class ShiprocketService:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.get_token()}"
         }
+    
+    def sanitize_phone(self, phone):
+        """Sanitize phone number to 10 digits for Shiprocket"""
+        if not phone:
+            return '9999999999'  # Fallback
+        # Remove all non-digit characters
+        digits = re.sub(r'\D', '', str(phone))
+        # If starts with 91 and is 12 digits, remove country code
+        if len(digits) == 12 and digits.startswith('91'):
+            digits = digits[2:]
+        # If starts with 0 and is 11 digits, remove leading 0
+        if len(digits) == 11 and digits.startswith('0'):
+            digits = digits[1:]
+        # Return last 10 digits if still too long
+        if len(digits) > 10:
+            digits = digits[-10:]
+        # If less than 10, pad with 9s (shouldn't happen ideally)
+        if len(digits) < 10:
+            return '9999999999'
+        return digits
 
     def sync_vendor_pickup_location(self, vendor_profile: VendorProfile):
         """Create or Update Pickup Location for Vendor"""
@@ -166,15 +187,16 @@ class ShiprocketService:
             vendor = items[0].vendor
             pickup_location = vendor.shiprocket_pickup_location_name
             
+            # Always try to sync/re-sync pickup location to ensure it exists in Shiprocket
+            try:
+                synced_location = self.sync_vendor_pickup_location(vendor)
+                if synced_location:
+                    pickup_location = synced_location
+            except Exception as e:
+                print(f"Warning: Could not sync pickup location for {vendor}: {e}")
+            
             if not pickup_location:
-                # Try to sync now if missing
-                try:
-                    pickup_location = self.sync_vendor_pickup_location(vendor)
-                except:
-                    pass
-                if not pickup_location:
-                    print(f"Cannot create shipment: No pickup location for vendor {vendor}")
-                    continue
+                raise Exception(f"Cannot create shipment: No pickup location for vendor {vendor.store_name}. Please ensure vendor has complete address details (phone, address, city, state, pincode).")
 
             # Build Order Items Payload
             sr_order_items = []
@@ -212,7 +234,7 @@ class ShiprocketService:
                 "billing_state": order.shipping_address_data.get('state', ''),
                 "billing_country": "India",
                 "billing_email": order.user.email,
-                "billing_phone": order.shipping_address_data.get('phone', '9999999999'),
+                "billing_phone": self.sanitize_phone(order.shipping_address_data.get('phone')),
                 "shipping_is_billing": True,
                 "order_items": sr_order_items,
                 "payment_method": payment_method,
