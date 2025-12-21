@@ -57,7 +57,7 @@ const MainLayout = () => {
                     </Link>
 
 
-                    <nav className="hidden md:flex items-center space-x-5">
+                    <nav className="hidden md:flex items-center space-x-4">
                         <Link to="/products" className="text-sm font-medium hover:text-orange-600 transition-colors whitespace-nowrap">All Products</Link>
 
                         {/* All Categories with show_in_menu = true */}
