@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Truck, Tag, Calendar, Download, XCircle, RefreshCw } from 'lucide-react';
+import { Package, Truck, Tag, Calendar, Download, XCircle, RefreshCw, Banknote } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -7,10 +7,11 @@ const ShipmentManager = () => {
     const [activeTab, setActiveTab] = useState('pending');
     const [shipments, setShipments] = useState([]);
     const [pendingOrders, setPendingOrders] = useState([]);
+    const [codOrders, setCodOrders] = useState([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (activeTab === 'pending') {
+        if (activeTab === 'pending' || activeTab === 'cod') {
             fetchPendingOrders();
         } else {
             fetchShipments();
@@ -23,10 +24,15 @@ const ShipmentManager = () => {
             // Get orders that are paid but don't have shipments yet
             const response = await api.get('/orders/admin/orders/?status=PROCESSING');
             const orders = response.data.results || response.data;
-            // Include both paid orders and COD orders (which may have 'cod' or 'pending' payment status)
-            setPendingOrders(orders.filter(order =>
-                (order.payment_status === 'paid' || order.payment_method === 'cod') && !order.shipments?.length
-            ));
+            // Separate prepaid orders and COD orders
+            const prepaid = orders.filter(order =>
+                order.payment_status === 'paid' && order.payment_method !== 'cod' && !order.shipments?.length
+            );
+            const cod = orders.filter(order =>
+                order.payment_method === 'cod' && !order.shipments?.length
+            );
+            setPendingOrders(prepaid);
+            setCodOrders(cod);
         } catch (error) {
             toast.error('Failed to load pending orders');
         } finally {
@@ -145,7 +151,17 @@ const ShipmentManager = () => {
                                 }`}
                         >
                             <Package className="inline-block w-4 h-4 mr-2" />
-                            Pending Orders ({pendingOrders.length})
+                            Prepaid Orders ({pendingOrders.length})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('cod')}
+                            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'cod'
+                                ? 'border-yellow-500 text-yellow-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                        >
+                            <Banknote className="inline-block w-4 h-4 mr-2" />
+                            COD Orders ({codOrders.length})
                         </button>
                         <button
                             onClick={() => setActiveTab('active')}
@@ -218,8 +234,8 @@ const ShipmentManager = () => {
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${order.payment_method === 'cod'
-                                                                        ? 'bg-yellow-100 text-yellow-800'
-                                                                        : 'bg-green-100 text-green-800'
+                                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                                    : 'bg-green-100 text-green-800'
                                                                     }`}>
                                                                     {order.payment_method === 'cod' ? 'COD' : 'Paid'}
                                                                 </span>
@@ -228,6 +244,65 @@ const ShipmentManager = () => {
                                                                 <button
                                                                     onClick={() => createShipment(order.id)}
                                                                     className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+                                                                >
+                                                                    Create Shipment
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* COD Orders Tab */}
+                            {activeTab === 'cod' && (
+                                <div>
+                                    {codOrders.length === 0 ? (
+                                        <div className="text-center py-12">
+                                            <Banknote className="mx-auto h-12 w-12 text-gray-400" />
+                                            <p className="mt-2 text-gray-600">No COD orders pending</p>
+                                        </div>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                                <thead className="bg-yellow-50">
+                                                    <tr>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
+                                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                    {codOrders.map((order) => (
+                                                        <tr key={order.id} className="hover:bg-yellow-50">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                                #{order.id}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="text-sm font-medium text-gray-900">
+                                                                    {order.shipping_address_data?.full_name || order.user?.username || 'N/A'}
+                                                                </div>
+                                                                <div className="text-sm text-gray-500">
+                                                                    {order.user?.email || order.shipping_address_data?.phone || ''}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                                ₹{parseFloat(order.total_amount).toFixed(2)}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                    COD
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                                                <button
+                                                                    onClick={() => createShipment(order.id)}
+                                                                    className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 text-sm font-medium"
                                                                 >
                                                                     Create Shipment
                                                                 </button>
