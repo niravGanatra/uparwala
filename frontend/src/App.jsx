@@ -34,6 +34,7 @@ import OrderTracking from './pages/OrderTracking';
 import ProductComparison from './pages/ProductComparison';
 import CMSPage from './pages/CMSPage';
 import RefundPolicyPage from './pages/RefundPolicyPage';
+import SecurityPage from './pages/SecurityPage';
 
 // Vendor pages (existing old structure)
 import VendorLayout from './layouts/VendorLayout';
@@ -119,6 +120,7 @@ function App() {
                 <Route path="/pages/:slug" element={<CMSPage />} />
                 <Route path="/refund-policy" element={<RefundPolicyPage />} />
                 <Route path="/pages/cancellations-returns" element={<RefundPolicyPage />} />
+                <Route path="/security" element={<SecurityPage />} />
               </Route>
 
               {/* Phase 7: NEW Analytics Dashboards - MOVED TO CORRECT LAYOUTS */}
