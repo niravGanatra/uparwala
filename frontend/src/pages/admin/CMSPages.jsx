@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {
     FileText, Plus, Edit, Trash2, Save, X, Eye, Globe, CheckCircle
 } from 'lucide-react';
+
+// Lazy load ReactQuill to prevent SSR/hydration issues
+const ReactQuill = lazy(() => import('react-quill'));
 
 const CMSPages = () => {
     const [pages, setPages] = useState([]);
@@ -283,12 +285,14 @@ const CMSPages = () => {
                                                 Content
                                             </label>
                                             <div className="h-96 mb-12">
-                                                <ReactQuill
-                                                    value={formData.content}
-                                                    onChange={(content) => setFormData({ ...formData, content })}
-                                                    modules={modules}
-                                                    className="h-full"
-                                                />
+                                                <Suspense fallback={<div className="h-full bg-gray-100 rounded flex items-center justify-center text-gray-500">Loading editor...</div>}>
+                                                    <ReactQuill
+                                                        value={formData.content}
+                                                        onChange={(content) => setFormData({ ...formData, content })}
+                                                        modules={modules}
+                                                        className="h-full"
+                                                    />
+                                                </Suspense>
                                             </div>
                                         </div>
                                     </div>
