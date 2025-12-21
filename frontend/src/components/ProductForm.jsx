@@ -1,6 +1,7 @@
 import { Input } from './ui/input';
 import { Upload } from 'lucide-react';
 import { Button } from './ui/button';
+import { Switch } from './ui/switch';
 
 // Extracted ProductForm component to prevent re-creation on parent renders
 const ProductForm = ({
@@ -158,38 +159,26 @@ const ProductForm = ({
                     </div>
                 </div>
 
-                {/* Checkboxes - Inventory & Type */}
-                <div className="flex flex-wrap gap-4 pt-2">
-                    <label htmlFor={`${idPrefix}_manage_stock`} className="flex items-center gap-2 cursor-pointer select-none">
-                        <input
-                            id={`${idPrefix}_manage_stock`}
-                            type="checkbox"
-                            checked={!!formData.manage_stock}
-                            onChange={(e) => setFormData({ ...formData, manage_stock: e.target.checked })}
-                            className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
-                        />
-                        <span className="text-sm">Manage Stock</span>
-                    </label>
-                    <label htmlFor={`${idPrefix}_featured`} className="flex items-center gap-2 cursor-pointer select-none">
-                        <input
-                            id={`${idPrefix}_featured`}
-                            type="checkbox"
-                            checked={!!formData.featured}
-                            onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                            className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
-                        />
-                        <span className="text-sm">Featured Product</span>
-                    </label>
-                    <label htmlFor={`${idPrefix}_is_active`} className="flex items-center gap-2 cursor-pointer select-none">
-                        <input
-                            id={`${idPrefix}_is_active`}
-                            type="checkbox"
-                            checked={!!formData.is_active}
-                            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                            className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
-                        />
-                        <span className="text-sm">Active</span>
-                    </label>
+                {/* Switches - Inventory & Type */}
+                <div className="flex flex-wrap gap-6 pt-2">
+                    <Switch
+                        id={`${idPrefix}_manage_stock`}
+                        label="Manage Stock"
+                        checked={!!formData.manage_stock}
+                        onCheckedChange={(checked) => setFormData({ ...formData, manage_stock: checked })}
+                    />
+                    <Switch
+                        id={`${idPrefix}_featured`}
+                        label="Featured Product"
+                        checked={!!formData.featured}
+                        onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
+                    />
+                    <Switch
+                        id={`${idPrefix}_is_active`}
+                        label="Active"
+                        checked={!!formData.is_active}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                    />
                 </div>
             </div>
 
@@ -238,28 +227,20 @@ const ProductForm = ({
                     </div>
                 </div>
 
-                {/* Checkboxes - Policies */}
-                <div className="flex flex-wrap gap-4 pt-1">
-                    <label htmlFor={`${idPrefix}_is_returnable`} className="flex items-center gap-2 cursor-pointer select-none">
-                        <input
-                            id={`${idPrefix}_is_returnable`}
-                            type="checkbox"
-                            checked={!!formData.is_returnable}
-                            onChange={(e) => setFormData({ ...formData, is_returnable: e.target.checked })}
-                            className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
-                        />
-                        <span className="text-sm">Returnable</span>
-                    </label>
-                    <label htmlFor={`${idPrefix}_is_exchangeable`} className="flex items-center gap-2 cursor-pointer select-none">
-                        <input
-                            id={`${idPrefix}_is_exchangeable`}
-                            type="checkbox"
-                            checked={!!formData.is_exchangeable}
-                            onChange={(e) => setFormData({ ...formData, is_exchangeable: e.target.checked })}
-                            className="h-4 w-4 text-orange-600 border border-gray-300 rounded focus:ring-orange-500 accent-orange-600 cursor-pointer"
-                        />
-                        <span className="text-sm">Exchangeable</span>
-                    </label>
+                {/* Switches - Policies */}
+                <div className="flex flex-wrap gap-6 pt-1">
+                    <Switch
+                        id={`${idPrefix}_is_returnable`}
+                        label="Returnable"
+                        checked={!!formData.is_returnable}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_returnable: checked })}
+                    />
+                    <Switch
+                        id={`${idPrefix}_is_exchangeable`}
+                        label="Exchangeable"
+                        checked={!!formData.is_exchangeable}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_exchangeable: checked })}
+                    />
                 </div>
             </div>
 
