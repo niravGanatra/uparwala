@@ -38,6 +38,7 @@ import SecurityPage from './pages/SecurityPage';
 import TermsOfUsePage from './pages/TermsOfUsePage';
 import PrivacyPage from './pages/PrivacyPage';
 import FAQPage from './pages/FAQPage';
+import EPRCompliancePage from './pages/EPRCompliancePage';
 
 // Vendor pages (existing old structure)
 import VendorLayout from './layouts/VendorLayout';
@@ -127,6 +128,7 @@ function App() {
                 <Route path="/terms-of-use" element={<TermsOfUsePage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/faq" element={<FAQPage />} />
+                <Route path="/epr-compliance" element={<EPRCompliancePage />} />
               </Route>
 
               {/* Phase 7: NEW Analytics Dashboards - MOVED TO CORRECT LAYOUTS */}
