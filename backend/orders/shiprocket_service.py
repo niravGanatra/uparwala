@@ -242,10 +242,13 @@ class ShiprocketService:
                     # Log mapping
                     print(f"Created Shiprocket Order {data.get('order_id')} for Vendor {vendor.store_name}")
                 else:
-                    print(f"Failed to create Shiprocket Order for Vendor {vendor.store_name}: {response.text}")
+                    error_msg = f"Shiprocket Error: {response.status_code} - {data}"
+                    print(f"Failed to create Shiprocket Order for Vendor {vendor.store_name}: {error_msg}")
+                    raise Exception(error_msg)
 
             except Exception as e:
                 print(f"Exception creating Shiprocket order: {e}")
+                raise
 
         return created_shipments
 
