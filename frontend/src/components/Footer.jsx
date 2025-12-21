@@ -34,7 +34,7 @@ const Footer = () => {
                         <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Consumer Policy</h3>
                         <ul className="space-y-2">
                             <li><Link to="/refund-policy" className="hover:text-white transition-colors text-sm">Cancellation & Returns</Link></li>
-                            <li><Link to="/pages/terms-of-use" className="hover:text-white transition-colors text-sm">Terms of Use</Link></li>
+                            <li><Link to="/terms-of-use" className="hover:text-white transition-colors text-sm">Terms of Use</Link></li>
                             <li><Link to="/security" className="hover:text-white transition-colors text-sm">Security</Link></li>
                             <li><Link to="/pages/privacy" className="hover:text-white transition-colors text-sm">Privacy</Link></li>
                             <li><Link to="/pages/sitemap" className="hover:text-white transition-colors text-sm">Sitemap</Link></li>
