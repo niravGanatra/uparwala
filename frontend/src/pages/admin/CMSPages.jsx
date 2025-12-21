@@ -1,20 +1,26 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import 'react-quill/dist/quill.snow.css';
 import {
     FileText, Plus, Edit, Trash2, Save, X, Eye, Globe, CheckCircle
 } from 'lucide-react';
 
-// Lazy load ReactQuill to prevent SSR/hydration issues
-const ReactQuill = lazy(() => import('react-quill'));
+// Dynamically import ReactQuill only on client side
+let ReactQuill = null;
+if (typeof window !== 'undefined') {
+    import('react-quill').then((mod) => {
+        ReactQuill = mod.default;
+    });
+    import('react-quill/dist/quill.snow.css');
+}
 
 const CMSPages = () => {
     const [pages, setPages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingPage, setEditingPage] = useState(null);
+    const [editorReady, setEditorReady] = useState(false);
 
     // Form states
     const [formData, setFormData] = useState({
@@ -28,6 +34,16 @@ const CMSPages = () => {
 
     useEffect(() => {
         fetchPages();
+        // Load editor after mount
+        if (typeof window !== 'undefined') {
+            import('react-quill').then((mod) => {
+                ReactQuill = mod.default;
+                setEditorReady(true);
+            }).catch(err => {
+                console.error('Failed to load editor:', err);
+                toast.error('Failed to load text editor');
+            });
+        }
     }, []);
 
     const fetchPages = async () => {
@@ -285,14 +301,18 @@ const CMSPages = () => {
                                                 Content
                                             </label>
                                             <div className="h-96 mb-12">
-                                                <Suspense fallback={<div className="h-full bg-gray-100 rounded flex items-center justify-center text-gray-500">Loading editor...</div>}>
+                                                {editorReady && ReactQuill ? (
                                                     <ReactQuill
                                                         value={formData.content}
                                                         onChange={(content) => setFormData({ ...formData, content })}
                                                         modules={modules}
                                                         className="h-full"
                                                     />
-                                                </Suspense>
+                                                ) : (
+                                                    <div className="h-full bg-gray-100 rounded flex items-center justify-center text-gray-500">
+                                                        Loading editor...
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
