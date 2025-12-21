@@ -23,8 +23,9 @@ const ShipmentManager = () => {
             // Get orders that are paid but don't have shipments yet
             const response = await api.get('/orders/admin/orders/?status=PROCESSING');
             const orders = response.data.results || response.data;
+            // Include both paid orders and COD orders (which may have 'cod' or 'pending' payment status)
             setPendingOrders(orders.filter(order =>
-                order.payment_status === 'paid' && !order.shipments?.length
+                (order.payment_status === 'paid' || order.payment_method === 'cod') && !order.shipments?.length
             ));
         } catch (error) {
             toast.error('Failed to load pending orders');
@@ -216,8 +217,11 @@ const ShipmentManager = () => {
                                                                 ₹{parseFloat(order.total_amount).toFixed(2)}
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                                    Paid
+                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${order.payment_method === 'cod'
+                                                                        ? 'bg-yellow-100 text-yellow-800'
+                                                                        : 'bg-green-100 text-green-800'
+                                                                    }`}>
+                                                                    {order.payment_method === 'cod' ? 'COD' : 'Paid'}
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
