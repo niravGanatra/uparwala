@@ -204,8 +204,13 @@ const ShipmentManager = () => {
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                                 #{order.id}
                                                             </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                                {order.user_email}
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="text-sm font-medium text-gray-900">
+                                                                    {order.shipping_address_data?.full_name || order.user?.username || 'N/A'}
+                                                                </div>
+                                                                <div className="text-sm text-gray-500">
+                                                                    {order.user?.email || order.shipping_address_data?.phone || ''}
+                                                                </div>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                                 ₹{parseFloat(order.total_amount).toFixed(2)}
