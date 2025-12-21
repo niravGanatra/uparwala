@@ -198,12 +198,21 @@ body {
     outline-offset: 2px;
 }
 
-/* Disable native appearance for better customization */
+/* Disable native appearance for better customization - but NOT for checkboxes/radios */
 button,
-input,
+input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
+}
+
+/* Ensure checkboxes and radios maintain their native appearance and are clickable */
+input[type="checkbox"],
+input[type="radio"] {
+    -webkit-appearance: checkbox;
+    -moz-appearance: checkbox;
+    appearance: auto;
+    cursor: pointer;
 }
