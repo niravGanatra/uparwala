@@ -44,8 +44,8 @@ const CommissionSettings = () => {
     };
 
     const handleSave = async (categoryId) => {
-        if (!editRate || editRate < 2 || editRate > 10) {
-            toast.error('Commission rate must be between 2 and 10');
+        if (!editRate || editRate < 0 || editRate > 100) {
+            toast.error('Commission rate must be between 0 and 100');
             return;
         }
 
@@ -70,7 +70,7 @@ const CommissionSettings = () => {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Category Commission Settings</h1>
-                    <p className="text-sm md:text-base text-gray-600 mt-1">Manage commission rates for product categories (2-10%)</p>
+                    <p className="text-sm md:text-base text-gray-600 mt-1">Manage commission rates for product categories</p>
                 </div>
 
                 {/* Category Commission Table */}
@@ -141,8 +141,8 @@ const CommissionSettings = () => {
                                                     <div className="flex items-center gap-2">
                                                         <input
                                                             type="number"
-                                                            min="2"
-                                                            max="10"
+                                                            min="0"
+                                                            max="100"
                                                             step="0.01"
                                                             value={editRate}
                                                             onChange={(e) => setEditRate(e.target.value)}
@@ -197,7 +197,7 @@ const CommissionSettings = () => {
                         <div className="flex items-start gap-2">
                             <Percent className="w-5 h-5 text-blue-600 mt-0.5" />
                             <div className="text-sm text-gray-700">
-                                <p className="font-medium">Commission Rate Range: 2% - 10%</p>
+                                <p className="font-medium">Commission Rate Range: 0% - 100%</p>
                                 <p className="text-gray-600 mt-1">
                                     Commission rates are applied to all products within each category.
                                     The commission is calculated based on the product's sale price.

@@ -52,12 +52,12 @@ class CategoryCommissionUpdateView(APIView):
             try:
                 from decimal import Decimal
                 commission_rate = Decimal(str(commission_rate))
-                if commission_rate < Decimal('2.00') or commission_rate > Decimal('10.00'):
+                if commission_rate < Decimal('0.00') or commission_rate > Decimal('100.00'):
                     raise ValueError()
                 category.commission_rate = commission_rate
             except (ValueError, Exception):
                 return Response(
-                    {'error': 'Commission rate must be between 2 and 10'},
+                    {'error': 'Commission rate must be between 0 and 100'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
