@@ -160,7 +160,7 @@ const HomePage = () => {
             <section className="py-8 md:py-12 bg-slate-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h2 className="text-2xl font-bold text-slate-900 mb-6 md:mb-8 text-center">Shop by Category</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3 md:gap-4 justify-items-center">
+                    <div className="flex flex-wrap justify-center gap-3 md:gap-4">
                         {homepageData.featured_categories.map((category, idx) => {
                             const IconComponent = iconMap[category.icon] || Package;
                             return (
@@ -171,10 +171,11 @@ const HomePage = () => {
                                     viewport={{ once: true }}
                                     transition={{ delay: idx * 0.05 }}
                                     whileHover={{ y: -5 }}
+                                    className="w-[calc(50%-6px)] sm:w-[140px] md:w-[150px]"
                                 >
                                     <Link
                                         to={category.link_url}
-                                        className="block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all group active:scale-95 min-h-[120px] sm:min-h-[140px]"
+                                        className="block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all group active:scale-95 h-full"
                                     >
                                         <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4 sm:p-6">
                                             {category.image ? (
