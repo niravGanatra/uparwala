@@ -49,28 +49,30 @@ const MainLayout = () => {
         <div className="min-h-screen flex flex-col">
             <header className="border-b bg-white sticky top-0 z-50 shadow-sm">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <Link to="/" className="text-2xl font-bold text-orange-600 hover:text-orange-700 transition-colors">
+                    <Link
+                        to="/"
+                        className="text-2xl font-bold text-orange-600 hover:text-orange-700 transition-colors outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 rounded"
+                    >
                         Uparwala
                     </Link>
 
 
-                    <nav className="hidden md:flex items-center space-x-6">
-                        <Link to="/" className="text-sm font-medium hover:text-orange-600 transition-colors">Home</Link>
-                        <Link to="/products" className="text-sm font-medium hover:text-orange-600 transition-colors">All Products</Link>
+                    <nav className="hidden md:flex items-center space-x-5">
+                        <Link to="/products" className="text-sm font-medium hover:text-orange-600 transition-colors whitespace-nowrap">All Products</Link>
 
                         {/* All Categories with show_in_menu = true */}
                         {categories.map(category => (
                             <Link
                                 key={category.id}
                                 to={`/category/${category.slug}`}
-                                className="text-sm font-medium hover:text-orange-600 transition-colors"
+                                className="text-sm font-medium hover:text-orange-600 transition-colors whitespace-nowrap"
                             >
                                 {category.name}
                             </Link>
                         ))}
 
                         {user && user.is_vendor && (
-                            <Link to="/vendor/dashboard" className="text-sm font-medium hover:text-orange-600 transition-colors">Dashboard</Link>
+                            <Link to="/vendor/dashboard" className="text-sm font-medium hover:text-orange-600 transition-colors whitespace-nowrap">Dashboard</Link>
                         )}
                     </nav>
 
