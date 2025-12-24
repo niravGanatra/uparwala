@@ -91,7 +91,57 @@ function App() {
             <AnalyticsTracker />
             <Toaster position="top-right" />
             <Routes>
-              {/* ... routes ... */}
+
+              {/* Main App Routes */}
+              <Route path="/" element={<MainLayout />}>
+                <Route index element={<HomePage />} />
+                <Route path="login" element={<LoginPage />} />
+                <Route path="register" element={<RegisterPage />} />
+                <Route path="vendor/register" element={<VendorRegistrationPage />} />
+
+                {/* Product Routes */}
+                <Route path="products" element={<ProductListingPage />} />
+                <Route path="products/:slug" element={<ProductDetailPage />} />
+                <Route path="category/:slug" element={<CategoryPage />} />
+                <Route path="compare" element={<ProductComparison />} />
+
+                {/* Cart & Checkout */}
+                <Route path="cart" element={<CartPage />} />
+
+                {/* CMS Pages */}
+                <Route path="about" element={<CMSPage slug="about-us" />} />
+                <Route path="contact" element={<CMSPage slug="contact-us" />} />
+                <Route path="refund-policy" element={<RefundPolicyPage />} />
+                <Route path="security" element={<SecurityPage />} />
+                <Route path="terms-of-use" element={<TermsOfUsePage />} />
+                <Route path="privacy-policy" element={<PrivacyPage />} />
+                <Route path="faq" element={<FAQPage />} />
+                <Route path="epr-compliance" element={<EPRCompliancePage />} />
+                <Route path="pages/:slug" element={<CMSPage />} />
+
+                {/* Protected User Routes */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="checkout" element={<Checkout />} />
+                  <Route path="order-confirmation" element={<OrderConfirmation />} />
+                  <Route path="profile" element={<ProfileSettings />} />
+                  <Route path="orders" element={<OrdersPage />} />
+                  <Route path="orders/:id" element={<OrderDetail />} />
+                  <Route path="tickets" element={<OrderTracking />} />
+                  <Route path="return-request" element={<RequestReturn />} />
+                  <Route path="wishlist" element={<Wishlist />} />
+                </Route>
+              </Route>
+
+              {/* Vendor Routes */}
+              <Route path="/vendor" element={<VendorLayout />}>
+                <Route path="dashboard" element={<VendorDashboard />} />
+                <Route path="products" element={<VendorProducts />} />
+                <Route path="orders" element={<VendorOrders />} />
+                <Route path="wallet" element={<VendorWalletEnhanced />} /> {/* Updated to Enhanced Wallet */}
+                <Route path="bulk-upload" element={<BulkUpload />} />
+                <Route path="settings" element={<VendorSettings />} />
+                <Route path="analytics" element={<VendorAnalytics />} />
+              </Route>
 
               {/* Admin Routes (Old Structure + New Dashboard) */}
               <Route path="/admin" element={<AdminLayout />}>
