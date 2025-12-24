@@ -162,3 +162,94 @@ class DashboardMetricsView(views.APIView):
         }
         
         return Response(data)
+
+
+class PlatformMetricsView(views.APIView):
+    """
+    GET /analytics/admin/platform-metrics/
+    Returns high-level platform statistics for the admin dashboard.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        from vendors.models import VendorProfile
+        
+        today = timezone.now().date()
+        
+        # Totals
+        total_users = User.objects.count()
+        total_vendors = VendorProfile.objects.count()
+        total_orders = Order.objects.count()
+        total_revenue = Order.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+        
+        # Today's metrics
+        orders_today = Order.objects.filter(created_at__date=today)
+        today_orders = orders_today.count()
+        today_revenue = orders_today.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+        
+        data = {
+            'total_users': total_users,
+            'total_vendors': total_vendors,
+            'total_orders': total_orders,
+            'total_revenue': total_revenue,
+            'today_orders': today_orders,
+            'today_revenue': today_revenue
+        }
+        return Response(data)
+
+
+class TopSellersView(views.APIView):
+    """
+    GET /analytics/admin/top-sellers/?limit=10
+    Returns top performing vendors by revenue.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        from vendors.models import VendorProfile
+        limit = int(request.query_params.get('limit', 5))
+        
+        # Calculate vendor revenue from OrderItems
+        # We start from VendorProfile
+        vendors = VendorProfile.objects.annotate(
+            total_revenue=Sum(F('order_items__price') * F('order_items__quantity')),
+            total_orders=Count('order_items__order', distinct=True)
+        ).order_by('-total_revenue')[:limit]
+        
+        data = []
+        for v in vendors:
+            data.append({
+                'id': v.id,
+                'store_name': v.store_name,
+                'total_revenue': v.total_revenue or 0,
+                'total_orders': v.total_orders
+            })
+            
+        return Response(data)
+
+
+class CategoryGrowthView(views.APIView):
+    """
+    GET /analytics/admin/category-growth/
+    Returns category performance by units sold.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        from products.models import Category
+        
+        # Annotate categories with total sold units
+        categories = Category.objects.annotate(
+            total_sold=Sum('products__orderitem__quantity'),
+            total_products=Count('products', distinct=True)
+        ).filter(total_sold__gt=0).order_by('-total_sold')[:10]
+        
+        data = []
+        for c in categories:
+            data.append({
+                'name': c.name,
+                'total_sold': c.total_sold or 0,
+                'total_products': c.total_products
+            })
+            
+        return Response(data)
