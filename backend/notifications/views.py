@@ -70,6 +70,7 @@ class TestEmailView(APIView):
                     'user': settings.EMAIL_HOST_USER,
                     'password_configured': bool(settings.EMAIL_HOST_PASSWORD),
                     'use_tls': settings.EMAIL_USE_TLS,
+                    'use_ssl': settings.EMAIL_USE_SSL,
                 }
             }
             return Response(debug_info, status=500)
