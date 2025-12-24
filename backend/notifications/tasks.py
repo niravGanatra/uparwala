@@ -31,3 +31,17 @@ def send_notification_email(template_name, recipient_email, context):
     except Exception as e:
         logger.error(f"Failed to send email: {str(e)}")
         return False
+
+@shared_task
+def send_sms_task(to_number, body):
+    """Async task to send SMS"""
+    from .twilio_service import TwilioService
+    service = TwilioService()
+    return service.send_sms(to_number, body)
+
+@shared_task
+def send_whatsapp_task(to_number, body):
+    """Async task to send WhatsApp message"""
+    from .twilio_service import TwilioService
+    service = TwilioService()
+    return service.send_whatsapp(to_number, body)

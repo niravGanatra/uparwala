@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import api from '../services/api';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 const SearchBar = ({ onSearch, showFilters = true }) => {
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [showFilterPanel, setShowFilterPanel] = useState(false);
+    const { trackEvent } = useAnalytics();
     const [filters, setFilters] = useState({
         category: '',
         min_price: '',
@@ -52,6 +54,7 @@ const SearchBar = ({ onSearch, showFilters = true }) => {
     const handleSearch = (e) => {
         e.preventDefault();
         setShowSuggestions(false);
+        trackEvent('search', { query, results_count: 0 });
         onSearch({ q: query, ...filters });
     };
 

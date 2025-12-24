@@ -10,15 +10,19 @@ import api from '../services/api';
 import CODChecker from '../components/CODChecker';
 import GiftWrapSelector from '../components/GiftWrapSelector';
 
+import { useAnalytics } from '../hooks/useAnalytics';
+
 const CartPage = () => {
     const { cart, fetchCart, removeFromCart, loading, clearCart } = useCart();
     const navigate = useNavigate();
     const [selectedItems, setSelectedItems] = useState([]);
+    const { trackEvent } = useAnalytics();
 
     useEffect(() => {
         fetchCart();
     }, []);
 
+    // ... existing useEffects (auto-select) ...
     // Auto-select all items when cart loads
     useEffect(() => {
         if (cart && cart.items) {
@@ -39,7 +43,8 @@ const CartPage = () => {
             }, 0);
     };
 
-    // Helper to get item price details
+    // ... getItemPrice, toggleSelectAll, toggleItemSelection ...
+
     const getItemPrice = (item) => {
         if (item.product.active_deal) {
             return {
@@ -78,6 +83,13 @@ const CartPage = () => {
             toast.error('Please select at least one item to checkout');
             return;
         }
+
+        const totalValue = calculateTotal();
+        trackEvent('initiate_checkout', {
+            cart_value: totalValue,
+            item_count: selectedItems.length,
+            selected_items: selectedItems
+        });
 
         // Navigate to checkout with selected item IDs
         navigate('/checkout', {

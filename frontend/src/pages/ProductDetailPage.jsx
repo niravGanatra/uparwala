@@ -15,6 +15,8 @@ import NotifyMeModal from '../components/NotifyMeModal';
 
 import ImageGallery from '../components/ImageGallery';
 
+import { useAnalytics } from '../hooks/useAnalytics';
+
 const ProductDetailPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
@@ -24,17 +26,18 @@ const ProductDetailPage = () => {
     const [showNotifyModal, setShowNotifyModal] = useState(false);
     const { user } = useAuth();
     const { addToCart, loading: cartLoading } = useCart();
+    const { trackEvent } = useAnalytics();
 
     useEffect(() => {
+        // ... existing fetch logic ...
         const fetchProduct = async () => {
             try {
-                console.log('Fetching product details for slug:', slug);
+                // console.log('Fetching product details for slug:', slug);
                 const response = await api.get(`/products/${slug}/`);
-                console.log('Fetch response:', response);
+                // console.log('Fetch response:', response);
                 setProduct(response.data);
             } catch (error) {
                 console.error('Failed to fetch product:', error);
-                console.error('Error details:', error.response?.data);
                 toast.error('Failed to load product');
             } finally {
                 setLoading(false);
@@ -48,10 +51,19 @@ const ProductDetailPage = () => {
     // Track product view
     useEffect(() => {
         if (product) {
+            // New Analytics System
+            trackEvent('product_view', {
+                product_id: product.id,
+                price: product.price,
+                category: product.category,
+                name: product.name
+            });
+
+            // Old Logic (Keep for backward compatibility)
             api.post(`/products/${product.id}/track-view/`)
                 .catch(err => console.error('Failed to track view:', err));
         }
-    }, [product]);
+    }, [product, trackEvent]);
 
     const handleAddToCart = async () => {
         if (!user) {
@@ -59,6 +71,15 @@ const ProductDetailPage = () => {
             navigate('/login');
             return;
         }
+
+        // Track Add to Cart
+        trackEvent('add_to_cart', {
+            product_id: product.id,
+            price: product.price,
+            quantity: quantity,
+            name: product.name
+        });
+
         await addToCart(product.id, quantity);
     };
 

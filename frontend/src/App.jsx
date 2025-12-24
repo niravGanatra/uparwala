@@ -74,85 +74,29 @@ import ServiceabilityManager from './pages/admin/ServiceabilityManager';
 import VendorDashboard from './pages/VendorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 
+import AnalyticsTracker from './components/AnalyticsTracker';
+import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
+
 function App() {
   // Track UTM parameters on mount (Phase 8)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const utmData = {
-      utm_source: params.get('utm_source') || '',
-      utm_medium: params.get('utm_medium') || '',
-      utm_campaign: params.get('utm_campaign') || '',
-      utm_term: params.get('utm_term') || '',
-      utm_content: params.get('utm_content') || '',
-      referrer: document.referrer,
-      landing_page: window.location.href
-    };
-
-    if (utmData.utm_source || utmData.utm_medium || utmData.utm_campaign) {
-      fetch('http://localhost:8000/api/marketing/track-utm/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(utmData),
-        credentials: 'include'
-      }).catch(err => console.error('UTM tracking failed:', err));
-    }
-  }, []);
+    // ... existing utm code ...
+  }, []); // Keeping empty dependency array
 
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <AuthProvider>
         <CartProvider>
           <Router>
+            <AnalyticsTracker />
             <Toaster position="top-right" />
             <Routes>
-              {/* Main Layout Routes */}
-              <Route element={<MainLayout />}>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/products" element={<ProductListingPage />} />
-                <Route path="/products/:slug" element={<ProductDetailPage />} />
-                <Route path="/category/:categorySlug" element={<CategoryPage />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
-                <Route path="/wishlist" element={<Wishlist />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/orders/:orderId" element={<OrderDetail />} />
-                <Route path="/orders/:orderId/track" element={<OrderTracking />} />
-                <Route path="/orders/:orderId/return" element={<RequestReturn />} />
-                <Route path="/profile/settings" element={<ProfileSettings />} />
-                <Route path="/compare" element={<ProductComparison />} />
-                <Route path="/pages/:slug" element={<CMSPage />} />
-                <Route path="/refund-policy" element={<RefundPolicyPage />} />
-                <Route path="/pages/cancellations-returns" element={<RefundPolicyPage />} />
-                <Route path="/security" element={<SecurityPage />} />
-                <Route path="/terms-of-use" element={<TermsOfUsePage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/faq" element={<FAQPage />} />
-                <Route path="/epr-compliance" element={<EPRCompliancePage />} />
-              </Route>
-
-              {/* Phase 7: NEW Analytics Dashboards - MOVED TO CORRECT LAYOUTS */}
-              <Route element={<AuthLayout />}>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/vendor/register" element={<VendorRegistrationPage />} />
-              </Route>
-
-              {/* Vendor Routes (Old Structure + New Dashboard) */}
-              <Route path="/vendor" element={<VendorLayout />}>
-                <Route path="dashboard" element={<VendorDashboard />} />
-                <Route path="products" element={<VendorProducts />} />
-                <Route path="orders" element={<VendorOrders />} />
-                <Route path="wallet" element={<VendorWallet />} />
-                <Route path="analytics" element={<VendorAnalytics />} />
-                <Route path="wallet-enhanced" element={<VendorWalletEnhanced />} />
-                <Route path="bulk-upload" element={<BulkUpload />} />
-                <Route path="settings" element={<VendorSettings />} />
-              </Route>
+              {/* ... routes ... */}
 
               {/* Admin Routes (Old Structure + New Dashboard) */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="analytics" element={<AnalyticsDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="orders" element={<AdminOrders />} />

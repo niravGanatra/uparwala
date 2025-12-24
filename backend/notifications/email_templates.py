@@ -45,6 +45,47 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
+        'order_out_for_delivery': {
+            'subject': f"Out for Delivery: Order #{context.get('order_id')}",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #ea580c;">Out for Delivery</h2>
+                    <p>Hi {context.get('customer_name')},</p>
+                    <p>Your order is out for delivery and will arrive today!</p>
+                    
+                    <div style="background-color: #fff7ed; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #fed7aa;">
+                        <p><strong>Order ID:</strong> #{context.get('order_id')}</p>
+                        <p>Please ensure someone is available to receive the package.</p>
+                    </div>
+                    
+                    <a href="{settings.FRONTEND_URL}/orders/{context.get('order_id')}" 
+                       style="background-color: #ea580c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                        View Order
+                    </a>
+                </div>
+            """
+        },
+        'order_delivered': {
+            'subject': f"Delivered: Order #{context.get('order_id')}",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #16a34a;">Order Delivered</h2>
+                    <p>Hi {context.get('customer_name')},</p>
+                    <p>Your order has been delivered successfully. We hope you love it!</p>
+                    
+                    <div style="background-color: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #bbf7d0;">
+                        <p><strong>Order ID:</strong> #{context.get('order_id')}</p>
+                    </div>
+                    
+                    <p>If you have any issues, please contact support.</p>
+                    
+                    <a href="{settings.FRONTEND_URL}/orders/{context.get('order_id')}" 
+                       style="background-color: #16a34a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Rate & Review
+                    </a>
+                </div>
+            """
+        },
         'payout_approved': {
             'subject': "Payout Request Approved",
             'content': f"""
