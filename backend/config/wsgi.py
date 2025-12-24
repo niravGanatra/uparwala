@@ -11,6 +11,13 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+# Load .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # Force settings module to avoid Railway variable override
 os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings'
 

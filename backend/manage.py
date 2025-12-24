@@ -3,9 +3,15 @@
 import os
 import sys
 
-
 def main():
     """Run administrative tasks."""
+    # Load .env file
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
+
     # Force settings module to avoid Railway variable override
     os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings'
     try:
