@@ -54,7 +54,24 @@ class TestEmailView(APIView):
                 'recipient': email
             })
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            from django.conf import settings
+            import os
+            
+            # Mask password for security
+            pwd = settings.EMAIL_HOST_PASSWORD
+            masked_pwd = f"{pwd[:2]}...{pwd[-2:]}" if pwd and len(pwd) > 4 else "NOT SET" if not pwd else "***"
+            
+            debug_info = {
+                'error': str(e),
+                'config': {
+                    'host': settings.EMAIL_HOST,
+                    'port': settings.EMAIL_PORT,
+                    'user': settings.EMAIL_HOST_USER,
+                    'password_configured': bool(settings.EMAIL_HOST_PASSWORD),
+                    'use_tls': settings.EMAIL_USE_TLS,
+                }
+            }
+            return Response(debug_info, status=500)
 class TestWhatsAppView(APIView):
     """Test endpoint to trigger a WhatsApp message (Admin only)"""
     permission_classes = [IsAdminUser]

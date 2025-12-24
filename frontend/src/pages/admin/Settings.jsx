@@ -207,7 +207,14 @@ const AdminSettings = () => {
                                                 });
                                                 alert('Test email sent successfully!');
                                             } catch (e) {
-                                                const msg = e.response?.data?.error || 'Error sending test email';
+                                                const errData = e.response?.data || {};
+                                                let msg = errData.error || 'Error sending test email';
+
+                                                // Add config info to alert if available
+                                                if (errData.config) {
+                                                    const conf = errData.config;
+                                                    msg += `\n\nDebug Info:\nHost: ${conf.host}:${conf.port}\nUser: ${conf.user}\nTLS: ${conf.use_tls}\nPassword Set: ${conf.password_configured}`;
+                                                }
                                                 alert('Failed: ' + msg);
                                             }
                                         }}
