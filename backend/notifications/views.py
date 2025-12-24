@@ -42,8 +42,9 @@ class TestEmailView(APIView):
             force_sync = request.data.get('sync', False)
             
             if force_sync:
-                result = send_notification_email(template, email, context)
-                status = 'sent' if result else 'failed'
+                # Pass raise_error=True to catch exceptions here
+                send_notification_email(template, email, context, raise_error=True)
+                status = 'sent'
             else:
                 send_notification_email.delay(template, email, context)
                 status = 'queued'

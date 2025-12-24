@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 @shared_task
-def send_notification_email(template_name, recipient_email, context):
+def send_notification_email(template_name, recipient_email, context, raise_error=False):
     """
     Async task to send notification emails
     """
@@ -15,6 +15,8 @@ def send_notification_email(template_name, recipient_email, context):
         template = get_email_template(template_name, context)
         if not template:
             logger.error(f"Template {template_name} not found")
+            if raise_error:
+                raise ValueError(f"Template {template_name} not found")
             return False
             
         send_mail(
@@ -30,6 +32,8 @@ def send_notification_email(template_name, recipient_email, context):
         
     except Exception as e:
         logger.error(f"Failed to send email: {str(e)}")
+        if raise_error:
+            raise e
         return False
 
 @shared_task
