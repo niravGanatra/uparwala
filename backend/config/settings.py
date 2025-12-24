@@ -385,6 +385,9 @@ EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 EMAIL_TIMEOUT = 10  # Timeout in seconds to prevent server hang
 
+# Resend API Configuration (Preferred over SMTP on Railway/PaaS)
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
+
 # Frontend URL for email links
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 

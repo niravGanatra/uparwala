@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 @shared_task
 def send_notification_email(template_name, recipient_email, context, raise_error=False):
     """
-    Async task to send notification emails
+    Async task to send notification emails via Resend API.
+    Falls back to SMTP if Resend is not configured.
     """
     try:
         template = get_email_template(template_name, context)
@@ -18,15 +19,28 @@ def send_notification_email(template_name, recipient_email, context, raise_error
             if raise_error:
                 raise ValueError(f"Template {template_name} not found")
             return False
+        
+        # Prefer Resend if API key is configured (works on Railway/PaaS)
+        resend_api_key = getattr(settings, 'RESEND_API_KEY', '')
+        
+        if resend_api_key:
+            from .resend_service import send_email_via_resend
+            send_email_via_resend(
+                to_email=recipient_email,
+                subject=template['subject'],
+                html_content=template['content']
+            )
+        else:
+            # Fallback to SMTP (for local dev)
+            send_mail(
+                subject=template['subject'],
+                message='',
+                html_message=template['content'],
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[recipient_email],
+                fail_silently=False,
+            )
             
-        send_mail(
-            subject=template['subject'],
-            message='',  # Plain text version (optional)
-            html_message=template['content'],
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[recipient_email],
-            fail_silently=False,
-        )
         logger.info(f"Email sent to {recipient_email} using template {template_name}")
         return True
         
