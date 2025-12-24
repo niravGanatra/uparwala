@@ -55,3 +55,33 @@ class TestEmailView(APIView):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+class TestWhatsAppView(APIView):
+    """Test endpoint to trigger a WhatsApp message (Admin only)"""
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        phone = request.data.get('phone')
+        message = request.data.get('message', 'This is a test message from Uparwala.')
+        
+        if not phone:
+            return Response({'error': 'Phone number is required'}, status=400)
+            
+        try:
+            # Import service here to avoid circular imports if any
+            from .twilio_service import TwilioService
+            service = TwilioService()
+            
+            # Send message synchronously for testing
+            sid = service.send_whatsapp(phone, message)
+            
+            if sid:
+                return Response({
+                    'message': 'WhatsApp test sent successfully',
+                    'sid': sid,
+                    'recipient': phone
+                })
+            else:
+                return Response({'error': 'Failed to send WhatsApp message'}, status=500)
+                
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)

@@ -6,6 +6,7 @@ import {
     Settings as SettingsIcon, Globe, Mail, CreditCard, Bell,
     Truck, Gift, LayoutGrid
 } from 'lucide-react';
+import api from '../../services/api';
 import CODManager from '../../components/admin/settings/CODManager';
 import GiftManager from '../../components/admin/settings/GiftManager';
 
@@ -155,6 +156,98 @@ const AdminSettings = () => {
                                         <input type="checkbox" defaultChecked className="w-4 h-4" />
                                     </div>
                                     <Button>Save Notification Settings</Button>
+                                </CardContent>
+                            </Card>
+
+                            {/* Test Notifications */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Bell className="h-5 w-5" />
+                                        Test Notifications
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Recipient Email</label>
+                                            <Input
+                                                id="test-email-recipient"
+                                                placeholder="user@example.com"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Template</label>
+                                            <select
+                                                id="test-email-template"
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <option value="welcome_email">Welcome Email</option>
+                                                <option value="order_confirmation">Order Confirmation</option>
+                                                <option value="order_shipped">Order Shipped</option>
+                                                <option value="order_out_for_delivery">Out for Delivery</option>
+                                                <option value="order_delivered">Order Delivered</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        onClick={async () => {
+                                            const email = document.getElementById('test-email-recipient').value;
+                                            const template = document.getElementById('test-email-template').value;
+                                            if (!email) {
+                                                alert('Please enter an email');
+                                                return;
+                                            }
+                                            try {
+                                                const res = await api.post('/notifications/test-email/', {
+                                                    email,
+                                                    template,
+                                                    sync: true
+                                                });
+                                                alert('Test email sent successfully!');
+                                            } catch (e) {
+                                                const msg = e.response?.data?.error || 'Error sending test email';
+                                                alert('Failed: ' + msg);
+                                            }
+                                        }}
+                                    >
+                                        Send Test Email
+                                    </Button>
+
+                                    <div className="border-t pt-4 mt-4">
+                                        <h3 className="text-sm font-medium mb-4">Test WhatsApp</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label className="block text-sm font-medium mb-2">Phone Number</label>
+                                                <Input
+                                                    id="test-whatsapp-phone"
+                                                    placeholder="+919876543210 (with country code)"
+                                                />
+                                            </div>
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            onClick={async () => {
+                                                const phone = document.getElementById('test-whatsapp-phone').value;
+                                                if (!phone) {
+                                                    alert('Please enter a phone number');
+                                                    return;
+                                                }
+                                                try {
+                                                    const res = await api.post('/notifications/test-whatsapp/', {
+                                                        phone
+                                                    });
+                                                    alert('Test WhatsApp message sent successfully!');
+                                                } catch (e) {
+                                                    const msg = e.response?.data?.error || 'Error sending test message';
+                                                    alert('Failed: ' + msg);
+                                                }
+                                            }}
+                                        >
+                                            Send Test WhatsApp
+                                        </Button>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
