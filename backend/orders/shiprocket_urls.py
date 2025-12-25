@@ -29,9 +29,7 @@ urlpatterns = [
     
     # Serviceability
     path('serviceability/', check_product_serviceability, name='check-serviceability'),
-]
-
-# Webhook URL (separate from orders)
-webhook_urlpatterns = [
+    
+    # Webhook (for Shiprocket to call)
     path('shiprocket/', shiprocket_webhook, name='shiprocket-webhook'),
 ]
