@@ -51,13 +51,15 @@ const OrderDetail = () => {
     }
 
     const statusSteps = [
-        { key: 'pending', label: 'Order Placed', icon: CheckCircle },
-        { key: 'processing', label: 'Processing', icon: Package },
-        { key: 'shipped', label: 'Shipped', icon: Truck },
-        { key: 'delivered', label: 'Delivered', icon: CheckCircle }
+        { key: 'PENDING', label: 'Order Placed', icon: CheckCircle },
+        { key: 'PROCESSING', label: 'Processing', icon: Package },
+        { key: 'SHIPPED', label: 'Shipped', icon: Truck },
+        { key: 'DELIVERED', label: 'Delivered', icon: CheckCircle }
     ];
 
     const currentStepIndex = statusSteps.findIndex(step => step.key === order.status);
+    // If status not found in steps (e.g., CANCELLED), show as step 0
+    const activeStepIndex = currentStepIndex >= 0 ? currentStepIndex : 0;
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -98,13 +100,13 @@ const OrderDetail = () => {
                             <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200">
                                 <div
                                     className="h-1 bg-blue-600 transition-all"
-                                    style={{ width: `${(currentStepIndex / (statusSteps.length - 1)) * 100}%` }}
+                                    style={{ width: `${(activeStepIndex / (statusSteps.length - 1)) * 100}%` }}
                                 />
                             </div>
                             <div className="relative flex justify-between">
                                 {statusSteps.map((step, index) => {
                                     const Icon = step.icon;
-                                    const isActive = index <= currentStepIndex;
+                                    const isActive = index <= activeStepIndex;
                                     return (
                                         <div key={step.key} className="flex flex-col items-center">
                                             <div
