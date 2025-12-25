@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { User, Save } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import SpiritualLoader from '../components/SpiritualLoader';
 
 const ProfileSettings = () => {
     const [loading, setLoading] = useState(true);
@@ -67,7 +68,7 @@ const ProfileSettings = () => {
     };
 
     if (loading) {
-        return <div className="text-center py-12">Loading...</div>;
+        return <SpiritualLoader size="md" />;
     }
 
     return (
@@ -183,8 +184,8 @@ const ProfileSettings = () => {
                             <label
                                 key={category.id}
                                 className={`flex items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${profile.preferred_categories.includes(category.id)
-                                        ? 'border-blue-600 bg-blue-50'
-                                        : 'border-gray-200 hover:border-blue-300'
+                                    ? 'border-blue-600 bg-blue-50'
+                                    : 'border-gray-200 hover:border-blue-300'
                                     }`}
                             >
                                 <input

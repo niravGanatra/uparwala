@@ -12,6 +12,7 @@ import ProductReviews from '../components/ProductReviews';
 import ProductRecommendations from '../components/ProductRecommendations';
 import ProductQA from '../components/ProductQA';
 import NotifyMeModal from '../components/NotifyMeModal';
+import SpiritualLoader from '../components/SpiritualLoader';
 
 import ImageGallery from '../components/ImageGallery';
 
@@ -84,15 +85,7 @@ const ProductDetailPage = () => {
     };
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center py-12">
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full"
-                />
-            </div>
-        );
+        return <SpiritualLoader size="md" />;
     }
 
     if (!product) return <div className="text-center py-12">Product not found</div>;

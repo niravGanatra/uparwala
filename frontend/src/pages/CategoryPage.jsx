@@ -6,6 +6,7 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
+import SpiritualLoader from '../components/SpiritualLoader';
 
 const CategoryPage = () => {
     const { slug } = useParams(); // Fixed: was 'categorySlug', route uses 'slug'
@@ -109,11 +110,7 @@ const CategoryPage = () => {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-            </div>
-        );
+        return <SpiritualLoader />;
     }
 
     return (

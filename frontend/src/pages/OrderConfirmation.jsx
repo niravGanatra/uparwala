@@ -4,6 +4,7 @@ import api from '../services/api';
 import { motion } from 'framer-motion';
 import { CheckCircle, Package, Truck, MapPin, CreditCard, Home, Calendar, ChevronRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import SpiritualLoader from '../components/SpiritualLoader';
 
 const OrderConfirmation = () => {
     const { orderId } = useParams();
@@ -51,14 +52,7 @@ const OrderConfirmation = () => {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    <p className="text-gray-500 font-medium">Loading your order...</p>
-                </div>
-            </div>
-        );
+        return <SpiritualLoader message="Loading your order..." />;
     }
 
     if (!order) {
@@ -250,7 +244,7 @@ const OrderConfirmation = () => {
                                     {order.payment_method === 'razorpay' ? 'Online Payment' : 'Cash on Delivery'}
                                 </span>
                                 <span className={`px-2 py-1 text-xs font-bold uppercase rounded ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700' :
-                                        order.payment_status === 'cod' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'
+                                    order.payment_status === 'cod' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'
                                     }`}>
                                     {order.payment_status === 'paid' ? 'Paid' : 'Pending'}
                                 </span>

@@ -5,6 +5,7 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import CancelItemModal from '../components/CancelItemModal';
 import PackageList from '../components/PackageList';
+import SpiritualLoader from '../components/SpiritualLoader';
 
 const OrderDetail = () => {
     const { orderId } = useParams();
@@ -30,11 +31,7 @@ const OrderDetail = () => {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-        );
+        return <SpiritualLoader />;
     }
 
     if (!order) {

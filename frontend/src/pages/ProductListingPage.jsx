@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { Search, Filter, X, ShoppingBag, Star } from 'lucide-react';
 import api from '../services/api';
 import ProductCard from '../components/ProductCard';
+import SpiritualLoader from '../components/SpiritualLoader';
 
 const ProductListingPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -225,10 +226,7 @@ const ProductListingPage = () => {
 
                 {/* Products Grid */}
                 {loading ? (
-                    <div className="text-center py-20">
-                        <div className="inline-block w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
-                        <p className="mt-4 text-slate-600">Loading products...</p>
-                    </div>
+                    <SpiritualLoader />
                 ) : products.length === 0 ? (
                     <div className="text-center py-20">
                         <ShoppingBag className="h-16 w-16 text-slate-300 mx-auto mb-4" />

@@ -3,6 +3,7 @@ import { Heart, ShoppingCart, Trash2, Package } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import SpiritualLoader from '../components/SpiritualLoader';
 
 const Wishlist = () => {
     const [wishlist, setWishlist] = useState([]);
@@ -45,11 +46,7 @@ const Wishlist = () => {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-        );
+        return <SpiritualLoader />;
     }
 
     return (
