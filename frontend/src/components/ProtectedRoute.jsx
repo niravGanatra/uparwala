@@ -1,11 +1,12 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import SpiritualLoader from './SpiritualLoader';
 
 export const ProtectedRoute = ({ children, requireVendor = false, requireAdmin = false }) => {
     const { user, loading } = useAuth();
 
     if (loading) {
-        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+        return <SpiritualLoader fullScreen={true} message="Authenticating..." />;
     }
 
     if (!user) {
@@ -20,5 +21,5 @@ export const ProtectedRoute = ({ children, requireVendor = false, requireAdmin =
         return <Navigate to="/" replace />;
     }
 
-    return children;
+    return children ? children : <Outlet />;
 };
