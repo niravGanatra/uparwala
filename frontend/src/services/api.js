@@ -7,6 +7,7 @@ const api = axios.create({
     withCredentials: true, // Critical: Send cookies with requests
     xsrfCookieName: 'csrftoken',
     xsrfHeaderName: 'X-CSRFToken',
+    timeout: 15000, // 15 second timeout for Railway cold starts
     headers: {
         'Content-Type': 'application/json',
     },
@@ -47,7 +48,6 @@ api.interceptors.response.use(
                 // Session expired / No Refresh Token
                 // We do NOT redirect globally, because guests might trigger 401s on protected endpoints
                 // components should handle the error or ProtectedRoute should handle access.
-                return Promise.reject(refreshError);
                 return Promise.reject(refreshError);
             }
         }

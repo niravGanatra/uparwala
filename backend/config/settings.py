@@ -139,7 +139,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR}/db.sqlite3',
-        conn_max_age=600
+        conn_max_age=600,
+        conn_health_checks=True,  # Verify connections before use
     )
 }
 
@@ -350,8 +351,8 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '200/day',
-        'user': '5000/day'
+        'anon': '1000/day',    # Increased from 200 for production traffic
+        'user': '10000/day'    # Increased from 5000 for active users
     }
 }
 

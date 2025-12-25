@@ -5,6 +5,7 @@ import { ShoppingBag, Home, Sparkles, Lamp, Sofa, Frame, Package, Search, Clock,
 import { Button } from '../components/ui/button';
 import api from '../services/api';
 import homepageService from '../services/homepageService';
+import { withRetry } from '../utils/retry';
 import RecentlyViewed from '../components/RecentlyViewed';
 import ProductRecommendations from '../components/ProductRecommendations';
 import ProductCard from '../components/ProductCard';
@@ -14,7 +15,9 @@ const HomePage = () => {
     const [products, setProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
+    const [slowLoading, setSlowLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [retryCount, setRetryCount] = useState(0);
 
     // Homepage data from API
     const [homepageData, setHomepageData] = useState({
@@ -32,15 +35,35 @@ const HomePage = () => {
         fetchProducts();
     }, []);
 
+    // Show "slow loading" message after 3 seconds
+    useEffect(() => {
+        let timer;
+        if (loading) {
+            timer = setTimeout(() => {
+                setSlowLoading(true);
+            }, 3000);
+        } else {
+            setSlowLoading(false);
+        }
+        return () => clearTimeout(timer);
+    }, [loading]);
+
     const fetchHomepageData = async () => {
         try {
             setLoading(true);
-            const data = await homepageService.getHomepageData();
-            setHomepageData(data);
             setError(null);
+
+            // Use retry with exponential backoff for Railway cold starts
+            const data = await withRetry(
+                () => homepageService.getHomepageData(),
+                { maxRetries: 3, baseDelay: 1500 }
+            );
+
+            setHomepageData(data);
+            setRetryCount(0);
         } catch (error) {
-            console.error('Failed to fetch homepage data:', error);
-            setError('Failed to load homepage content');
+            console.error('Failed to fetch homepage data after retries:', error);
+            setError('Unable to load homepage. Please check your connection and try again.');
         } finally {
             setLoading(false);
         }
@@ -48,7 +71,12 @@ const HomePage = () => {
 
     const fetchProducts = async () => {
         try {
-            const response = await api.get('/products/');
+            // Use retry for products too
+            const response = await withRetry(
+                () => api.get('/products/'),
+                { maxRetries: 2, baseDelay: 1000 }
+            );
+
             // Filter out out-of-stock products for trending section
             const inStockProducts = response.data.filter(product =>
                 product.stock_status !== 'outofstock' &&
@@ -57,7 +85,14 @@ const HomePage = () => {
             setProducts(inStockProducts.slice(0, 8));
         } catch (error) {
             console.error('Failed to fetch products:', error);
+            // Don't set error state - homepage can still show without trending products
         }
+    };
+
+    const handleRetry = () => {
+        setRetryCount(prev => prev + 1);
+        fetchHomepageData();
+        fetchProducts();
     };
 
     const handleSearch = (e) => {
@@ -77,22 +112,50 @@ const HomePage = () => {
         'lamp': Lamp
     };
 
-    // Loading state
+    // Loading state with slow loading message
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="h-12 w-12 animate-spin text-yellow-600" />
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-amber-50">
+                <div className="text-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-yellow-600 mx-auto mb-4" />
+                    {slowLoading ? (
+                        <div className="text-slate-600">
+                            <p className="font-medium">Taking longer than usual...</p>
+                            <p className="text-sm mt-1">Please wait while we load the content</p>
+                        </div>
+                    ) : (
+                        <p className="text-slate-500">Loading...</p>
+                    )}
+                </div>
             </div>
         );
     }
 
-    // Error state
+    // Error state with retry button
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-red-600 mb-4">{error}</p>
-                    <Button onClick={fetchHomepageData}>Retry</Button>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-amber-50">
+                <div className="text-center max-w-md mx-auto px-4">
+                    <div className="bg-white rounded-2xl shadow-lg p-8">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <h2 className="text-xl font-bold text-slate-900 mb-2">Connection Issue</h2>
+                        <p className="text-slate-600 mb-6">{error}</p>
+                        <Button
+                            onClick={handleRetry}
+                            className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                        >
+                            Try Again
+                        </Button>
+                        {retryCount > 0 && (
+                            <p className="text-sm text-slate-400 mt-3">
+                                Retry attempt: {retryCount}
+                            </p>
+                        )}
+                    </div>
                 </div>
             </div>
         );
