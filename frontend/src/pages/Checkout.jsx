@@ -15,6 +15,7 @@ const Checkout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
+    console.log('[Checkout] Render. User:', user?.id);
     const selectedItemIds = location.state?.selectedItemIds || [];
     const [step, setStep] = useState(1); // 1: Address, 2: Payment, 3: Review
     const [loading, setLoading] = useState(false);
@@ -120,8 +121,10 @@ const Checkout = () => {
     };
 
     const fetchCart = async () => {
+        console.log('[Checkout] Fetching cart...');
         try {
             const response = await api.get('/orders/cart/');
+            console.log('[Checkout] Cart response:', response.data);
             const allItems = response.data?.items || [];
 
             // Filter items based on selection from cart page
@@ -141,14 +144,16 @@ const Checkout = () => {
 
             // Only redirect if cart is completely empty
             if (filteredItems.length === 0) {
+                console.log('[Checkout] Cart empty, redirecting');
                 toast.error('Your cart is empty');
                 navigate('/cart');
             }
         } catch (error) {
-            console.error('Failed to fetch cart:', error);
+            console.error('[Checkout] Failed to fetch cart:', error);
             toast.error('Failed to load cart');
             setCartItems([]);
         } finally {
+            console.log('[Checkout] Finished loading cart, setting initialLoading false');
             setInitialLoading(false);
         }
     };
