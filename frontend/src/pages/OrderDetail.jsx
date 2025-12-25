@@ -212,25 +212,25 @@ const OrderDetail = () => {
                     <div className="space-y-2">
                         <div className="flex justify-between">
                             <span>Subtotal</span>
-                            <span>₹{order.subtotal?.toFixed(2)}</span>
+                            <span>₹{Number(order.subtotal || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Shipping</span>
-                            <span>₹{order.shipping_amount?.toFixed(2)}</span>
+                            <span>₹{Number(order.shipping_amount || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Tax (GST)</span>
-                            <span>₹{order.tax_amount?.toFixed(2)}</span>
+                            <span>₹{Number(order.tax_amount || 0).toFixed(2)}</span>
                         </div>
-                        {order.discount_amount > 0 && (
+                        {Number(order.discount_amount || 0) > 0 && (
                             <div className="flex justify-between text-green-600">
                                 <span>Discount</span>
-                                <span>-₹{order.discount_amount.toFixed(2)}</span>
+                                <span>-₹{Number(order.discount_amount).toFixed(2)}</span>
                             </div>
                         )}
                         <div className="border-t pt-2 flex justify-between font-bold text-lg">
                             <span>Total</span>
-                            <span className="text-blue-600">₹{order.total_amount.toFixed(2)}</span>
+                            <span className="text-blue-600">₹{Number(order.total_amount || 0).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
