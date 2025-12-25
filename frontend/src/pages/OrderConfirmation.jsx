@@ -8,7 +8,7 @@ import SpiritualLoader from '../components/SpiritualLoader';
 import toast from 'react-hot-toast';
 
 const OrderConfirmation = () => {
-    const { orderId } = useParams();
+    const { id: orderId } = useParams();
     const location = useLocation();
     const isGuest = location.state?.isGuest || false;
     const guestEmail = location.state?.guestEmail || '';
