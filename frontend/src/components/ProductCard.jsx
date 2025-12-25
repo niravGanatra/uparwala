@@ -34,8 +34,25 @@ const ProductCard = ({ product }) => {
             navigate('/login');
             return;
         }
-        await addToCart(product.id, 1);
-        navigate('/checkout');
+
+        try {
+            // Add to cart and get the cart item ID
+            const cartItem = await addToCart(product.id, 1);
+
+            // Small delay to ensure cart state is updated
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Navigate to checkout with the selected item
+            // If cartItem has an id, pass it; otherwise checkout will use full cart
+            if (cartItem && cartItem.id) {
+                navigate('/checkout', { state: { selectedItemIds: [cartItem.id] } });
+            } else {
+                navigate('/checkout');
+            }
+        } catch (error) {
+            console.error('Buy Now failed:', error);
+            toast.error('Failed to proceed to checkout');
+        }
     };
 
     const handleNotifyMe = (e) => {
