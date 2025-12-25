@@ -272,9 +272,10 @@ ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 LOGIN_URL = 'http://localhost:5173/login'
 ACCOUNT_ADAPTER = 'users.adapters.CustomAccountAdapter'
 
-# New Allauth Configuration (Replaces deprecated settings)
+# New Allauth Configuration
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username', 'password1', 'password2']
-ACCOUNT_LOGIN_METHODS = {'email', 'username'}
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_REQUIRED = True
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
 
@@ -363,6 +364,12 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=120),
     'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
 }
+
+# Allauth settings
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # Override JWT user authentication to allow inactive users
 def custom_user_authentication_rule(user):

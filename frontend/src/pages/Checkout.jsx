@@ -344,20 +344,26 @@ const Checkout = () => {
                     handler: async function (paymentResponse) {
                         // Verify payment
                         try {
-                            await api.post('/payments/verify/', {
+                            const verifyResponse = await api.post('/payments/verify/', {
                                 razorpay_order_id: paymentResponse.razorpay_order_id,
                                 razorpay_payment_id: paymentResponse.razorpay_payment_id,
                                 razorpay_signature: paymentResponse.razorpay_signature,
                                 order_id: response.data.order_id
                             });
 
+                            console.log('Payment verification response:', verifyResponse.data);
+
                             toast.success('Payment successful!');
                             // Clear gift data
                             localStorage.removeItem('checkout_gift_data');
+                            // Reset processing state before navigation
+                            setProcessingPayment(false);
                             navigate(`/order-confirmation/${response.data.order_id}`);
                         } catch (error) {
                             console.error('Payment verification failed:', error);
-                            toast.error('Payment verification failed');
+                            console.error('Error response:', error.response?.data);
+                            toast.error(error.response?.data?.error || 'Payment verification failed');
+                            setProcessingPayment(false);
                         }
                     },
                     prefill: prefillData,

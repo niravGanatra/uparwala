@@ -1,8 +1,11 @@
+import logging
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
+
+logger = logging.getLogger(__name__)
 from decimal import Decimal
 
 from .models import Payment, ShippingZone, TaxRate

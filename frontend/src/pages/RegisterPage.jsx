@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
-import api from '../services/api';
+import { register } from '../services/auth';
 import toast from 'react-hot-toast';
 
 const RegisterPage = () => {
@@ -29,7 +29,7 @@ const RegisterPage = () => {
 
         setLoading(true);
         try {
-            await api.post('/auth/registration/', formData);
+            await register(formData);
             toast.success('Registration successful! Please login.');
             navigate('/login');
         } catch (error) {

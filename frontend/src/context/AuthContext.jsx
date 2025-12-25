@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getCurrentUser, login as apiLogin, logout as apiLogout } from '../services/auth';
+import SpiritualLoader from '../components/SpiritualLoader';
 
 const AuthContext = createContext(null);
 
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={{ user, login, logout, loading }}>
-            {!loading && children}
+            {loading ? <SpiritualLoader fullScreen={true} message="Initializing..." /> : children}
         </AuthContext.Provider>
     );
 };
