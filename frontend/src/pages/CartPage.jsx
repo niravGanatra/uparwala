@@ -262,10 +262,10 @@ const CartPage = () => {
                                     <span>₹{calculateTotal().toFixed(2)}</span>
                                 </div>
 
-                                {(cart.discount_amount > 0 || (cart.subtotal - cart.total_amount) > 0) && (
+                                {(Number(cart.discount_amount || 0) > 0 || (Number(cart.subtotal || 0) - Number(cart.total_amount || 0)) > 0) && (
                                     <div className="flex justify-between text-sm text-green-600">
                                         <span>Discount</span>
-                                        <span>-₹{(cart.discount_amount || (cart.subtotal - cart.total_amount)).toFixed(2)}</span>
+                                        <span>-₹{Number(cart.discount_amount || (Number(cart.subtotal || 0) - Number(cart.total_amount || 0))).toFixed(2)}</span>
                                     </div>
                                 )}
 
