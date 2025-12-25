@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Home, Sparkles, Lamp, Sofa, Frame, Package, Search, Clock, Tag, ArrowRight, Loader2 } from 'lucide-react';
@@ -10,6 +10,58 @@ import RecentlyViewed from '../components/RecentlyViewed';
 import ProductRecommendations from '../components/ProductRecommendations';
 import ProductCard from '../components/ProductCard';
 
+// Sanskrit Shlokas for loading screen
+const SANSKRIT_SHLOKAS = [
+    {
+        sanskrit: "ॐ सर्वे भवन्तु सुखिनः",
+        translation: "May all beings be happy"
+    },
+    {
+        sanskrit: "वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ",
+        translation: "O Lord Ganesha, of curved trunk and massive form"
+    },
+    {
+        sanskrit: "ॐ असतो मा सद्गमय",
+        translation: "Lead me from untruth to truth"
+    },
+    {
+        sanskrit: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन",
+        translation: "You have the right to work, but not to the fruits"
+    },
+    {
+        sanskrit: "ॐ शान्तिः शान्तिः शान्तिः",
+        translation: "Om Peace, Peace, Peace"
+    },
+    {
+        sanskrit: "सत्यमेव जयते",
+        translation: "Truth alone triumphs"
+    },
+    {
+        sanskrit: "ॐ भूर्भुवः स्वः",
+        translation: "Om, the three worlds - Earth, Atmosphere, Heaven"
+    },
+    {
+        sanskrit: "लोकाः समस्ताः सुखिनो भवन्तु",
+        translation: "May all the worlds be happy"
+    },
+    {
+        sanskrit: "ॐ नमः शिवाय",
+        translation: "Salutations to Lord Shiva"
+    },
+    {
+        sanskrit: "श्री गणेशाय नमः",
+        translation: "Salutations to Lord Ganesha"
+    },
+    {
+        sanskrit: "ॐ नमो भगवते वासुदेवाय",
+        translation: "Salutations to Lord Vasudeva"
+    },
+    {
+        sanskrit: "यत्र योगेश्वरः कृष्णो यत्र पार्थो धनुर्धरः",
+        translation: "Where there is Krishna, there is victory"
+    }
+];
+
 const HomePage = () => {
     const navigate = useNavigate();
     const [products, setProducts] = useState([]);
@@ -18,6 +70,11 @@ const HomePage = () => {
     const [slowLoading, setSlowLoading] = useState(false);
     const [error, setError] = useState(null);
     const [retryCount, setRetryCount] = useState(0);
+
+    // Random shloka for loading screen (memoized to not change during loading)
+    const randomShloka = useMemo(() => {
+        return SANSKRIT_SHLOKAS[Math.floor(Math.random() * SANSKRIT_SHLOKAS.length)];
+    }, []);
 
     // Homepage data from API
     const [homepageData, setHomepageData] = useState({
@@ -112,19 +169,99 @@ const HomePage = () => {
         'lamp': Lamp
     };
 
-    // Loading state with slow loading message
+    // Loading state with Om symbol and Sanskrit shloka
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-amber-50">
-                <div className="text-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-yellow-600 mx-auto mb-4" />
-                    {slowLoading ? (
-                        <div className="text-slate-600">
-                            <p className="font-medium">Taking longer than usual...</p>
-                            <p className="text-sm mt-1">Please wait while we load the content</p>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
+                <div className="text-center px-6 max-w-md">
+                    {/* Animated Om Symbol */}
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="relative mb-8"
+                    >
+                        {/* Glowing background */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.2, 1],
+                                    opacity: [0.3, 0.6, 0.3]
+                                }}
+                                transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                                className="w-32 h-32 bg-gradient-to-br from-orange-300 to-amber-400 rounded-full blur-xl"
+                            />
                         </div>
-                    ) : (
-                        <p className="text-slate-500">Loading...</p>
+
+                        {/* Om Symbol */}
+                        <motion.div
+                            animate={{
+                                rotate: [0, 5, -5, 0],
+                            }}
+                            transition={{
+                                duration: 4,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }}
+                            className="relative text-8xl font-bold text-orange-600 drop-shadow-lg"
+                            style={{ fontFamily: 'serif' }}
+                        >
+                            ॐ
+                        </motion.div>
+                    </motion.div>
+
+                    {/* Sanskrit Shloka */}
+                    <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
+                        className="mb-6"
+                    >
+                        <p className="text-2xl md:text-3xl font-medium text-amber-800 mb-3" style={{ fontFamily: 'serif' }}>
+                            {randomShloka.sanskrit}
+                        </p>
+                        <p className="text-sm md:text-base text-amber-600 italic">
+                            "{randomShloka.translation}"
+                        </p>
+                    </motion.div>
+
+                    {/* Loading indicator */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="flex items-center justify-center gap-2 text-amber-700"
+                    >
+                        <motion.span
+                            animate={{ opacity: [0.4, 1, 0.4] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            className="w-2 h-2 bg-amber-500 rounded-full"
+                        />
+                        <motion.span
+                            animate={{ opacity: [0.4, 1, 0.4] }}
+                            transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+                            className="w-2 h-2 bg-amber-500 rounded-full"
+                        />
+                        <motion.span
+                            animate={{ opacity: [0.4, 1, 0.4] }}
+                            transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
+                            className="w-2 h-2 bg-amber-500 rounded-full"
+                        />
+                    </motion.div>
+
+                    {/* Slow loading message */}
+                    {slowLoading && (
+                        <motion.p
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-6 text-sm text-amber-600"
+                        >
+                            🙏 Please wait, blessings are loading...
+                        </motion.p>
                     )}
                 </div>
             </div>
