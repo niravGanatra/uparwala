@@ -20,6 +20,8 @@ const Checkout = () => {
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true); // For initial page load
     const [processingPayment, setProcessingPayment] = useState(false);
+    const [calculating, setCalculating] = useState(false); // Track specific calculation status
+    const [calculationError, setCalculationError] = useState(null);
 
     // Data states
     const [addresses, setAddresses] = useState([]);
@@ -176,10 +178,17 @@ const Checkout = () => {
                 payload.gift_option_id = giftData.gift_option_id;
             }
 
+            setCalculating(true);
+            setCalculationError(null);
+
             const response = await api.post('/payments/calculate-totals/', payload);
             setOrderSummary(response.data);
         } catch (error) {
             console.error('Failed to calculate totals:', error);
+            setCalculationError(error.response?.data?.error || 'Failed to calculate order totals. Please try again.');
+            setOrderSummary(null);
+
+            // More specific error messages
 
             // More specific error messages
             if (error.response?.status === 401) {
@@ -190,6 +199,8 @@ const Checkout = () => {
             } else {
                 toast.error('Failed to calculate order totals');
             }
+        } finally {
+            setCalculating(false);
         }
     };
 
@@ -511,6 +522,18 @@ const Checkout = () => {
                             <span>₹{Number(orderSummary.total).toFixed(2)}</span>
                         </div>
                     </div>
+                ) : calculationError ? (
+                    <div className="text-center py-6 text-sm bg-red-50 rounded-lg border border-red-100 p-4">
+                        <div className="text-red-600 font-medium mb-2">
+                            {calculationError}
+                        </div>
+                        <button
+                            onClick={calculateTotals}
+                            className="text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-md text-xs font-semibold shadow-sm transition-colors"
+                        >
+                            Retry Calculation
+                        </button>
+                    </div>
                 ) : (
                     <div className="text-center py-6 text-gray-500 text-sm bg-gray-50 rounded-lg border border-dashed border-gray-200">
                         {!selectedShippingAddress ? (
@@ -518,11 +541,21 @@ const Checkout = () => {
                                 <MapPin className="w-6 h-6 mx-auto mb-2 text-gray-400" />
                                 <p>Select a delivery address to view order details</p>
                             </>
-                        ) : (
+                        ) : calculating ? (
                             <>
                                 <Loader className="w-6 h-6 mx-auto mb-2 text-blue-500 animate-spin" />
                                 <p>Calculating taxes and shipping...</p>
                             </>
+                        ) : (
+                            <div className="flex flex-col items-center">
+                                <p className="mb-2 text-gray-400">Total not calculated</p>
+                                <button
+                                    onClick={calculateTotals}
+                                    className="text-blue-600 hover:text-blue-700 font-medium text-xs underline"
+                                >
+                                    Calculate Total
+                                </button>
+                            </div>
                         )}
                     </div>
                 )}
