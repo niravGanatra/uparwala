@@ -63,6 +63,13 @@ const Checkout = () => {
     };
 
     useEffect(() => {
+        // Redirect to login if not authenticated
+        if (!user) {
+            toast.error('Please login to access checkout');
+            navigate('/login', { state: { from: '/checkout' } });
+            return;
+        }
+
         fetchAddresses();
         fetchCart();
 
@@ -77,7 +84,7 @@ const Checkout = () => {
                 localStorage.removeItem('checkout_gift_data');
             }
         }
-    }, []);
+    }, [user, navigate]);
 
     useEffect(() => {
         // Trigger total calculation when entering payment or review step
