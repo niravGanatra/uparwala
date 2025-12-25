@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 # from .google_auth import GoogleLoginView  <-- REMOVED: Using the one in views.py
-from .views import RegisterView, UserDetailView, user_profile, GoogleLoginView
+from .views import RegisterView, UserDetailView, user_profile, GoogleLoginView, ConvertGuestView
 from .admin_views import (
     AdminUserStatsView,
     AdminProductStatsView,
@@ -26,6 +26,7 @@ urlpatterns = [
     path('me/', UserDetailView.as_view(), name='user-detail'),
     path('profile/', user_profile, name='user-profile'),
     path('google/login/', GoogleLoginView.as_view(), name='google-login'),
+    path('convert-guest/', ConvertGuestView.as_view(), name='convert-guest'),
     
     # Vendor application
     path('vendor/apply/', VendorApplicationView.as_view(), name='vendor-apply'),

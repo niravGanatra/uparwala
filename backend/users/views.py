@@ -151,3 +151,70 @@ def user_profile(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ConvertGuestView(APIView):
+    """Convert a guest order to a registered account"""
+    permission_classes = (permissions.AllowAny,)
+    
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        order_id = request.data.get('order_id')
+        
+        if not email or not password:
+            return Response(
+                {'error': 'Email and password are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if len(password) < 6:
+            return Response(
+                {'error': 'Password must be at least 6 characters'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if user already exists
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {'error': 'An account with this email already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Create the new user
+            username = email.split('@')[0]
+            base_username = username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                is_active=True
+            )
+            
+            # Link the order to this new user
+            if order_id:
+                from orders.models import Order
+                try:
+                    order = Order.objects.get(id=order_id, guest_email=email, user__isnull=True)
+                    order.user = user
+                    order.save()
+                except Order.DoesNotExist:
+                    pass  # Order might already be linked or doesn't exist
+            
+            return Response({
+                'success': True,
+                'message': 'Account created successfully',
+                'user_id': user.id
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to create account: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

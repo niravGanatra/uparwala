@@ -1,15 +1,28 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { motion } from 'framer-motion';
-import { CheckCircle, Package, Truck, MapPin, CreditCard, Home, Calendar, ChevronRight } from 'lucide-react';
+import { CheckCircle, Package, Truck, MapPin, CreditCard, Home, Calendar, ChevronRight, UserPlus, Eye, EyeOff } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import SpiritualLoader from '../components/SpiritualLoader';
+import toast from 'react-hot-toast';
 
 const OrderConfirmation = () => {
     const { orderId } = useParams();
+    const location = useLocation();
+    const isGuest = location.state?.isGuest || false;
+    const guestEmail = location.state?.guestEmail || '';
+
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // Convert to account state
+    const [showCreateAccount, setShowCreateAccount] = useState(isGuest);
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [creatingAccount, setCreatingAccount] = useState(false);
+    const [accountCreated, setAccountCreated] = useState(false);
 
     useEffect(() => {
         fetchOrderDetails();
@@ -81,6 +94,39 @@ const OrderConfirmation = () => {
             month: 'long',
             day: 'numeric'
         });
+    };
+
+    const handleCreateAccount = async (e) => {
+        e.preventDefault();
+
+        if (password.length < 6) {
+            toast.error('Password must be at least 6 characters');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            toast.error('Passwords do not match');
+            return;
+        }
+
+        setCreatingAccount(true);
+
+        try {
+            await api.post('/users/convert-guest/', {
+                email: guestEmail,
+                password: password,
+                order_id: orderId
+            });
+
+            toast.success('Account created successfully! You can now login.');
+            setAccountCreated(true);
+            setShowCreateAccount(false);
+        } catch (error) {
+            console.error('Failed to create account:', error);
+            toast.error(error.response?.data?.error || 'Failed to create account');
+        } finally {
+            setCreatingAccount(false);
+        }
     };
 
     return (
@@ -251,12 +297,100 @@ const OrderConfirmation = () => {
                             </div>
                         </div>
 
+                        {/* Convert to Account Section (Guest only) */}
+                        {isGuest && showCreateAccount && !accountCreated && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-sm border border-blue-100 p-6"
+                            >
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <UserPlus className="w-5 h-5 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold text-gray-900">Create an Account</h2>
+                                        <p className="text-sm text-gray-500">Track your orders and faster checkout next time</p>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleCreateAccount} className="space-y-4">
+                                    <div className="text-sm text-gray-600 bg-white rounded-lg p-3 border border-gray-200">
+                                        <span className="font-medium">Email:</span> {guestEmail}
+                                    </div>
+
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            placeholder="Create password (min 6 characters)"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+                                            required
+                                            minLength={6}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        >
+                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+
+                                    <input
+                                        type="password"
+                                        placeholder="Confirm password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required
+                                    />
+
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="submit"
+                                            disabled={creatingAccount}
+                                            className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                        >
+                                            {creatingAccount ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                    Creating...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <UserPlus className="w-4 h-4" />
+                                                    Create Account
+                                                </>
+                                            )}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowCreateAccount(false)}
+                                            className="px-4 py-3 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                                        >
+                                            Skip
+                                        </button>
+                                    </div>
+                                </form>
+                            </motion.div>
+                        )}
+
+                        {accountCreated && (
+                            <div className="bg-green-50 rounded-2xl border border-green-100 p-6 text-center">
+                                <CheckCircle className="w-10 h-10 text-green-600 mx-auto mb-2" />
+                                <h3 className="font-bold text-green-800">Account Created!</h3>
+                                <p className="text-sm text-green-600">You can now <Link to="/login" className="underline font-medium">login</Link> to view your orders</p>
+                            </div>
+                        )}
+
                         <div className="flex flex-col gap-3">
                             <Link
-                                to="/orders"
+                                to={isGuest && !accountCreated ? "/" : "/orders"}
                                 className="w-full py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 text-center font-medium transition-colors shadow-lg shadow-gray-200"
                             >
-                                View Order History
+                                {isGuest && !accountCreated ? 'Continue Shopping' : 'View Order History'}
                             </Link>
                             <Link
                                 to="/"
