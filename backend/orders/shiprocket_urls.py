@@ -30,6 +30,6 @@ urlpatterns = [
     # Serviceability
     path('serviceability/', check_product_serviceability, name='check-serviceability'),
     
-    # Webhook (for Shiprocket to call)
-    path('shiprocket/', shiprocket_webhook, name='shiprocket-webhook'),
+    # Webhook (for Shiprocket to call) - named 'shipping-status' as Shiprocket blocks URLs with 'shiprocket' keyword
+    path('shipping-status/', shiprocket_webhook, name='shiprocket-webhook'),
 ]
