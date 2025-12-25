@@ -47,7 +47,14 @@ class AddToCartView(APIView):
             cart_item.quantity = quantity
         cart_item.save()
 
-        return Response({'status': 'Item added to cart'}, status=status.HTTP_200_OK)
+        # Return cart item ID for Buy Now functionality
+        return Response({
+            'status': 'Item added to cart',
+            'id': cart_item.id,
+            'cart_item_id': cart_item.id,
+            'product_id': product.id,
+            'quantity': cart_item.quantity
+        }, status=status.HTTP_200_OK)
 
 class RemoveFromCartView(APIView):
     permission_classes = [permissions.AllowAny] # Allow guests

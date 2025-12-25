@@ -114,15 +114,22 @@ const Checkout = () => {
 
             // Filter items based on selection from cart page
             // If no selectedItemIds, use all items (backward compatibility)
-            const filteredItems = selectedItemIds.length > 0
-                ? allItems.filter(item => selectedItemIds.includes(item.id))
-                : allItems;
+            let filteredItems = allItems;
+
+            if (selectedItemIds.length > 0) {
+                const matchedItems = allItems.filter(item => selectedItemIds.includes(item.id));
+                // If we found matches, use them; otherwise fall back to all items (Buy Now fallback)
+                if (matchedItems.length > 0) {
+                    filteredItems = matchedItems;
+                }
+                // If no matches found but we have items, use all items (Buy Now likely just added the item)
+            }
 
             setCartItems(filteredItems);
 
-            // Warn if cart is empty after filtering
-            if (filteredItems.length === 0 && allItems.length > 0) {
-                toast.error('No items selected for checkout');
+            // Only redirect if cart is completely empty
+            if (filteredItems.length === 0) {
+                toast.error('Your cart is empty');
                 navigate('/cart');
             }
         } catch (error) {
