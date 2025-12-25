@@ -2,6 +2,22 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
+// List of public endpoints that don't need authentication
+const PUBLIC_ENDPOINTS = [
+    '/homepage/',
+    '/products/',
+    '/products/categories/',
+    '/products/search/',
+    '/products/featured/',
+    '/auth/token/refresh/',
+];
+
+// Check if URL is a public endpoint
+const isPublicEndpoint = (url) => {
+    if (!url) return false;
+    return PUBLIC_ENDPOINTS.some(endpoint => url.includes(endpoint));
+};
+
 const api = axios.create({
     baseURL: API_URL,
     withCredentials: true, // Critical: Send cookies with requests
@@ -17,7 +33,9 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('access_token');
-        if (token) {
+        // Only attach token if it exists AND this is not a public endpoint
+        // This prevents 401s on public endpoints due to expired tokens
+        if (token && !isPublicEndpoint(config.url)) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
         return config;
@@ -32,6 +50,12 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+
+        // Don't try to refresh for public endpoints - they shouldn't need auth
+        if (isPublicEndpoint(originalRequest?.url)) {
+            return Promise.reject(error);
+        }
+
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
             try {
@@ -42,9 +66,9 @@ api.interceptors.response.use(
                 return api(originalRequest);
             } catch (refreshError) {
                 console.error('Session expired:', refreshError);
-                // Auth Context will handle redirect if needed, or we explicitly redirect
-                // But usually we just let the error propagate so AuthContext sees it.
-                // However, for safety in SPA:
+                // Clear expired tokens from localStorage to prevent further 401s
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
                 // Session expired / No Refresh Token
                 // We do NOT redirect globally, because guests might trigger 401s on protected endpoints
                 // components should handle the error or ProtectedRoute should handle access.
