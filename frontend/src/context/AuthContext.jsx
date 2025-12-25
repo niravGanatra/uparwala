@@ -16,11 +16,29 @@ export const AuthProvider = ({ children }) => {
             } catch (error) {
                 // Expected if not logged in
                 // console.log('User not logged in');
+                setUser(null);
             } finally {
                 setLoading(false);
             }
         };
+
         initAuth();
+
+        // Handle BFCache (Back-Forward Cache) restoration
+        // This fixes the issue where clicking "Back" after logout shows the user as logged in
+        const handlePageShow = (event) => {
+            if (event.persisted) {
+                // Page was restored from cache, force re-check
+                setLoading(true);
+                initAuth();
+            }
+        };
+
+        window.addEventListener('pageshow', handlePageShow);
+
+        return () => {
+            window.removeEventListener('pageshow', handlePageShow);
+        };
     }, []);
 
     const login = async (username, password) => {
