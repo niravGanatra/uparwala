@@ -122,7 +122,7 @@ function App() {
                 {/* Protected User Routes */}
                 <Route element={<ProtectedRoute />}>
                   <Route path="checkout" element={<Checkout />} />
-                  <Route path="order-confirmation" element={<OrderConfirmation />} />
+                  <Route path="order-confirmation/:id" element={<OrderConfirmation />} />
                   <Route path="profile" element={<ProfileSettings />} />
                   <Route path="orders" element={<OrdersPage />} />
                   <Route path="orders/:id" element={<OrderDetail />} />
