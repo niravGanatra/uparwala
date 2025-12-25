@@ -29,14 +29,15 @@ const ProductCard = ({ product }) => {
     const handleBuyNow = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!user) {
-            toast.error('Please login to continue');
-            navigate('/login');
+
+        // Check stock first
+        if (isOutOfStock) {
+            toast.error('This item is out of stock');
             return;
         }
 
         try {
-            // Add to cart and get the cart item ID
+            // Add to cart (works for both logged-in and guest users)
             const cartItem = await addToCart(product.id, 1);
 
             // Small delay to ensure cart state is updated

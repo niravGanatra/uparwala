@@ -1,9 +1,10 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db import transaction
 from decimal import Decimal
+import logging
 
 from .models import Order, OrderItem, Cart
 from users.models import Address
@@ -12,73 +13,175 @@ from payments.razorpay_gateway import RazorpayGateway
 from payments.tax_calculator import TaxCalculator
 from payments.shipping_calculator import ShippingCalculator
 
+logger = logging.getLogger(__name__)
+
 
 class CheckoutView(APIView):
-    """Create order from cart and initiate payment"""
-    permission_classes = [IsAuthenticated]
+    """Create order from cart and initiate payment - supports both logged-in and guest users"""
+    permission_classes = [AllowAny]  # Allow guests to checkout
     
     @transaction.atomic
     def post(self, request):
         """
         Create order from cart
         
-        Expected payload:
+        Expected payload for logged-in users:
         {
             "shipping_address_id": 1,
-            "billing_address_id": 1,  # optional, defaults to shipping
-            "payment_method": "razorpay",  # or "cod"
-            "coupon_code": "SAVE10"  # optional
+            "billing_address_id": 1,
+            "payment_method": "razorpay",
+            "coupon_code": "SAVE10"
+        }
+        
+        Expected payload for guests:
+        {
+            "guest_email": "guest@example.com",
+            "guest_address": {
+                "full_name": "John Doe",
+                "phone": "9876543210",
+                "address_line1": "123 Main St",
+                "address_line2": "",
+                "city": "Mumbai",
+                "state": "Maharashtra",
+                "state_code": "MH",
+                "pincode": "400001"
+            },
+            "payment_method": "razorpay"
         }
         """
-        user = request.user
-        shipping_address_id = request.data.get('shipping_address_id')
-        billing_address_id = request.data.get('billing_address_id', shipping_address_id)
+        user = request.user if request.user.is_authenticated else None
         payment_method = request.data.get('payment_method', 'razorpay')
         coupon_code = request.data.get('coupon_code')
-        selected_item_ids = request.data.get('selected_item_ids', [])  # For selective checkout
+        selected_item_ids = request.data.get('selected_item_ids', [])
         
-        # DEBUG: Log selective checkout
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"Checkout - selected_item_ids: {selected_item_ids}")
+        logger.info(f"Checkout - user: {user}, selected_item_ids: {selected_item_ids}")
         
-        # Validate addresses
-        try:
-            shipping_address = Address.objects.get(id=shipping_address_id, user=user)
-            billing_address = Address.objects.get(id=billing_address_id, user=user)
-        except Address.DoesNotExist:
-            return Response(
-                {'error': 'Invalid address'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Get cart
-        try:
-            cart = Cart.objects.get(user=user)
-            all_cart_items = cart.items.all()
+        # Handle address based on user type
+        if user:
+            # Logged-in user: get address from database
+            shipping_address_id = request.data.get('shipping_address_id')
+            billing_address_id = request.data.get('billing_address_id', shipping_address_id)
             
-            # Filter by selected items if provided (selective checkout)
-            if selected_item_ids:
-                logger.info(f"Filtering {all_cart_items.count()} cart items to selected: {selected_item_ids}")
-                cart_items = all_cart_items.filter(id__in=selected_item_ids)
-                logger.info(f"After filter: {cart_items.count()} items")
-                if not cart_items.exists():
-                    return Response(
-                        {'error': 'No valid items selected for checkout'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-            else:
-                logger.info("No selected_item_ids - using all cart items")
-                cart_items = all_cart_items
-            
-            if not cart_items.exists():
+            try:
+                shipping_address = Address.objects.get(id=shipping_address_id, user=user)
+                billing_address = Address.objects.get(id=billing_address_id, user=user)
+                
+                shipping_address_data = {
+                    'full_name': shipping_address.full_name,
+                    'phone': shipping_address.phone,
+                    'address_line1': shipping_address.address_line1,
+                    'address_line2': shipping_address.address_line2 or '',
+                    'city': shipping_address.city,
+                    'state': shipping_address.state,
+                    'state_code': shipping_address.state_code or '',
+                    'pincode': shipping_address.pincode,
+                    'country': shipping_address.country,
+                }
+                billing_address_data = {
+                    'full_name': billing_address.full_name,
+                    'phone': billing_address.phone,
+                    'address_line1': billing_address.address_line1,
+                    'address_line2': billing_address.address_line2 or '',
+                    'city': billing_address.city,
+                    'state': billing_address.state,
+                    'state_code': billing_address.state_code or '',
+                    'pincode': billing_address.pincode,
+                    'country': billing_address.country,
+                }
+            except Address.DoesNotExist:
                 return Response(
-                    {'error': 'Cart is empty'},
+                    {'error': 'Invalid address'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        except Cart.DoesNotExist:
+            
+            # Get cart for logged-in user
+            try:
+                cart = Cart.objects.get(user=user)
+            except Cart.DoesNotExist:
+                return Response(
+                    {'error': 'Cart not found'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            guest_email = None
+            session_id = None
+        else:
+            # Guest user: get address from request payload
+            guest_address = request.data.get('guest_address')
+            guest_email = request.data.get('guest_email')
+            
+            if not guest_address:
+                return Response(
+                    {'error': 'Address is required for guest checkout'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if not guest_email:
+                return Response(
+                    {'error': 'Email is required for guest checkout'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validate required fields
+            required_fields = ['full_name', 'phone', 'address_line1', 'city', 'state', 'pincode']
+            for field in required_fields:
+                if not guest_address.get(field):
+                    return Response(
+                        {'error': f'{field} is required'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            shipping_address_data = {
+                'full_name': guest_address.get('full_name'),
+                'phone': guest_address.get('phone'),
+                'address_line1': guest_address.get('address_line1'),
+                'address_line2': guest_address.get('address_line2', ''),
+                'city': guest_address.get('city'),
+                'state': guest_address.get('state'),
+                'state_code': guest_address.get('state_code', ''),
+                'pincode': guest_address.get('pincode'),
+                'country': 'India',
+            }
+            billing_address_data = shipping_address_data.copy()
+            
+            # Get cart for guest user via session
+            session_key = request.session.session_key
+            if not session_key:
+                return Response(
+                    {'error': 'Session not found. Please add items to cart first.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            try:
+                cart = Cart.objects.get(session_id=session_key, user=None)
+            except Cart.DoesNotExist:
+                return Response(
+                    {'error': 'Cart not found'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            session_id = session_key
+        
+        # Get cart items
+        all_cart_items = cart.items.all()
+        
+        # Filter by selected items if provided (selective checkout)
+        if selected_item_ids:
+            logger.info(f"Filtering {all_cart_items.count()} cart items to selected: {selected_item_ids}")
+            cart_items = all_cart_items.filter(id__in=selected_item_ids)
+            logger.info(f"After filter: {cart_items.count()} items")
+            if not cart_items.exists():
+                return Response(
+                    {'error': 'No valid items selected for checkout'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            logger.info("No selected_item_ids - using all cart items")
+            cart_items = all_cart_items
+        
+        if not cart_items.exists():
             return Response(
-                {'error': 'Cart not found'},
+                {'error': 'Cart is empty'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -95,7 +198,7 @@ class CheckoutView(APIView):
         
         # Validate Pincode Serviceability for all items
         from .utils import is_pincode_servicable
-        shipping_pincode = shipping_address.pincode
+        shipping_pincode = shipping_address_data['pincode']
         
         for item in cart_items:
             is_available, message = is_pincode_servicable(shipping_pincode, item.product.vendor)
@@ -107,16 +210,17 @@ class CheckoutView(APIView):
         
         # Calculate shipping
         shipping_calc = ShippingCalculator()
+        state_code = shipping_address_data.get('state_code', '')
         shipping_data = shipping_calc.calculate_shipping(
             cart_items,
-            shipping_address.state_code,
+            state_code,
             subtotal
         )
         shipping_cost = Decimal(str(shipping_data['total_shipping']))
         
         # Calculate tax using product-level tax slabs
         tax_calc = TaxCalculator()
-        tax_data = tax_calc.calculate_gst_with_slabs(cart_items, shipping_address.state_code)
+        tax_data = tax_calc.calculate_gst_with_slabs(cart_items, state_code)
         tax_amount = Decimal(str(tax_data['total_tax']))
         
         # Apply coupon (TODO: implement coupon logic)
@@ -142,7 +246,9 @@ class CheckoutView(APIView):
         
         # Create order
         order = Order.objects.create(
-            user=user,
+            user=user,  # None for guests
+            guest_email=guest_email or '',
+            session_id=session_id or '',
             status='PENDING',
             payment_status='pending',
             payment_method=payment_method,
@@ -155,28 +261,8 @@ class CheckoutView(APIView):
             total_amount=float(total_amount),
             
             # Addresses (store as JSON for historical record)
-            shipping_address_data={
-                'full_name': shipping_address.full_name,
-                'phone': shipping_address.phone,
-                'address_line1': shipping_address.address_line1,
-                'address_line2': shipping_address.address_line2,
-                'city': shipping_address.city,
-                'state': shipping_address.state,
-                'state_code': shipping_address.state_code,
-                'pincode': shipping_address.pincode,
-                'country': shipping_address.country,
-            },
-            billing_address_data={
-                'full_name': billing_address.full_name,
-                'phone': billing_address.phone,
-                'address_line1': billing_address.address_line1,
-                'address_line2': billing_address.address_line2,
-                'city': billing_address.city,
-                'state': billing_address.state,
-                'state_code': billing_address.state_code,
-                'pincode': billing_address.pincode,
-                'country': billing_address.country,
-            },
+            shipping_address_data=shipping_address_data,
+            billing_address_data=billing_address_data,
             
             # Tax breakdown
             tax_breakdown=tax_data,
@@ -187,6 +273,7 @@ class CheckoutView(APIView):
         
         # Create Order Gift Record if selected
         if gift_option:
+            from .models import OrderGift
             OrderGift.objects.create(
                 order=order,
                 gift_option=gift_option,
@@ -223,10 +310,16 @@ class CheckoutView(APIView):
         if payment_method == 'razorpay':
             # Create Razorpay order
             gateway = RazorpayGateway()
+            notes = {'order_id': order.id}
+            if user:
+                notes['user_id'] = user.id
+            else:
+                notes['guest_email'] = guest_email
+                
             result = gateway.create_order(
                 amount=total_amount,
                 receipt=f'order_{order.id}',
-                notes={'order_id': order.id, 'user_id': user.id}
+                notes=notes
             )
             
             if not result['success']:
@@ -249,6 +342,7 @@ class CheckoutView(APIView):
                 'order_id': order.id,
                 'order_number': f'ORD-{order.id:06d}',
                 'total_amount': float(total_amount),
+                'is_guest': user is None,
                 'payment': {
                     'razorpay_order_id': result['order_id'],
                     'razorpay_key_id': gateway.client.auth[0],  # Key ID
@@ -274,6 +368,7 @@ class CheckoutView(APIView):
                 'order_id': order.id,
                 'order_number': f'ORD-{order.id:06d}',
                 'total_amount': float(total_amount),
+                'is_guest': user is None,
                 'message': 'Order placed successfully. Pay on delivery.'
             }, status=status.HTTP_201_CREATED)
         

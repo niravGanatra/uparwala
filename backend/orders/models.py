@@ -43,7 +43,12 @@ class Order(models.Model):
         ('cod', 'Cash on Delivery'),
     )
     
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
+    # User can be null for guest orders
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
+    # Guest checkout fields
+    guest_email = models.EmailField(blank=True, help_text="Email for guest orders")
+    session_id = models.CharField(max_length=40, blank=True, db_index=True, help_text="Session ID for guest orders")
+    
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     customer_note = models.TextField(blank=True, help_text="Notes from customer at checkout")
     

@@ -5,14 +5,17 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import {
     MapPin, CreditCard, ShoppingBag, ChevronRight,
-    Plus, Check, Loader, Truck, Shield, Gift
+    Plus, Check, Loader, Truck, Shield, Gift, Mail
 } from 'lucide-react';
 import GiftWrapSelector from '../components/GiftWrapSelector';
 import SpiritualLoader from '../components/SpiritualLoader';
+import { useAuth } from '../context/AuthContext';
 
 const Checkout = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAuth();
+    const isGuest = !user;
     const selectedItemIds = location.state?.selectedItemIds || [];
     const [step, setStep] = useState(1); // 1: Address, 2: Payment, 3: Review
     const [loading, setLoading] = useState(false);
@@ -51,6 +54,19 @@ const Checkout = () => {
     const [giftData, setGiftData] = useState(null);
     const [isAddressLocked, setIsAddressLocked] = useState(false);
 
+    // Guest checkout state
+    const [guestEmail, setGuestEmail] = useState('');
+    const [guestAddress, setGuestAddress] = useState({
+        full_name: '',
+        phone: '',
+        address_line1: '',
+        address_line2: '',
+        city: '',
+        state: '',
+        state_code: '',
+        pincode: ''
+    });
+
     const setGiftOption = (option) => {
         setGiftData(option);
         if (option) {
@@ -78,10 +94,18 @@ const Checkout = () => {
     }, []);
 
     useEffect(() => {
-        if (selectedShippingAddress && (step === 2 || step === 3)) {
-            calculateTotals();
+        // Trigger total calculation when entering payment or review step
+        if (step === 2 || step === 3) {
+            // For guests, use guestAddress; for logged-in users, use selected address
+            if (isGuest) {
+                if (guestAddress.pincode && guestAddress.state_code) {
+                    calculateTotals();
+                }
+            } else if (selectedShippingAddress) {
+                calculateTotals();
+            }
         }
-    }, [selectedShippingAddress, step, giftData]);
+    }, [selectedShippingAddress, step, giftData, isGuest, guestAddress.pincode, guestAddress.state_code]);
 
     // Separate effect for COD check to ensure orderSummary is ready
     useEffect(() => {
@@ -144,15 +168,22 @@ const Checkout = () => {
     };
 
     const calculateTotals = async () => {
-        if (!selectedShippingAddress) return;
+        let stateCode = '';
 
-        const address = addresses.find(a => a.id === selectedShippingAddress);
-        if (!address) return;
+        if (isGuest) {
+            // Use guest address state code
+            stateCode = guestAddress.state_code || guestAddress.state || 'MH';
+        } else {
+            // Use selected address for logged-in users
+            if (!selectedShippingAddress) return;
+            const address = addresses.find(a => a.id === selectedShippingAddress);
+            if (!address) return;
+            stateCode = address.state_code || address.state;
+        }
 
         try {
             const payload = {
-                // Use state_code if available, otherwise fallback to state
-                state_code: address.state_code || address.state
+                state_code: stateCode
             };
 
             // Add selected item IDs for selective checkout
@@ -176,8 +207,11 @@ const Checkout = () => {
 
             // More specific error messages
             if (error.response?.status === 401) {
-                toast.error('Please log in to continue');
-                navigate('/login');
+                // For guests, 401 is expected - just skip login redirect
+                if (!isGuest) {
+                    toast.error('Please log in to continue');
+                    navigate('/login');
+                }
             } else if (error.response?.data?.error) {
                 toast.error(error.response.data.error);
             } else {
@@ -266,9 +300,23 @@ const Checkout = () => {
     };
 
     const handlePlaceOrder = async () => {
-        if (!selectedShippingAddress) {
-            toast.error('Please select a shipping address');
-            return;
+        // Validation for guests
+        if (isGuest) {
+            if (!guestEmail || !guestEmail.includes('@')) {
+                toast.error('Please enter a valid email address');
+                return;
+            }
+            if (!guestAddress.full_name || !guestAddress.phone || !guestAddress.address_line1 ||
+                !guestAddress.city || !guestAddress.state || !guestAddress.pincode) {
+                toast.error('Please fill in all required address fields');
+                return;
+            }
+        } else {
+            // Validation for logged-in users
+            if (!selectedShippingAddress) {
+                toast.error('Please select a shipping address');
+                return;
+            }
         }
 
         if (!policyAgreed) {
@@ -279,11 +327,18 @@ const Checkout = () => {
         setProcessingPayment(true);
 
         try {
-            const payload = {
-                shipping_address_id: selectedShippingAddress,
-                billing_address_id: sameAsShipping ? selectedShippingAddress : selectedBillingAddress,
+            let payload = {
                 payment_method: paymentMethod
             };
+
+            // Different payload for guest vs logged-in users
+            if (isGuest) {
+                payload.guest_email = guestEmail;
+                payload.guest_address = guestAddress;
+            } else {
+                payload.shipping_address_id = selectedShippingAddress;
+                payload.billing_address_id = sameAsShipping ? selectedShippingAddress : selectedBillingAddress;
+            }
 
             // Include gift data
             if (giftData) {
@@ -306,6 +361,13 @@ const Checkout = () => {
 
             if (paymentMethod === 'razorpay') {
                 // Initialize Razorpay
+                const prefillData = isGuest
+                    ? { name: guestAddress.full_name, contact: guestAddress.phone, email: guestEmail }
+                    : {
+                        name: addresses.find(a => a.id === selectedShippingAddress)?.full_name,
+                        contact: addresses.find(a => a.id === selectedShippingAddress)?.phone
+                    };
+
                 const options = {
                     key: response.data.payment.razorpay_key_id,
                     amount: response.data.payment.amount,
@@ -326,16 +388,16 @@ const Checkout = () => {
                             toast.success('Payment successful!');
                             // Clear gift data
                             localStorage.removeItem('checkout_gift_data');
-                            navigate(`/order-confirmation/${response.data.order_id}`);
+                            // Pass isGuest flag to order confirmation for "create account" option
+                            navigate(`/order-confirmation/${response.data.order_id}`, {
+                                state: { isGuest: response.data.is_guest, guestEmail }
+                            });
                         } catch (error) {
                             console.error('Payment verification failed:', error);
                             toast.error('Payment verification failed');
                         }
                     },
-                    prefill: {
-                        name: addresses.find(a => a.id === selectedShippingAddress)?.full_name,
-                        contact: addresses.find(a => a.id === selectedShippingAddress)?.phone
-                    },
+                    prefill: prefillData,
                     theme: {
                         color: '#3b82f6'
                     }
@@ -353,7 +415,10 @@ const Checkout = () => {
                 toast.success('Order placed successfully!');
                 // Clear gift data
                 localStorage.removeItem('checkout_gift_data');
-                navigate(`/order-confirmation/${response.data.order_id}`);
+                // Pass isGuest flag to order confirmation for "create account" option
+                navigate(`/order-confirmation/${response.data.order_id}`, {
+                    state: { isGuest: response.data.is_guest, guestEmail }
+                });
             }
         } catch (error) {
             console.error('Checkout failed:', error);
@@ -515,150 +580,294 @@ const Checkout = () => {
         );
     };
 
-    const renderAddressStep = () => (
-        <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-800">Select Delivery Address</h2>
-                <button
-                    onClick={() => setShowAddressForm(!showAddressForm)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-                >
-                    <Plus className="w-4 h-4" />
-                    Add New
-                </button>
-            </div>
+    const renderAddressStep = () => {
+        // Guest checkout: show inline address form
+        if (isGuest) {
+            return (
+                <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Delivery Details</h2>
+                        <p className="text-gray-500 text-sm mt-1">Enter your details to continue with checkout</p>
+                    </div>
 
-            {showAddressForm && (
-                <motion.form
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    onSubmit={handleAddAddress}
-                    className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4"
-                >
-                    {/* ... Existing form inputs but styled better ... */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" placeholder="Full Name" value={addressForm.full_name} onChange={(e) => setAddressForm({ ...addressForm, full_name: e.target.value })} className="input-field" required />
-                        <input type="tel" placeholder="Phone Number" value={addressForm.phone} onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })} className="input-field" required />
+                    {/* Email */}
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                            <Mail className="w-4 h-4" />
+                            Email Address *
+                        </label>
+                        <input
+                            type="email"
+                            placeholder="your@email.com"
+                            value={guestEmail}
+                            onChange={(e) => setGuestEmail(e.target.value)}
+                            className="input-field w-full"
+                            required
+                        />
+                        <p className="text-xs text-gray-500 mt-2">We'll send order confirmation to this email</p>
                     </div>
-                    <input type="text" placeholder="Address Line 1" value={addressForm.address_line1} onChange={(e) => setAddressForm({ ...addressForm, address_line1: e.target.value })} className="input-field w-full" required />
-                    <input type="text" placeholder="Address Line 2 (Optional)" value={addressForm.address_line2} onChange={(e) => setAddressForm({ ...addressForm, address_line2: e.target.value })} className="input-field w-full" />
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    {/* Address Form */}
+                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
+                        <h3 className="font-semibold text-gray-800">Delivery Address</h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input
+                                type="text"
+                                placeholder="Full Name *"
+                                value={guestAddress.full_name}
+                                onChange={(e) => setGuestAddress({ ...guestAddress, full_name: e.target.value })}
+                                className="input-field"
+                                required
+                            />
+                            <input
+                                type="tel"
+                                placeholder="Phone Number *"
+                                value={guestAddress.phone}
+                                onChange={(e) => setGuestAddress({ ...guestAddress, phone: e.target.value })}
+                                className="input-field"
+                                required
+                            />
+                        </div>
+
                         <input
                             type="text"
-                            placeholder="City"
-                            value={addressForm.city}
-                            onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                            className={`input-field ${isAddressLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                            readOnly={isAddressLocked}
+                            placeholder="Address Line 1 *"
+                            value={guestAddress.address_line1}
+                            onChange={(e) => setGuestAddress({ ...guestAddress, address_line1: e.target.value })}
+                            className="input-field w-full"
                             required
                         />
                         <input
                             type="text"
-                            placeholder="State"
-                            value={addressForm.state}
-                            onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
-                            className={`input-field ${isAddressLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                            readOnly={isAddressLocked}
-                            required
+                            placeholder="Address Line 2 (Optional)"
+                            value={guestAddress.address_line2}
+                            onChange={(e) => setGuestAddress({ ...guestAddress, address_line2: e.target.value })}
+                            className="input-field w-full"
                         />
-                        <input type="text" placeholder="State Code (e.g., DL)" value={addressForm.state_code} onChange={(e) => setAddressForm({ ...addressForm, state_code: e.target.value.toUpperCase() })} className="input-field" maxLength={2} required />
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input
+                                type="text"
+                                placeholder="Pincode *"
+                                value={guestAddress.pincode}
+                                onChange={(e) => {
+                                    const pin = e.target.value;
+                                    setGuestAddress({ ...guestAddress, pincode: pin });
+                                    // Auto-fill city/state on 6 digits
+                                    if (pin.length === 6) {
+                                        api.get(`/orders/pincode/details/${pin}/`).then(res => {
+                                            if (res.data) {
+                                                setGuestAddress(prev => ({
+                                                    ...prev,
+                                                    city: res.data.city,
+                                                    state: res.data.state,
+                                                    state_code: res.data.state_code || ''
+                                                }));
+                                                toast.success('City & State auto-filled!');
+                                            }
+                                        }).catch(() => { });
+                                    }
+                                }}
+                                className="input-field"
+                                maxLength={6}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="City *"
+                                value={guestAddress.city}
+                                onChange={(e) => setGuestAddress({ ...guestAddress, city: e.target.value })}
+                                className="input-field"
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="State *"
+                                value={guestAddress.state}
+                                onChange={(e) => setGuestAddress({ ...guestAddress, state: e.target.value })}
+                                className="input-field"
+                                required
+                            />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="State Code (e.g., MH, DL)"
+                            value={guestAddress.state_code}
+                            onChange={(e) => setGuestAddress({ ...guestAddress, state_code: e.target.value.toUpperCase() })}
+                            className="input-field w-32"
+                            maxLength={2}
+                        />
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Pincode"
-                        value={addressForm.pincode}
-                        onChange={(e) => {
-                            setAddressForm({ ...addressForm, pincode: e.target.value });
-                            setIsAddressLocked(false);
+
+                    <button
+                        onClick={() => {
+                            if (!guestEmail || !guestEmail.includes('@')) {
+                                toast.error('Please enter a valid email');
+                                return;
+                            }
+                            if (!guestAddress.full_name || !guestAddress.phone || !guestAddress.address_line1 ||
+                                !guestAddress.city || !guestAddress.state || !guestAddress.pincode) {
+                                toast.error('Please fill in all required fields');
+                                return;
+                            }
+                            setStep(2);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        onBlur={handlePincodeBlur}
-                        className="input-field w-full"
-                        required
-                        maxLength={6}
-                    />
-
-                    <div className="flex items-center gap-2 mt-2">
-                        <input type="checkbox" id="default" checked={addressForm.is_default} onChange={(e) => setAddressForm({ ...addressForm, is_default: e.target.checked })} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" />
-                        <label htmlFor="default" className="text-sm text-gray-700">Set as default address</label>
-                    </div>
-
-                    <div className="flex gap-3 mt-4">
-                        <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium">
-                            {loading ? 'Saving...' : 'Save Address'}
-                        </button>
-                        <button type="button" onClick={() => setShowAddressForm(false)} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-gray-700">
-                            Cancel
-                        </button>
-                    </div>
-                </motion.form>
-            )}
-
-            <div className="grid grid-cols-1 gap-4">
-                {addresses.map((address) => (
-                    <div
-                        key={address.id}
-                        onClick={() => setSelectedShippingAddress(address.id)}
-                        className={`relative p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 ${selectedShippingAddress === address.id
-                            ? 'border-blue-600 bg-blue-50/50 shadow-md transform scale-[1.01]'
-                            : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm'
-                            }`}
+                        className="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-lg shadow-lg hover:shadow-blue-500/25 transition-all mt-4"
                     >
-                        <div className="flex items-start gap-4">
-                            <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedShippingAddress === address.id ? 'border-blue-600' : 'border-gray-300'}`}>
-                                {selectedShippingAddress === address.id && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
-                            </div>
-                            <div className="flex-1">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h3 className="font-bold text-gray-900 text-lg">{address.full_name}</h3>
-                                        {address.is_default && (
-                                            <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
-                                                Default
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {/* Edit/Delete actions could go here */}
-                                    </div>
+                        Continue to Payment
+                    </button>
+                </div>
+            );
+        }
+
+        // Logged-in user: show saved address selection (existing behavior)
+        return (
+            <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-gray-800">Select Delivery Address</h2>
+                    <button
+                        onClick={() => setShowAddressForm(!showAddressForm)}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add New
+                    </button>
+                </div>
+
+                {showAddressForm && (
+                    <motion.form
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        onSubmit={handleAddAddress}
+                        className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4"
+                    >
+                        {/* ... Existing form inputs but styled better ... */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" placeholder="Full Name" value={addressForm.full_name} onChange={(e) => setAddressForm({ ...addressForm, full_name: e.target.value })} className="input-field" required />
+                            <input type="tel" placeholder="Phone Number" value={addressForm.phone} onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })} className="input-field" required />
+                        </div>
+                        <input type="text" placeholder="Address Line 1" value={addressForm.address_line1} onChange={(e) => setAddressForm({ ...addressForm, address_line1: e.target.value })} className="input-field w-full" required />
+                        <input type="text" placeholder="Address Line 2 (Optional)" value={addressForm.address_line2} onChange={(e) => setAddressForm({ ...addressForm, address_line2: e.target.value })} className="input-field w-full" />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input
+                                type="text"
+                                placeholder="City"
+                                value={addressForm.city}
+                                onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                                className={`input-field ${isAddressLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                readOnly={isAddressLocked}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="State"
+                                value={addressForm.state}
+                                onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
+                                className={`input-field ${isAddressLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                readOnly={isAddressLocked}
+                                required
+                            />
+                            <input type="text" placeholder="State Code (e.g., DL)" value={addressForm.state_code} onChange={(e) => setAddressForm({ ...addressForm, state_code: e.target.value.toUpperCase() })} className="input-field" maxLength={2} required />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Pincode"
+                            value={addressForm.pincode}
+                            onChange={(e) => {
+                                setAddressForm({ ...addressForm, pincode: e.target.value });
+                                setIsAddressLocked(false);
+                            }}
+                            onBlur={handlePincodeBlur}
+                            className="input-field w-full"
+                            required
+                            maxLength={6}
+                        />
+
+                        <div className="flex items-center gap-2 mt-2">
+                            <input type="checkbox" id="default" checked={addressForm.is_default} onChange={(e) => setAddressForm({ ...addressForm, is_default: e.target.checked })} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" />
+                            <label htmlFor="default" className="text-sm text-gray-700">Set as default address</label>
+                        </div>
+
+                        <div className="flex gap-3 mt-4">
+                            <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium">
+                                {loading ? 'Saving...' : 'Save Address'}
+                            </button>
+                            <button type="button" onClick={() => setShowAddressForm(false)} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-gray-700">
+                                Cancel
+                            </button>
+                        </div>
+                    </motion.form>
+                )}
+
+                <div className="grid grid-cols-1 gap-4">
+                    {addresses.map((address) => (
+                        <div
+                            key={address.id}
+                            onClick={() => setSelectedShippingAddress(address.id)}
+                            className={`relative p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 ${selectedShippingAddress === address.id
+                                ? 'border-blue-600 bg-blue-50/50 shadow-md transform scale-[1.01]'
+                                : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm'
+                                }`}
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedShippingAddress === address.id ? 'border-blue-600' : 'border-gray-300'}`}>
+                                    {selectedShippingAddress === address.id && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
                                 </div>
-                                <p className="text-gray-600 mt-2 leading-relaxed">
-                                    {address.address_line1}, {address.address_line2 && `${address.address_line2}, `}
-                                    {address.city}, {address.state} - <span className="font-medium text-gray-900">{address.pincode}</span>
-                                </p>
-                                <p className="text-gray-600 mt-1 flex items-center gap-2">
-                                    <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Phone</span>
-                                    {address.phone}
-                                </p>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 text-lg">{address.full_name}</h3>
+                                            {address.is_default && (
+                                                <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                                                    Default
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {/* Edit/Delete actions could go here */}
+                                        </div>
+                                    </div>
+                                    <p className="text-gray-600 mt-2 leading-relaxed">
+                                        {address.address_line1}, {address.address_line2 && `${address.address_line2}, `}
+                                        {address.city}, {address.state} - <span className="font-medium text-gray-900">{address.pincode}</span>
+                                    </p>
+                                    <p className="text-gray-600 mt-1 flex items-center gap-2">
+                                        <span className="text-xs uppercase font-bold tracking-wider text-gray-400">Phone</span>
+                                        {address.phone}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
-
-            {addresses.length === 0 && !showAddressForm && (
-                <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
-                    <MapPin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p className="text-gray-500 font-medium">No saved addresses found</p>
-                    <p className="text-sm text-gray-400">Add a new address to continue</p>
+                    ))}
                 </div>
-            )}
 
-            <button
-                onClick={() => {
-                    if (!selectedShippingAddress) {
-                        toast.error('Please select a delivery address');
-                        return;
-                    }
-                    setStep(2);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                disabled={!selectedShippingAddress}
-                className="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg shadow-lg hover:shadow-blue-500/25 transition-all mt-8"
-            >
-                Continue to Payment
-            </button>
-        </div>
-    );
+                {addresses.length === 0 && !showAddressForm && (
+                    <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                        <MapPin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                        <p className="text-gray-500 font-medium">No saved addresses found</p>
+                        <p className="text-sm text-gray-400">Add a new address to continue</p>
+                    </div>
+                )}
+
+                <button
+                    onClick={() => {
+                        if (!selectedShippingAddress) {
+                            toast.error('Please select a delivery address');
+                            return;
+                        }
+                        setStep(2);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    disabled={!selectedShippingAddress}
+                    className="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg shadow-lg hover:shadow-blue-500/25 transition-all mt-8"
+                >
+                    Continue to Payment
+                </button>
+            </div>
+        );
+    };
 
     const renderPaymentStep = () => (
         <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
