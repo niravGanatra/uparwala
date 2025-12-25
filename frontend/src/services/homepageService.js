@@ -1,9 +1,10 @@
 import api from './api';
 
 const homepageService = {
-    // Get all homepage data in one request
+    // Get all homepage data in one request (with cache-busting)
     getHomepageData: async () => {
-        const response = await api.get('/homepage/');
+        const timestamp = Date.now();
+        const response = await api.get(`/homepage/?_t=${timestamp}`);
         return response.data;
     },
 

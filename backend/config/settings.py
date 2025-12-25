@@ -111,6 +111,7 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',  # Required for allauth
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'config.middleware.APICacheControlMiddleware',  # Prevent API response caching
 ]
 
 ROOT_URLCONF = 'config.urls'
