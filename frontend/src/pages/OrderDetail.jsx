@@ -8,7 +8,7 @@ import PackageList from '../components/PackageList';
 import SpiritualLoader from '../components/SpiritualLoader';
 
 const OrderDetail = () => {
-    const { orderId } = useParams();
+    const { id: orderId } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
