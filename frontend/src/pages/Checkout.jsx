@@ -89,11 +89,13 @@ const Checkout = () => {
     }, [user, navigate]);
 
     useEffect(() => {
-        // Trigger total calculation when entering payment or review step
-        if ((step === 2 || step === 3) && selectedShippingAddress) {
+        // Trigger total calculation whenever address, gift options, or step changes
+        // Now runs on Step 1 (Address) as well, immediately after selection
+        if (selectedShippingAddress) {
             calculateTotals();
         }
-    }, [selectedShippingAddress, step, giftData]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedShippingAddress, giftData, addresses]);
 
     // Separate effect for COD check to ensure orderSummary is ready
     useEffect(() => {
@@ -547,8 +549,9 @@ const Checkout = () => {
                                 <p>Calculating taxes and shipping...</p>
                             </>
                         ) : (
+                            // Fallback: If for some reason auto-calc didn't fire or cleared (rare)
                             <div className="flex flex-col items-center">
-                                <p className="mb-2 text-gray-400">Total not calculated</p>
+                                <p className="mb-2 text-gray-400">Total will be updated...</p>
                                 <button
                                     onClick={calculateTotals}
                                     className="text-blue-600 hover:text-blue-700 font-medium text-xs underline"
