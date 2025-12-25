@@ -15,7 +15,6 @@ const Checkout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
-    console.log('[Checkout] Render. User:', user?.id);
     const selectedItemIds = location.state?.selectedItemIds || [];
     const [step, setStep] = useState(1); // 1: Address, 2: Payment, 3: Review
     const [loading, setLoading] = useState(false);
@@ -121,10 +120,8 @@ const Checkout = () => {
     };
 
     const fetchCart = async () => {
-        console.log('[Checkout] Fetching cart...');
         try {
             const response = await api.get('/orders/cart/');
-            console.log('[Checkout] Cart response:', response.data);
             const allItems = response.data?.items || [];
 
             // Filter items based on selection from cart page
@@ -144,16 +141,14 @@ const Checkout = () => {
 
             // Only redirect if cart is completely empty
             if (filteredItems.length === 0) {
-                console.log('[Checkout] Cart empty, redirecting');
                 toast.error('Your cart is empty');
                 navigate('/cart');
             }
         } catch (error) {
-            console.error('[Checkout] Failed to fetch cart:', error);
+            console.error('Failed to fetch cart:', error);
             toast.error('Failed to load cart');
             setCartItems([]);
         } finally {
-            console.log('[Checkout] Finished loading cart, setting initialLoading false');
             setInitialLoading(false);
         }
     };
@@ -181,14 +176,10 @@ const Checkout = () => {
                 payload.gift_option_id = giftData.gift_option_id;
             }
 
-            console.log('[Checkout] Calculating totals with payload:', payload);
             const response = await api.post('/payments/calculate-totals/', payload);
-            console.log('[Checkout] Total calculation successful:', response.data);
             setOrderSummary(response.data);
         } catch (error) {
-            console.error('[Checkout] Failed to calculate totals:', error);
-            console.error('[Checkout] Error response:', error.response?.data);
-            console.error('[Checkout] Error status:', error.response?.status);
+            console.error('Failed to calculate totals:', error);
 
             // More specific error messages
             if (error.response?.status === 401) {
@@ -521,8 +512,18 @@ const Checkout = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="text-center py-4 text-gray-500 text-sm">
-                        Calculating total...
+                    <div className="text-center py-6 text-gray-500 text-sm bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                        {!selectedShippingAddress ? (
+                            <>
+                                <MapPin className="w-6 h-6 mx-auto mb-2 text-gray-400" />
+                                <p>Select a delivery address to view order details</p>
+                            </>
+                        ) : (
+                            <>
+                                <Loader className="w-6 h-6 mx-auto mb-2 text-blue-500 animate-spin" />
+                                <p>Calculating taxes and shipping...</p>
+                            </>
+                        )}
                     </div>
                 )}
 
