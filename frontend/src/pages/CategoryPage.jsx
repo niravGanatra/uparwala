@@ -8,7 +8,7 @@ import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 
 const CategoryPage = () => {
-    const { categorySlug } = useParams();
+    const { slug } = useParams(); // Fixed: was 'categorySlug', route uses 'slug'
     const { addToCart } = useCart();
     const [products, setProducts] = useState([]);
     const [category, setCategory] = useState(null);
@@ -20,41 +20,74 @@ const CategoryPage = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                // Parallel fetch: Category products, Category details, and Active Banners
-                // Note: We need a way to get ID from slug, or search products by category slug
-                // Assuming /products/?category=slug works or we fetch category first
-
-                // 1. Fetch Banners to check for promotions
-                const bannersRes = await api.get('/homepage/promotions/');
-                const activeBanners = bannersRes.data;
-
-                // 2. Check if any banner links to this category
-                const currentPath = `/category/${categorySlug}`;
-                const matchingBanner = activeBanners.find(b =>
-                    b.is_active && b.link_url && b.link_url.includes(categorySlug)
-                );
-
-                if (matchingBanner) {
-                    setPromoBanner(matchingBanner);
-                    // Extract discount percentage from text strings like "50% OFF", "Flat 20% Discount"
-                    const match = matchingBanner.discount_text?.match(/(\d+)%/);
-                    if (match) {
-                        setActiveDiscount(parseInt(match[1]));
+                // 1. Fetch category details first to get proper name
+                try {
+                    const categoryRes = await api.get('/products/categories/');
+                    const foundCategory = categoryRes.data.find(c => c.slug === slug);
+                    if (foundCategory) {
+                        setCategory(foundCategory);
+                    } else {
+                        // Fallback: derive name from slug
+                        setCategory({ name: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') });
                     }
-                } else {
-                    setActiveDiscount(0);
-                    setPromoBanner(null);
+                } catch (e) {
+                    // Fallback: derive name from slug
+                    setCategory({ name: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') });
                 }
 
-                // 3. Fetch Products
-                // We filter by category slug explicitly now that backend supports it
-                const productsRes = await api.get(`/products/?category__slug=${categorySlug}`);
-                setProducts(productsRes.data.results || productsRes.data);
+                // 2. Fetch Banners to check for promotions
+                try {
+                    const bannersRes = await api.get('/homepage/promotions/');
+                    const activeBanners = bannersRes.data;
 
-                // 4. Fetch Category Details (Mock title if API endpoint not handy, but better to fetch)
-                // If API doesn't support slug lookup directly, we might rely on the products' category field
-                // For now user wants functionality, so we'll derive title from slug if needed
-                setCategory({ name: categorySlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') });
+                    // Check if any banner links to this category
+                    const matchingBanner = activeBanners.find(b =>
+                        b.is_active && b.link_url && b.link_url.includes(slug)
+                    );
+
+                    if (matchingBanner) {
+                        setPromoBanner(matchingBanner);
+                        // Extract discount percentage from text strings like "50% OFF", "Flat 20% Discount"
+                        const match = matchingBanner.discount_text?.match(/(\d+)%/);
+                        if (match) {
+                            setActiveDiscount(parseInt(match[1]));
+                        }
+                    } else {
+                        setActiveDiscount(0);
+                        setPromoBanner(null);
+                    }
+                } catch (e) {
+                    console.log('No promotions found');
+                }
+
+                // 3. Fetch Products - try multiple filter approaches
+                let productsData = [];
+
+                try {
+                    // Try with category__slug filter first
+                    const productsRes = await api.get(`/products/?category__slug=${slug}`);
+                    productsData = productsRes.data.results || productsRes.data || [];
+                } catch (e) {
+                    console.error('Category filter failed:', e);
+                }
+
+                // If no products found, try fetching all and filtering client-side
+                if (productsData.length === 0) {
+                    try {
+                        const allProductsRes = await api.get('/products/');
+                        const allProducts = allProductsRes.data.results || allProductsRes.data || [];
+                        // Filter products that belong to this category
+                        productsData = allProducts.filter(p =>
+                            p.category?.slug === slug ||
+                            p.category_slug === slug ||
+                            p.category?.name?.toLowerCase().replace(/\s+/g, '-') === slug
+                        );
+                    } catch (e) {
+                        console.error('Failed to fetch all products:', e);
+                    }
+                }
+
+                setProducts(productsData);
 
             } catch (error) {
                 console.error("Error loading category page:", error);
@@ -64,9 +97,11 @@ const CategoryPage = () => {
             }
         };
 
-        fetchData();
-        window.scrollTo(0, 0);
-    }, [categorySlug]);
+        if (slug) {
+            fetchData();
+            window.scrollTo(0, 0);
+        }
+    }, [slug]);
 
     const calculatePrice = (originalPrice) => {
         if (!activeDiscount) return originalPrice;
