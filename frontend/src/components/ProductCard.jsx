@@ -48,8 +48,10 @@ const ProductCard = ({ product }) => {
             const cartItem = await addToCart(product.id, 1);
 
             // Navigate to checkout with selected item
-            if (cartItem && cartItem.id) {
-                navigate('/checkout', { state: { selectedItemIds: [cartItem.id] } });
+            // API returns cart_item_id, not id
+            const itemId = cartItem?.cart_item_id || cartItem?.id;
+            if (itemId) {
+                navigate('/checkout', { state: { selectedItemIds: [itemId] } });
             } else {
                 // Fallback: navigate to checkout without specific item selection
                 navigate('/checkout');
