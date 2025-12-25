@@ -8,6 +8,7 @@ import {
     Plus, Check, Loader, Truck, Shield, Gift
 } from 'lucide-react';
 import GiftWrapSelector from '../components/GiftWrapSelector';
+import SpiritualLoader from '../components/SpiritualLoader';
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -15,6 +16,7 @@ const Checkout = () => {
     const selectedItemIds = location.state?.selectedItemIds || [];
     const [step, setStep] = useState(1); // 1: Address, 2: Payment, 3: Review
     const [loading, setLoading] = useState(false);
+    const [initialLoading, setInitialLoading] = useState(true); // For initial page load
     const [processingPayment, setProcessingPayment] = useState(false);
 
     // Data states
@@ -136,6 +138,8 @@ const Checkout = () => {
             console.error('Failed to fetch cart:', error);
             toast.error('Failed to load cart');
             setCartItems([]);
+        } finally {
+            setInitialLoading(false);
         }
     };
 
@@ -833,6 +837,11 @@ const Checkout = () => {
             </div>
         );
     };
+
+    // Show loading state while fetching cart
+    if (initialLoading) {
+        return <SpiritualLoader message="Preparing checkout..." />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50/50 py-8 lg:py-12">
