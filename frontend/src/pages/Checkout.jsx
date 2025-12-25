@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import {
     MapPin, CreditCard, ShoppingBag, ChevronRight,
-    Plus, Check, Loader, Truck, Shield, Gift, Mail
+    Plus, Check, Loader, Truck, Shield, Gift
 } from 'lucide-react';
 import GiftWrapSelector from '../components/GiftWrapSelector';
 import SpiritualLoader from '../components/SpiritualLoader';
@@ -15,7 +15,6 @@ const Checkout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
-    const isGuest = !user;
     const selectedItemIds = location.state?.selectedItemIds || [];
     const [step, setStep] = useState(1); // 1: Address, 2: Payment, 3: Review
     const [loading, setLoading] = useState(false);
@@ -54,19 +53,6 @@ const Checkout = () => {
     const [giftData, setGiftData] = useState(null);
     const [isAddressLocked, setIsAddressLocked] = useState(false);
 
-    // Guest checkout state
-    const [guestEmail, setGuestEmail] = useState('');
-    const [guestAddress, setGuestAddress] = useState({
-        full_name: '',
-        phone: '',
-        address_line1: '',
-        address_line2: '',
-        city: '',
-        state: '',
-        state_code: '',
-        pincode: ''
-    });
-
     const setGiftOption = (option) => {
         setGiftData(option);
         if (option) {
@@ -95,17 +81,10 @@ const Checkout = () => {
 
     useEffect(() => {
         // Trigger total calculation when entering payment or review step
-        if (step === 2 || step === 3) {
-            // For guests, use guestAddress; for logged-in users, use selected address
-            if (isGuest) {
-                if (guestAddress.pincode && guestAddress.state_code) {
-                    calculateTotals();
-                }
-            } else if (selectedShippingAddress) {
-                calculateTotals();
-            }
+        if ((step === 2 || step === 3) && selectedShippingAddress) {
+            calculateTotals();
         }
-    }, [selectedShippingAddress, step, giftData, isGuest, guestAddress.pincode, guestAddress.state_code]);
+    }, [selectedShippingAddress, step, giftData]);
 
     // Separate effect for COD check to ensure orderSummary is ready
     useEffect(() => {
@@ -168,18 +147,12 @@ const Checkout = () => {
     };
 
     const calculateTotals = async () => {
-        let stateCode = '';
+        if (!selectedShippingAddress) return;
 
-        if (isGuest) {
-            // Use guest address state code
-            stateCode = guestAddress.state_code || guestAddress.state || 'MH';
-        } else {
-            // Use selected address for logged-in users
-            if (!selectedShippingAddress) return;
-            const address = addresses.find(a => a.id === selectedShippingAddress);
-            if (!address) return;
-            stateCode = address.state_code || address.state;
-        }
+        const address = addresses.find(a => a.id === selectedShippingAddress);
+        if (!address) return;
+
+        const stateCode = address.state_code || address.state;
 
         try {
             const payload = {
@@ -207,11 +180,8 @@ const Checkout = () => {
 
             // More specific error messages
             if (error.response?.status === 401) {
-                // For guests, 401 is expected - just skip login redirect
-                if (!isGuest) {
-                    toast.error('Please log in to continue');
-                    navigate('/login');
-                }
+                toast.error('Please log in to continue');
+                navigate('/login');
             } else if (error.response?.data?.error) {
                 toast.error(error.response.data.error);
             } else {
@@ -300,23 +270,10 @@ const Checkout = () => {
     };
 
     const handlePlaceOrder = async () => {
-        // Validation for guests
-        if (isGuest) {
-            if (!guestEmail || !guestEmail.includes('@')) {
-                toast.error('Please enter a valid email address');
-                return;
-            }
-            if (!guestAddress.full_name || !guestAddress.phone || !guestAddress.address_line1 ||
-                !guestAddress.city || !guestAddress.state || !guestAddress.pincode) {
-                toast.error('Please fill in all required address fields');
-                return;
-            }
-        } else {
-            // Validation for logged-in users
-            if (!selectedShippingAddress) {
-                toast.error('Please select a shipping address');
-                return;
-            }
+        // Validation for logged-in users
+        if (!selectedShippingAddress) {
+            toast.error('Please select a shipping address');
+            return;
         }
 
         if (!policyAgreed) {
@@ -328,17 +285,10 @@ const Checkout = () => {
 
         try {
             let payload = {
-                payment_method: paymentMethod
+                payment_method: paymentMethod,
+                shipping_address_id: selectedShippingAddress,
+                billing_address_id: sameAsShipping ? selectedShippingAddress : selectedBillingAddress
             };
-
-            // Different payload for guest vs logged-in users
-            if (isGuest) {
-                payload.guest_email = guestEmail;
-                payload.guest_address = guestAddress;
-            } else {
-                payload.shipping_address_id = selectedShippingAddress;
-                payload.billing_address_id = sameAsShipping ? selectedShippingAddress : selectedBillingAddress;
-            }
 
             // Include gift data
             if (giftData) {
@@ -361,12 +311,12 @@ const Checkout = () => {
 
             if (paymentMethod === 'razorpay') {
                 // Initialize Razorpay
-                const prefillData = isGuest
-                    ? { name: guestAddress.full_name, contact: guestAddress.phone, email: guestEmail }
-                    : {
-                        name: addresses.find(a => a.id === selectedShippingAddress)?.full_name,
-                        contact: addresses.find(a => a.id === selectedShippingAddress)?.phone
-                    };
+                const selectedAddress = addresses.find(a => a.id === selectedShippingAddress);
+                const prefillData = {
+                    name: selectedAddress?.full_name,
+                    contact: selectedAddress?.phone,
+                    email: user?.email
+                };
 
                 const options = {
                     key: response.data.payment.razorpay_key_id,
@@ -388,10 +338,7 @@ const Checkout = () => {
                             toast.success('Payment successful!');
                             // Clear gift data
                             localStorage.removeItem('checkout_gift_data');
-                            // Pass isGuest flag to order confirmation for "create account" option
-                            navigate(`/order-confirmation/${response.data.order_id}`, {
-                                state: { isGuest: response.data.is_guest, guestEmail }
-                            });
+                            navigate(`/order-confirmation/${response.data.order_id}`);
                         } catch (error) {
                             console.error('Payment verification failed:', error);
                             toast.error('Payment verification failed');
@@ -415,10 +362,7 @@ const Checkout = () => {
                 toast.success('Order placed successfully!');
                 // Clear gift data
                 localStorage.removeItem('checkout_gift_data');
-                // Pass isGuest flag to order confirmation for "create account" option
-                navigate(`/order-confirmation/${response.data.order_id}`, {
-                    state: { isGuest: response.data.is_guest, guestEmail }
-                });
+                navigate(`/order-confirmation/${response.data.order_id}`);
             }
         } catch (error) {
             console.error('Checkout failed:', error);
@@ -581,148 +525,7 @@ const Checkout = () => {
     };
 
     const renderAddressStep = () => {
-        // Guest checkout: show inline address form
-        if (isGuest) {
-            return (
-                <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Delivery Details</h2>
-                        <p className="text-gray-500 text-sm mt-1">Enter your details to continue with checkout</p>
-                    </div>
-
-                    {/* Email */}
-                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <Mail className="w-4 h-4" />
-                            Email Address *
-                        </label>
-                        <input
-                            type="email"
-                            placeholder="your@email.com"
-                            value={guestEmail}
-                            onChange={(e) => setGuestEmail(e.target.value)}
-                            className="input-field w-full"
-                            required
-                        />
-                        <p className="text-xs text-gray-500 mt-2">We'll send order confirmation to this email</p>
-                    </div>
-
-                    {/* Address Form */}
-                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
-                        <h3 className="font-semibold text-gray-800">Delivery Address</h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input
-                                type="text"
-                                placeholder="Full Name *"
-                                value={guestAddress.full_name}
-                                onChange={(e) => setGuestAddress({ ...guestAddress, full_name: e.target.value })}
-                                className="input-field"
-                                required
-                            />
-                            <input
-                                type="tel"
-                                placeholder="Phone Number *"
-                                value={guestAddress.phone}
-                                onChange={(e) => setGuestAddress({ ...guestAddress, phone: e.target.value })}
-                                className="input-field"
-                                required
-                            />
-                        </div>
-
-                        <input
-                            type="text"
-                            placeholder="Address Line 1 *"
-                            value={guestAddress.address_line1}
-                            onChange={(e) => setGuestAddress({ ...guestAddress, address_line1: e.target.value })}
-                            className="input-field w-full"
-                            required
-                        />
-                        <input
-                            type="text"
-                            placeholder="Address Line 2 (Optional)"
-                            value={guestAddress.address_line2}
-                            onChange={(e) => setGuestAddress({ ...guestAddress, address_line2: e.target.value })}
-                            className="input-field w-full"
-                        />
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <input
-                                type="text"
-                                placeholder="Pincode *"
-                                value={guestAddress.pincode}
-                                onChange={(e) => {
-                                    const pin = e.target.value;
-                                    setGuestAddress({ ...guestAddress, pincode: pin });
-                                    // Auto-fill city/state on 6 digits
-                                    if (pin.length === 6) {
-                                        api.get(`/orders/pincode/details/${pin}/`).then(res => {
-                                            if (res.data) {
-                                                setGuestAddress(prev => ({
-                                                    ...prev,
-                                                    city: res.data.city,
-                                                    state: res.data.state,
-                                                    state_code: res.data.state_code || ''
-                                                }));
-                                                toast.success('City & State auto-filled!');
-                                            }
-                                        }).catch(() => { });
-                                    }
-                                }}
-                                className="input-field"
-                                maxLength={6}
-                                required
-                            />
-                            <input
-                                type="text"
-                                placeholder="City *"
-                                value={guestAddress.city}
-                                onChange={(e) => setGuestAddress({ ...guestAddress, city: e.target.value })}
-                                className="input-field"
-                                required
-                            />
-                            <input
-                                type="text"
-                                placeholder="State *"
-                                value={guestAddress.state}
-                                onChange={(e) => setGuestAddress({ ...guestAddress, state: e.target.value })}
-                                className="input-field"
-                                required
-                            />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="State Code (e.g., MH, DL)"
-                            value={guestAddress.state_code}
-                            onChange={(e) => setGuestAddress({ ...guestAddress, state_code: e.target.value.toUpperCase() })}
-                            className="input-field w-32"
-                            maxLength={2}
-                        />
-                    </div>
-
-                    <button
-                        onClick={() => {
-                            if (!guestEmail || !guestEmail.includes('@')) {
-                                toast.error('Please enter a valid email');
-                                return;
-                            }
-                            if (!guestAddress.full_name || !guestAddress.phone || !guestAddress.address_line1 ||
-                                !guestAddress.city || !guestAddress.state || !guestAddress.pincode) {
-                                toast.error('Please fill in all required fields');
-                                return;
-                            }
-                            setStep(2);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-lg shadow-lg hover:shadow-blue-500/25 transition-all mt-4"
-                    >
-                        Continue to Payment
-                    </button>
-                </div>
-            );
-        }
-
-        // Logged-in user: show saved address selection (existing behavior)
+        // Show saved address selection
         return (
             <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
                 <div className="flex items-center justify-between">

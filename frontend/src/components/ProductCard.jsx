@@ -30,24 +30,28 @@ const ProductCard = ({ product }) => {
         e.preventDefault();
         e.stopPropagation();
 
-        // Check stock first
+        // Require login for Buy Now
+        if (!user) {
+            toast.error('Please login to continue');
+            navigate('/login', { state: { from: `/products/${product.slug}` } });
+            return;
+        }
+
+        // Check stock
         if (isOutOfStock) {
             toast.error('This item is out of stock');
             return;
         }
 
         try {
-            // Add to cart (works for both logged-in and guest users)
+            // Add to cart and get the cart item
             const cartItem = await addToCart(product.id, 1);
 
-            // Small delay to ensure cart state is updated
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            // Navigate to checkout with the selected item
-            // If cartItem has an id, pass it; otherwise checkout will use full cart
+            // Navigate to checkout with selected item
             if (cartItem && cartItem.id) {
                 navigate('/checkout', { state: { selectedItemIds: [cartItem.id] } });
             } else {
+                // Fallback: navigate to checkout without specific item selection
                 navigate('/checkout');
             }
         } catch (error) {
