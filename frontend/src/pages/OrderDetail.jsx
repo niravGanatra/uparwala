@@ -20,7 +20,7 @@ const OrderDetail = () => {
 
     const fetchOrderDetail = async () => {
         try {
-            const response = await api.get(`/orders/orders/${orderId}/tracking/`);
+            const response = await api.get(`/orders/orders/${orderId}/`);
             setOrder(response.data);
         } catch (error) {
             console.error('Failed to fetch order:', error);
