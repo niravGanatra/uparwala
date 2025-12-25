@@ -327,10 +327,15 @@ def get_all_shipments(request):
 @permission_classes([AllowAny])
 def shiprocket_webhook(request):
     """Handle Shiprocket webhooks for tracking updates"""
+    from django.conf import settings
     
-    # TODO: Implement signature verification
-    # webhook_secret = settings.SHIPROCKET_WEBHOOK_SECRET
-    # Verify request signature here
+    # Verify webhook token from x-api-key header
+    webhook_token = getattr(settings, 'SHIPROCKET_WEBHOOK_TOKEN', None)
+    received_token = request.headers.get('x-api-key', '')
+    
+    if webhook_token and received_token != webhook_token:
+        logger.warning(f"Invalid webhook token received")
+        return Response({'status': 'error', 'message': 'Invalid token'}, status=status.HTTP_403_FORBIDDEN)
     
     data = request.data
     logger.info(f"Received Shiprocket webhook: {data}")
