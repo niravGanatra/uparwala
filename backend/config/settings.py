@@ -261,6 +261,7 @@ SITE_ID = 1
 # Authentication Backends
 AUTHENTICATION_BACKENDS = [
     'users.backends.AllowInactiveUserBackend',  # Custom backend to allow inactive users
+    'django.contrib.auth.backends.ModelBackend',  # Default Django Auth (fallback)
     'allauth.account.auth_backends.AuthenticationBackend',  # User Auth
 ]
 
