@@ -225,13 +225,10 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        }
-                </div>
-            """
         },
         'welcome_email': {
             'subject': "You're all set! Welcome to the Uparwala community",
-            'content': f"""
+            'content': f'''
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <h2 style="color: #f97316;">Welcome to Uparwala!</h2>
                     <p>Hi {context.get('customer_name')},</p>
@@ -244,7 +241,7 @@ def get_email_template(template_name, context):
                         Start Shopping
                     </a>
                 </div>
-            """
+            '''
         },
         'password_reset': {
             'subject': "Reset your password",
