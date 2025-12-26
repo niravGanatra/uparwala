@@ -190,6 +190,8 @@ class ShiprocketService:
             # Always try to sync/re-sync pickup location to ensure it exists in Shiprocket
             try:
                 synced_location = self.sync_vendor_pickup_location(vendor)
+            except Exception as e:
+                print(f"Warning: Failed to sync pickup location for vendor {vendor_id}: {e}")
             # Check if order already exists for this vendor
             # We use a suffix for multi-vendor orders: order_id-vendor_id
             # Assuming order.order_number exists, if not, order.id might be used.
