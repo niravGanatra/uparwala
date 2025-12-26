@@ -13,13 +13,35 @@ def calculate_pending_payouts():
     Calculate pending payouts for all vendors based on delivered orders
     that haven't been paid out yet.
     
+    Only includes orders:
+    - Delivered at least 7 days ago
+    - With no active return/exchange requests
+    
     Returns:
         list: List of dicts containing vendor payout information
     """
-    # Get all delivered order items that haven't been paid to vendor
+    from datetime import timedelta
+    from orders.models import OrderReturn
+    
+    # Calculate cutoff date (7 days ago)
+    cutoff_date = timezone.now() - timedelta(days=7)
+    
+    # Get order items with active return requests (to exclude)
+    # Active return statuses: requested, approved, received (not refunded or rejected)
+    items_with_returns = OrderReturn.objects.filter(
+        status__in=['requested', 'approved', 'received']
+    ).values_list('order_item_id', flat=True)
+    
+    # Get all delivered order items that:
+    # 1. Haven't been paid to vendor
+    # 2. Delivered at least 7 days ago
+    # 3. Don't have active return requests
     unpaid_items = OrderItem.objects.filter(
         order__status='DELIVERED',
-        paid_to_vendor=False
+        paid_to_vendor=False,
+        order__delivered_at__lte=cutoff_date  # Delivered 7+ days ago
+    ).exclude(
+        id__in=items_with_returns  # No active return requests
     ).select_related('vendor', 'product', 'product__category', 'order')
     
     # Group by vendor
@@ -105,6 +127,10 @@ def trigger_payout(vendor_id, admin_user, transaction_id='', notes=''):
     """
     Trigger payout for a specific vendor - marks all unpaid delivered items as paid
     
+    Only includes items:
+    - Delivered at least 7 days ago
+    - With no active return/exchange requests
+    
     Args:
         vendor_id: ID of the vendor to pay out
         admin_user: User object of the admin triggering the payout
@@ -114,13 +140,26 @@ def trigger_payout(vendor_id, admin_user, transaction_id='', notes=''):
     Returns:
         dict: Payout summary with total amount paid
     """
+    from datetime import timedelta
     from vendors.models import PayoutRequest
+    from orders.models import OrderReturn
     
-    # Get all unpaid delivered items for this vendor
+    # Calculate cutoff date (7 days ago)
+    cutoff_date = timezone.now() - timedelta(days=7)
+    
+    # Get order items with active return requests (to exclude)
+    items_with_returns = OrderReturn.objects.filter(
+        status__in=['requested', 'approved', 'received']
+    ).values_list('order_item_id', flat=True)
+    
+    # Get all unpaid delivered items for this vendor that meet payout criteria
     unpaid_items = OrderItem.objects.filter(
         vendor_id=vendor_id,
         order__status='DELIVERED',
-        paid_to_vendor=False
+        paid_to_vendor=False,
+        order__delivered_at__lte=cutoff_date  # Delivered 7+ days ago
+    ).exclude(
+        id__in=items_with_returns  # No active return requests
     ).select_related('product', 'product__category')
     
     if not unpaid_items.exists():
