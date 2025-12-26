@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
-import { Search, Store, Eye, MapPin, Phone, CreditCard, FileText, Globe, Info, Calendar } from 'lucide-react';
+import { Search, Store, Eye, MapPin, Phone, CreditCard, FileText, Globe, Info, Calendar, Trash2 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -59,6 +59,21 @@ const AdminVendors = () => {
                     v.id === vendorId ? { ...v, is_active: currentStatus } : v
                 )
             );
+        }
+    };
+
+    const handleDeleteVendor = async (vendorId, storeName) => {
+        if (!window.confirm(`Are you sure you want to DELETE "${storeName}"? This will permanently remove the vendor and all associated data. This action cannot be undone!`)) {
+            return;
+        }
+
+        try {
+            await api.delete(`/users/admin/vendor-applications/${vendorId}/delete/`);
+            toast.success(`Vendor deleted successfully!`);
+            fetchVendors();
+        } catch (error) {
+            console.error('Failed to delete vendor:', error);
+            toast.error('Failed to delete vendor');
         }
     };
 
@@ -185,6 +200,13 @@ const AdminVendors = () => {
                                                                     <Eye className="h-4 w-4 mr-1" />
                                                                     View
                                                                 </Button>
+                                                                <button
+                                                                    onClick={() => handleDeleteVendor(vendor.id, vendor.vendor_profile?.store_name || vendor.username)}
+                                                                    className="px-3 py-1.5 rounded text-xs font-medium border border-red-200 text-red-700 hover:bg-red-50 transition-colors flex items-center gap-1"
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                    Delete
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
