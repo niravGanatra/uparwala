@@ -303,11 +303,12 @@ REST_AUTH = {
     'JWT_AUTH_COOKIE': 'access_token',
     'JWT_AUTH_REFRESH_COOKIE': 'refresh_token',
     'JWT_AUTH_HTTPONLY': True,
-    'JWT_AUTH_SAMESITE': 'None' if not DEBUG else 'Lax',  # None for production (cross-domain), Lax for local
-    'JWT_AUTH_SECURE': not DEBUG,  # Secure cookies only in production (HTTPS required)
+    'JWT_AUTH_SAMESITE': 'None',  # Required for cross-domain (Railway backend -> Custom frontend)
+    'JWT_AUTH_SECURE': True,  # Required for SameSite=None (HTTPS only)
+    'JWT_AUTH_COOKIE_DOMAIN': None,  # Allow cookies to work with any domain
     'SESSION_COOKIE_HTTPONLY': True,
-    'SESSION_COOKIE_SAMESITE': 'None' if not DEBUG else 'Lax',
-    'SESSION_COOKIE_SECURE': not DEBUG,
+    'SESSION_COOKIE_SAMESITE': 'None',
+    'SESSION_COOKIE_SECURE': True,
 }
 
 # Custom User Model
