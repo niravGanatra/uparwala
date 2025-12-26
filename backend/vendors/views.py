@@ -135,20 +135,31 @@ class ApproveVendorView(APIView):
                 from notifications.resend_service import send_email_via_resend
                 from notifications.email_templates import get_email_template
                 
+                print(f"[VENDOR APP APPROVE] Starting email send for vendor: {vendor.user.username}")
+                print(f"[VENDOR APP APPROVE] Vendor email: {vendor.user.email}")
+                
                 context = {
                     'vendor_name': vendor.store_name or vendor.user.get_full_name() or vendor.user.username,
                 }
+                print(f"[VENDOR APP APPROVE] Email context: {context}")
+                
                 email_data = get_email_template('vendor_approved', context)
                 
                 if email_data:
-                    send_email_via_resend(
+                    print(f"[VENDOR APP APPROVE] Template loaded. Subject: {email_data['subject']}")
+                    result = send_email_via_resend(
                         to_email=vendor.user.email,
                         subject=email_data['subject'],
                         html_content=email_data['content']
                     )
+                    print(f"[VENDOR APP APPROVE] Email sent. Result: {result}")
+                else:
+                    print(f"[VENDOR APP APPROVE] ERROR: Template not found")
             except Exception as e:
                 # Log error but don't fail the approval
-                print(f"Email sending failed: {e}")
+                print(f"[VENDOR APP APPROVE] ERROR sending email: {str(e)}")
+                import traceback
+                print(f"[VENDOR APP APPROVE] Traceback: {traceback.format_exc()}")
             
             return Response({'message': 'Vendor approved successfully and email sent'})
         except VendorProfile.DoesNotExist:
