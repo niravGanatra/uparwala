@@ -11,6 +11,7 @@ from .admin_views import (
     VendorApplicationListView,
     VendorApprovalView,
     VendorRejectionView,
+    VendorDeletionView,
 )
 from .vendor_application import VendorApplicationView, VendorStatusView
 from .auth_views import CustomLoginView
@@ -45,6 +46,7 @@ urlpatterns = [
     path('admin/vendor-applications/', VendorApplicationListView.as_view(), name='vendor-applications'),
     path('admin/vendor-applications/<int:pk>/approve/', VendorApprovalView.as_view(), name='approve-vendor'),
     path('admin/vendor-applications/<int:pk>/reject/', VendorRejectionView.as_view(), name='reject-vendor'),
+    path('admin/vendor-applications/<int:pk>/delete/', VendorDeletionView.as_view(), name='delete-vendor'),
 
     # Customer Addresses
     path('addresses/', AddressListCreateView.as_view(), name='address-list-create'),

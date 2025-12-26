@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, AlertCircle, Mail, Phone, MapPin } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertCircle, Mail, Phone, MapPin, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import api from '../../services/api';
@@ -76,6 +76,22 @@ const VendorApprovals = () => {
         } catch (error) {
             console.error('Failed to reject vendor:', error);
             toast.error('Failed to reject vendor');
+        }
+    };
+
+    const handleDelete = async (vendorId, storeName) => {
+        if (!window.confirm(`Are you sure you want to DELETE "${storeName}"? This action cannot be undone!`)) {
+            return;
+        }
+
+        try {
+            await api.delete(`/users/admin/vendor-applications/${vendorId}/delete/`);
+            toast.success(`${storeName} deleted successfully!`);
+            fetchVendors();
+            fetchStats();
+        } catch (error) {
+            console.error('Failed to delete vendor:', error);
+            toast.error('Failed to delete vendor');
         }
     };
 
@@ -207,6 +223,15 @@ const VendorApprovals = () => {
                                                 >
                                                     <XCircle className="h-4 w-4 mr-1" />
                                                     Reject
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="border-red-300 text-red-600 hover:bg-red-50"
+                                                    onClick={() => handleDelete(vendor.id, vendor.store_name)}
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-1" />
+                                                    Delete
                                                 </Button>
                                             </div>
                                         </div>
