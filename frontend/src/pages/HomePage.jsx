@@ -379,9 +379,9 @@ const HomePage = () => {
                                     >
                                         <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4 sm:p-6">
                                             {category.image ? (
-                                                <img src={category.image} alt={category.name} className="h-12 w-12 sm:h-16 sm:w-16 object-contain" />
+                                                <img src={category.image} alt={category.name} className="h-[60px] w-[60px] sm:h-20 sm:w-20 object-contain" />
                                             ) : (
-                                                <IconComponent className="h-12 w-12 sm:h-16 sm:w-16 text-yellow-600 group-hover:text-yellow-700 transition-colors" />
+                                                <IconComponent className="h-[60px] w-[60px] sm:h-20 sm:w-20 text-yellow-600 group-hover:text-yellow-700 transition-colors" />
                                             )}
                                         </div>
                                         <div className="p-2 sm:p-3 text-center">
