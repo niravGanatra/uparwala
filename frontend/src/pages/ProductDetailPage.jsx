@@ -269,6 +269,31 @@ const ProductDetailPage = () => {
                                         </Button>
                                         <Button
                                             size="lg"
+                                            variant="default"
+                                            className="w-full sm:flex-1 bg-orange-600 hover:bg-orange-700"
+                                            onClick={async () => {
+                                                if (!user) {
+                                                    toast.error('Please login to buy');
+                                                    navigate('/login');
+                                                    return;
+                                                }
+                                                // Track Buy Now
+                                                trackEvent('buy_now', {
+                                                    product_id: product.id,
+                                                    price: product.price,
+                                                    quantity: quantity,
+                                                    name: product.name
+                                                });
+                                                // Add to cart and navigate to checkout
+                                                await addToCart(product.id, quantity);
+                                                navigate('/checkout');
+                                            }}
+                                            disabled={cartLoading}
+                                        >
+                                            Buy Now
+                                        </Button>
+                                        <Button
+                                            size="lg"
                                             variant="outline"
                                             className="w-full sm:w-auto sm:min-w-[56px]"
                                             aria-label="Add to wishlist"
