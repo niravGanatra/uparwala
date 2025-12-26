@@ -106,20 +106,34 @@ class VendorApprovalView(APIView):
                 from notifications.resend_service import send_email_via_resend
                 from notifications.email_templates import get_email_template
                 
+                print(f"[VENDOR APPROVAL EMAIL] Starting email send for vendor: {vendor.username}")
+                print(f"[VENDOR APPROVAL EMAIL] Vendor email: {vendor.email}")
+                
                 context = {
                     'vendor_name': vendor.business_name or vendor.get_full_name() or vendor.username,
                 }
+                print(f"[VENDOR APPROVAL EMAIL] Email context: {context}")
+                
                 email_data = get_email_template('vendor_approved', context)
                 
                 if email_data:
-                    send_email_via_resend(
+                    print(f"[VENDOR APPROVAL EMAIL] Email template loaded successfully")
+                    print(f"[VENDOR APPROVAL EMAIL] Subject: {email_data['subject']}")
+                    
+                    result = send_email_via_resend(
                         to_email=vendor.email,
                         subject=email_data['subject'],
                         html_content=email_data['content']
                     )
+                    print(f"[VENDOR APPROVAL EMAIL] Email sent successfully! Resend response: {result}")
+                else:
+                    print(f"[VENDOR APPROVAL EMAIL] ERROR: Email template not found!")
             except Exception as e:
                 # Log error but don't fail the approval
-                print(f"Email sending failed: {e}")
+                print(f"[VENDOR APPROVAL EMAIL] ERROR: Email sending failed: {str(e)}")
+                print(f"[VENDOR APPROVAL EMAIL] ERROR Type: {type(e).__name__}")
+                import traceback
+                print(f"[VENDOR APPROVAL EMAIL] Traceback: {traceback.format_exc()}")
             
             return Response({
                 'message': f'Vendor {vendor.username} approved successfully and email sent',
