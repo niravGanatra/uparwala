@@ -9,6 +9,7 @@ class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart', null=True, blank=True)
     session_id = models.CharField(max_length=40, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
@@ -88,7 +89,18 @@ class Order(models.Model):
     
     # Email flags
     review_request_sent = models.BooleanField(default=False)
+    review_request_sent = models.BooleanField(default=False)
     review_request_sent_at = models.DateTimeField(null=True, blank=True)
+
+    # Return Status
+    RETURN_STATUS_CHOICES = (
+        ('requested', 'Return Requested'),
+        ('approved', 'Return Approved'),
+        ('rejected', 'Return Rejected'),
+        ('refunded', 'Refunded'),
+    )
+    return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, null=True, blank=True)
+    return_reason = models.TextField(blank=True)
 
     class Meta:
         ordering = ['-created_at']

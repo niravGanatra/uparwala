@@ -8,6 +8,7 @@ from .views import (
 from .checkout_views import CheckoutView
 from .logistics_views import CODPincodeViewSet, GiftOptionViewSet
 from .serviceability_views import AdminServiceabilityViewSet, PublicServiceabilityCheckView, PublicPostcodeDetailsView
+from .return_views import request_return
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -27,6 +28,7 @@ urlpatterns = [
     path('cart/items/<int:item_id>/', RemoveFromCartView.as_view(), name='remove-from-cart'),
     path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
     path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),
+    path('orders/<int:order_id>/return/', request_return, name='request-return'),
     path('admin/orders/', AdminOrderListView.as_view(), name='admin-order-list'),
     
     # Serviceability Check

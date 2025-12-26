@@ -210,22 +210,7 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'welcome_email': {
-            'subject': "Welcome to Uparwala!",
-            'content': f"""
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #f97316;">Welcome aboard!</h2>
-                    <p>Hi {context.get('name')},</p>
-                    <p>Thanks for joining Uparwala Marketplace. We're excited to have you.</p>
-                    <p>Start exploring thousands of unique products today!</p>
-                    
-                    <a href="{settings.FRONTEND_URL}" 
-                       style="background-color: #f97316; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                        Start Shopping
-                    </a>
-                </div>
-            """
-        },
+
         'welcome_email': {
             'subject': "You're all set! Welcome to the Uparwala community",
             'content': f'''
