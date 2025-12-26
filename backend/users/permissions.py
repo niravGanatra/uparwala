@@ -8,7 +8,7 @@ class IsApprovedVendor(BasePermission):
         return (
             request.user.is_authenticated and
             request.user.is_vendor and
-            request.user.vendor_status == 'approved'
+            request.user.vendor_status in ['approved', 'verified']
         )
 
 class IsVendor(BasePermission):
