@@ -11,13 +11,40 @@ import CODManager from '../../components/admin/settings/CODManager';
 import GiftManager from '../../components/admin/settings/GiftManager';
 
 const AdminSettings = () => {
-    const [activeTab, setActiveTab] = useState('general');
+    const [testEmailGroup, setTestEmailGroup] = useState('customer');
+    const [testTemplate, setTestTemplate] = useState('welcome_email');
 
-    const tabs = [
-        { id: 'general', label: 'General', icon: SettingsIcon },
-        { id: 'logistics', label: 'Logistics', icon: Truck },
-        { id: 'addons', label: 'Store Add-ons', icon: LayoutGrid },
-    ];
+    const emailTemplates = {
+        customer: [
+            { id: 'welcome_email', name: 'Welcome Email' },
+            { id: 'password_reset', name: 'Password Reset' },
+            { id: 'order_confirmation', name: 'Order Confirmation' },
+            { id: 'order_shipped', name: 'Order Shipped' },
+            { id: 'order_out_for_delivery', name: 'Out for Delivery' },
+            { id: 'order_delivered', name: 'Order Delivered' },
+            { id: 'order_cancellation', name: 'Order Cancellation' },
+            { id: 'payment_received', name: 'Payment Received' },
+            { id: 'return_request_received', name: 'Return Request Received' },
+            { id: 'refund_processed', name: 'Refund Processed' },
+            { id: 'rate_and_review', name: 'Rate & Review' },
+            { id: 'abandoned_cart', name: 'Abandoned Cart' },
+            { id: 'back_in_stock', name: 'Back in Stock' },
+        ],
+        vendor: [
+            { id: 'vendor_registration_received', name: 'Registration Received' },
+            { id: 'vendor_account_approved', name: 'Account Approved' },
+            { id: 'vendor_account_rejected', name: 'Account Rejected' },
+            { id: 'vendor_new_order', name: 'New Order Alert' },
+            { id: 'vendor_order_cancelled', name: 'Order Cancelled Alert' },
+            { id: 'vendor_sla_warning', name: 'SLA Warning' },
+            { id: 'vendor_product_status_update', name: 'Product Status Update' },
+            { id: 'vendor_low_stock', name: 'Low Stock Alert' },
+            { id: 'vendor_payout_processed', name: 'Payout Processed' },
+            { id: 'vendor_commission_invoice', name: 'Commission Invoice' },
+            { id: 'vendor_return_requested', name: 'Return Requested' },
+            { id: 'vendor_rto_delivered', name: 'RTO Delivered' },
+        ]
+    };
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -177,16 +204,29 @@ const AdminSettings = () => {
                                             />
                                         </div>
                                         <div>
+                                            <label className="block text-sm font-medium mb-2">Group</label>
+                                            <select
+                                                value={testEmailGroup}
+                                                onChange={(e) => {
+                                                    setTestEmailGroup(e.target.value);
+                                                    setTestTemplate(emailTemplates[e.target.value][0].id);
+                                                }}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mb-4"
+                                            >
+                                                <option value="customer">Customer Emails</option>
+                                                <option value="vendor">Vendor Emails</option>
+                                            </select>
+
                                             <label className="block text-sm font-medium mb-2">Template</label>
                                             <select
                                                 id="test-email-template"
+                                                value={testTemplate}
+                                                onChange={(e) => setTestTemplate(e.target.value)}
                                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                <option value="welcome_email">Welcome Email</option>
-                                                <option value="order_confirmation">Order Confirmation</option>
-                                                <option value="order_shipped">Order Shipped</option>
-                                                <option value="order_out_for_delivery">Out for Delivery</option>
-                                                <option value="order_delivered">Order Delivered</option>
+                                                {emailTemplates[testEmailGroup].map((t) => (
+                                                    <option key={t.id} value={t.id}>{t.name}</option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
@@ -194,7 +234,9 @@ const AdminSettings = () => {
                                         variant="outline"
                                         onClick={async () => {
                                             const email = document.getElementById('test-email-recipient').value;
-                                            const template = document.getElementById('test-email-template').value;
+                                            // const template = document.getElementById('test-email-template').value; // Use state instead
+                                            const template = testTemplate;
+
                                             if (!email) {
                                                 alert('Please enter an email');
                                                 return;
@@ -205,7 +247,7 @@ const AdminSettings = () => {
                                                     template,
                                                     sync: true
                                                 });
-                                                alert('Test email sent successfully!');
+                                                alert(`Test email (${template}) sent successfully!`);
                                             } catch (e) {
                                                 const errData = e.response?.data || {};
                                                 let msg = errData.error || 'Error sending test email';

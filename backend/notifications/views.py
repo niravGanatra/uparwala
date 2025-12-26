@@ -14,35 +14,98 @@ class TestEmailView(APIView):
         if not email:
             return Response({'error': 'Email is required'}, status=400)
             
-        # Context data for testing different templates
-        context = {
+        # Context generation based on template type
+        base_context = {
             'name': 'Test User',
             'customer_name': 'Test Customer',
-            'vendor_name': 'Test Vendor',
-            'order_id': '12345',
-            'total_amount': '999.00',
-            'tracking_number': 'TRACK123',
-            'courier_name': 'FedEx',
-            'amount': '5000.00',
-            'transaction_id': 'TXN789',
-            'date': '2025-11-29',
-            'product_name': 'Awesome Product',
-            'product_slug': 'awesome-product',
-            'reason': 'Image quality low',
+            'vendor_name': 'Test Vendor Store',
+            'order_id': 'ORD-TEST-123',
+            'transaction_id': 'TXN-ABC-789',
+            'date': '26 Dec 2025',
         }
         
-        # Send email (using .delay() for async execution if Celery is running)
-        # For testing without Celery worker, we can call it directly or use .delay()
-        # If Celery is not running, .delay() might queue it but not execute it.
-        # For immediate feedback in dev, we might want to call it synchronously if needed,
-        # but let's stick to the pattern.
+        specific_contexts = {
+            # --- Customer Templates ---
+            'welcome_email': {},
+            'password_reset': {
+                'reset_url': 'https://uparwala.com/reset-password/token123'
+            },
+            'order_confirmation': {
+                'total_amount': '1499.00',
+            },
+            'order_shipped': {
+                'tracking_number': 'AWB123456789',
+                'courier_name': 'BlueDart'
+            },
+            'order_out_for_delivery': {},
+            'order_delivered': {},
+            'order_cancellation': {
+                'refund_amount': '1499.00'
+            },
+            'payment_received': {
+                'amount': '1499.00'
+            },
+            'return_request_received': {},
+            'refund_processed': {
+                'amount': '1499.00'
+            },
+            'rate_and_review': {
+                'product_name': 'Premium Cotton Shirt',
+                'product_slug': 'premium-cotton-shirt'
+            },
+            'abandoned_cart': {},
+            'back_in_stock': {
+                'product_name': 'Sony WH-1000XM5',
+                'product_slug': 'sony-wh-1000xm5'
+            },
+            
+            # --- Vendor Templates ---
+            'vendor_registration_received': {},
+            'vendor_account_approved': {},
+            'vendor_account_rejected': {
+                'reason': 'GST certificate invalid or blurred.'
+            },
+            'vendor_new_order': {
+                'items_html': '<li>Men\'s T-Shirt (Blue, L) x 1</li><li>Slim Fit Jeans (Black, 32) x 1</li>',
+                'shipping_address': 'John Doe<br>123 Main St<br>Mumbai, MH - 400001<br>Phone: 9876543210',
+                'ship_by_date': '28 Dec 2025'
+            },
+            'vendor_order_cancelled': {},
+            'vendor_sla_warning': {},
+            'vendor_product_status_update': {
+                'product_name': 'Wireless Earbuds',
+                'status': 'Rejected',
+                'reason': 'Description contains prohibited claims.'
+            },
+            'vendor_low_stock': {
+                'product_name': 'Running Shoes',
+                'current_stock': '3'
+            },
+            'vendor_payout_processed': {
+                'amount': '5000.00',
+                'total_sales': '5500.00',
+                'commission': '500.00'
+            },
+            'vendor_commission_invoice': {
+                'month': 'November 2025',
+                'total_commission': '450.00'
+            },
+            'vendor_return_requested': {
+                'reason': 'Size too small'
+            },
+            'vendor_rto_delivered': {}
+        }
+        
+        # Merge base with specific context
+        context = base_context.copy()
+        if template in specific_contexts:
+            context.update(specific_contexts[template])
         
         try:
             # Check if we want to force sync for testing
-            force_sync = request.data.get('sync', False)
+            force_sync = request.data.get('sync', True) # Default to True for admin test button
             
             if force_sync:
-                # Pass raise_error=True to catch exceptions here
                 send_notification_email(template, email, context, raise_error=True)
                 status = 'sent'
             else:
@@ -50,30 +113,18 @@ class TestEmailView(APIView):
                 status = 'queued'
                 
             return Response({
-                'message': f'Email test {status}',
+                'message': f'Email {status} successfully',
                 'template': template,
-                'recipient': email
+                'recipient': email,
+                'context': context
             })
         except Exception as e:
             from django.conf import settings
-            import os
             
-            # Mask password for security
-            pwd = settings.EMAIL_HOST_PASSWORD
-            masked_pwd = f"{pwd[:2]}...{pwd[-2:]}" if pwd and len(pwd) > 4 else "NOT SET" if not pwd else "***"
-            
-            debug_info = {
+            return Response({
                 'error': str(e),
-                'config': {
-                    'host': settings.EMAIL_HOST,
-                    'port': settings.EMAIL_PORT,
-                    'user': settings.EMAIL_HOST_USER,
-                    'password_configured': bool(settings.EMAIL_HOST_PASSWORD),
-                    'use_tls': settings.EMAIL_USE_TLS,
-                    'use_ssl': settings.EMAIL_USE_SSL,
-                }
-            }
-            return Response(debug_info, status=500)
+                'detail': 'Check backend logs for full traceback.'
+            }, status=500)
 class TestWhatsAppView(APIView):
     """Test endpoint to trigger a WhatsApp message (Admin only)"""
     permission_classes = [IsAdminUser]

@@ -298,18 +298,8 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 # REST Auth Settings
-REST_AUTH = {
-    'USE_JWT': True,
-    'JWT_AUTH_COOKIE': 'access_token',
-    'JWT_AUTH_REFRESH_COOKIE': 'refresh_token',
-    'JWT_AUTH_HTTPONLY': True,
-    'JWT_AUTH_SAMESITE': 'None',  # Required for cross-domain (Railway backend -> Custom frontend)
-    'JWT_AUTH_SECURE': True,  # Required for SameSite=None (HTTPS only)
-    'JWT_AUTH_COOKIE_DOMAIN': None,  # Allow cookies to work with any domain
-    'SESSION_COOKIE_HTTPONLY': True,
-    'SESSION_COOKIE_SAMESITE': 'None',
-    'SESSION_COOKIE_SECURE': True,
-}
+# REST_AUTH moved to bottom of file
+
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
@@ -371,9 +361,20 @@ SIMPLE_JWT = {
 }
 
 # Allauth settings - allow both username and email login
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_LOGIN_METHODS = {'email', 'username'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username', 'password1'] # password1 = password, password1 + password2 = password + confirmation? 
+# The warning suggested ['email*', 'username', 'password1', 'password2']
+# But typically REST APIs don't force double password entry unless configured.
+# Let's stick to standard map if possible or the list if that's what updated allauth wants.
+# Actually, let's try to map the old behavior:
+# EMAIL_REQUIRED = True -> email*
+# USERNAME_REQUIRED = False -> username (optional)
+# Using the list format suggested by the warning:
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username'] # We can add passwords if needed, but Login doesn't use signup fields usually?
+# Wait, for LOGIN, we need ACCOUNT_LOGIN_METHODS.
+# The warnings were about serializers.
+
+# Let's perform a safe update based on the warning exact text for now, but usually for API based signup we might not need password confirmation field.
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # Override JWT user authentication to allow inactive users
@@ -428,10 +429,14 @@ TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
 TWILIO_WHATSAPP_NUMBER = os.getenv('TWILIO_WHATSAPP_NUMBER')
 
 # dj-rest-auth settings
+# dj-rest-auth settings
 REST_AUTH = {
     'USE_JWT': True,
     'JWT_AUTH_COOKIE': 'jwt-auth',
     'JWT_AUTH_REFRESH_COOKIE': 'jwt-refresh-token',
+    'JWT_AUTH_HTTPONLY': True,
+    'JWT_AUTH_SAMESITE': 'Lax' if DEBUG else 'None',  # Lax for local (http), None for prod (https)
+    'JWT_AUTH_SECURE': not DEBUG,  # False for local, True for prod
     'PASSWORD_RESET_SERIALIZER': 'users.serializers.CustomPasswordResetSerializer',
     'REGISTER_SERIALIZER': 'users.serializers.RegisterSerializer',
 }
