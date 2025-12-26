@@ -247,6 +247,17 @@ class Product(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        # Auto-generate slug if not present
+        if not self.slug:
+            self.slug = slugify(self.name)
+            
+            # Ensure uniqueness
+            original_slug = self.slug
+            counter = 1
+            while Product.objects.filter(slug=self.slug).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
+
         # Auto-compute price field
         if self.sale_price and self.sale_price < self.regular_price:
             self.price = self.sale_price

@@ -35,7 +35,12 @@ if not SECRET_KEY and os.getenv('DEBUG') == 'True':
     SECRET_KEY = 'django-insecure-fallback-dev-key'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+# SECURITY WARNING: don't run with debug turned on in production!
+# Default to True for local development (if not on Railway), False if on Railway or explicitly set
+def is_railway():
+    return os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_STATIC_URL') is not None
+
+DEBUG = os.getenv('DEBUG', 'False' if is_railway() else 'True') == 'True'
 
 # Security Headers (Production)
 if not DEBUG:
@@ -275,7 +280,6 @@ ACCOUNT_ADAPTER = 'users.adapters.CustomAccountAdapter'
 
 # New Allauth Configuration
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username', 'password1', 'password2']
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_REQUIRED = True
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
@@ -353,7 +357,7 @@ REST_FRAMEWORK = {
     }
 }
 
-from datetime import timedelta
+# from datetime import timedelta (Already imported at top)
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=120),
@@ -370,7 +374,7 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'username', 'password1'] # password1 = passwo
 # EMAIL_REQUIRED = True -> email*
 # USERNAME_REQUIRED = False -> username (optional)
 # Using the list format suggested by the warning:
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'username'] # We can add passwords if needed, but Login doesn't use signup fields usually?
+# ACCOUNT_SIGNUP_FIELDS removed (already defined above)
 # Wait, for LOGIN, we need ACCOUNT_LOGIN_METHODS.
 # The warnings were about serializers.
 

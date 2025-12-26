@@ -141,7 +141,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
-        read_only_fields = ('vendor', 'created_at', 'updated_at')
+        read_only_fields = ('vendor', 'created_at', 'updated_at', 'slug', 'price')
 
 class ProductListSerializer(ProductSerializer):
     """Serializer for listing products (reusing ProductSerializer for now)"""

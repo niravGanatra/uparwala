@@ -395,8 +395,8 @@ const VendorProducts = () => {
                                     <Input
                                         type="number"
                                         step="0.01"
-                                        value={formData.price}
-                                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                        value={formData.regular_price}
+                                        onChange={(e) => setFormData({ ...formData, regular_price: e.target.value })}
                                         required
                                         placeholder="0.00"
                                     />
