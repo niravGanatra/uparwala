@@ -58,10 +58,14 @@ class RegisterSerializer(serializers.ModelSerializer):
                 username = f"{base_username}{counter}"
                 counter += 1
         
+        # Check if is_vendor is passed in context (for vendor registration)
+        is_vendor = self.context.get('is_vendor', False)
+
         user = User.objects.create_user(
             username=username,
             email=validated_data['email'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            is_vendor=is_vendor
         )
         return user
 

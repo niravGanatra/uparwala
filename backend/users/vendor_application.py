@@ -21,7 +21,7 @@ class VendorApplicationView(APIView):
         
         try:
             # First create the user account
-            serializer = RegisterSerializer(data=request.data)
+            serializer = RegisterSerializer(data=request.data, context={'is_vendor': True})
             if serializer.is_valid():
                 print("Vendor Application: Serializer valid, saving user...")
                 try:
@@ -33,7 +33,7 @@ class VendorApplicationView(APIView):
                     raise e
                 
                 # Update user as vendor with pending status
-                user.is_vendor = True
+                # user.is_vendor = True (Already set during creation)
                 user.vendor_status = 'pending'
                 user.vendor_application_date = timezone.now()
                 
