@@ -11,7 +11,14 @@ import CODManager from '../../components/admin/settings/CODManager';
 import GiftManager from '../../components/admin/settings/GiftManager';
 
 const AdminSettings = () => {
+    const [activeTab, setActiveTab] = useState('general');
     const [testEmailGroup, setTestEmailGroup] = useState('customer');
+
+    const tabs = [
+        { id: 'general', label: 'General', icon: Globe },
+        { id: 'logistics', label: 'Logistics', icon: Truck },
+        { id: 'addons', label: 'Add-ons', icon: Gift },
+    ];
     const [testTemplate, setTestTemplate] = useState('welcome_email');
 
     const emailTemplates = {
