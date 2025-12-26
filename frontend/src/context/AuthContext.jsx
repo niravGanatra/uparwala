@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         await apiLogout();
         setUser(null);
-        window.location.href = '/login';
+        window.location.href = '/';
     };
 
     return (
