@@ -95,6 +95,26 @@ class VendorApplicationView(APIView):
                         cancelled_cheque=request.FILES.get('cancelled_cheque')
                     )
                     print("Vendor Application: VendorProfile created successfully.")
+                    
+                    # Send Registration Received Email
+                    try:
+                        from notifications.resend_service import send_email_via_resend
+                        from notifications.email_templates import get_email_template
+                        
+                        print(f"Vendor Application: Sending registration email to {user.email}")
+                        context = {'vendor_name': store_name}
+                        email_data = get_email_template('vendor_registration_received', context)
+                        
+                        if email_data:
+                            send_email_via_resend(
+                                to_email=user.email,
+                                subject=email_data['subject'],
+                                html_content=email_data['content']
+                            )
+                            print("Vendor Application: Registration email sent.")
+                    except Exception as email_err:
+                        print(f"Vendor Application: Error sending email: {email_err}")
+
                 except Exception as e:
                     # If VendorProfile creation fails, don't fail the whole registration
                     # The user is already created as a vendor with pending status

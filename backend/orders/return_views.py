@@ -52,4 +52,23 @@ def request_return(request, order_id):
     except Exception as e:
         logger.error(f"Failed to send return request email: {e}")
 
+    # Notify Vendors
+    try:
+        vendor_ids = order.items.values_list('product__vendor', flat=True).distinct()
+        from vendors.models import VendorProfile
+        vendors = VendorProfile.objects.filter(id__in=vendor_ids)
+        
+        for vendor in vendors:
+            if vendor.user.email:
+                context = {
+                    'vendor_name': vendor.store_name,
+                    'order_id': order.id,
+                    'reason': reason
+                }
+                email_data = get_email_template('vendor_return_requested', context)
+                if email_data:
+                    send_email_via_resend(vendor.user.email, email_data['subject'], email_data['content'])
+    except Exception as e:
+         logger.error(f"Failed to send vendor return email: {e}")
+
     return Response({'message': 'Return request submitted successfully'})

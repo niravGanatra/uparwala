@@ -83,7 +83,22 @@ class ApproveProductView(APIView):
         product.is_active = True
         product.save()
         
-        # TODO: Send email notification to vendor
+        # Send email notification to vendor
+        try:
+            if product.vendor and product.vendor.user.email:
+                from notifications.resend_service import send_email_via_resend
+                from notifications.email_templates import get_email_template
+                
+                context = {
+                    'vendor_name': product.vendor.store_name,
+                    'product_name': product.name,
+                    'status': 'Live'
+                }
+                email_data = get_email_template('vendor_product_status_update', context)
+                if email_data:
+                    send_email_via_resend(product.vendor.user.email, email_data['subject'], email_data['content'])
+        except Exception as e:
+            print(f"Failed to send product approval email: {e}")
         
         serializer = ProductModerationSerializer(moderation)
         return Response({
@@ -131,7 +146,23 @@ class RejectProductView(APIView):
         product.is_active = False
         product.save()
         
-        # TODO: Send email notification to vendor
+        # Send email notification to vendor
+        try:
+            if product.vendor and product.vendor.user.email:
+                from notifications.resend_service import send_email_via_resend
+                from notifications.email_templates import get_email_template
+                
+                context = {
+                    'vendor_name': product.vendor.store_name,
+                    'product_name': product.name,
+                    'status': 'Rejected',
+                    'reason': rejection_reason
+                }
+                email_data = get_email_template('vendor_product_status_update', context)
+                if email_data:
+                    send_email_via_resend(product.vendor.user.email, email_data['subject'], email_data['content'])
+        except Exception as e:
+            print(f"Failed to send product rejection email: {e}")
         
         serializer = ProductModerationSerializer(moderation)
         return Response({
@@ -179,7 +210,23 @@ class RequestChangesView(APIView):
         product.is_active = False
         product.save()
         
-        # TODO: Send email notification to vendor
+        # Send email notification to vendor
+        try:
+            if product.vendor and product.vendor.user.email:
+                from notifications.resend_service import send_email_via_resend
+                from notifications.email_templates import get_email_template
+                
+                context = {
+                    'vendor_name': product.vendor.store_name,
+                    'product_name': product.name,
+                    'status': 'Changes Requested',
+                    'reason': notes
+                }
+                email_data = get_email_template('vendor_product_status_update', context)
+                if email_data:
+                    send_email_via_resend(product.vendor.user.email, email_data['subject'], email_data['content'])
+        except Exception as e:
+            print(f"Failed to send product change request email: {e}")
         
         serializer = ProductModerationSerializer(moderation)
         return Response({

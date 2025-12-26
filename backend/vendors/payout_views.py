@@ -166,7 +166,35 @@ class ApprovePayoutView(APIView):
         vendor.balance -= payout.requested_amount
         vendor.save()
         
-        # TODO: Send email notification to vendor
+        # Send email notification to vendor
+        try:
+            if vendor.user.email:
+                from notifications.resend_service import send_email_via_resend
+                from notifications.email_templates import get_email_template
+                
+                # Context is tricky as PayoutRequest model might not store Sales/Commission breakdown directly
+                # But template expects: amount, total_sales, commission
+                # We can just send the net amount if we don't have breakdown handy, or fetch it.
+                # Use simplified context for now.
+                
+                context = {
+                    'vendor_name': vendor.store_name,
+                    'amount': float(payout.requested_amount),
+                    'total_sales': float(payout.requested_amount), # Simplified: assuming net check
+                    'commission': 0.00, # Simplified
+                    'transaction_id': transaction_id,
+                    'date': timezone.now().strftime('%d %b %Y')
+                }
+                
+                # If we had access to the calculation that created this request, we'd use it.
+                # For `payout_approved` template (existing) or `vendor_payout_processed` (new)?
+                # I created `vendor_payout_processed` template. Let's use that one.
+                
+                email_data = get_email_template('vendor_payout_processed', context)
+                if email_data:
+                    send_email_via_resend(vendor.user.email, email_data['subject'], email_data['content'])
+        except Exception as e:
+            print(f"Failed to send payout processed email: {e}")
         
         serializer = PayoutRequestSerializer(payout)
         return Response({

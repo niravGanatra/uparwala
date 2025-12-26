@@ -58,3 +58,36 @@ def trigger_back_in_stock_notifications(sender, instance, created, **kwargs):
                             notif.save()
                 except Exception as e:
                     logger.error(f"Failed to send back-in-stock email to {notif.email}: {e}")
+
+@receiver(pre_save, sender=Product)
+def check_low_stock_and_notify(sender, instance, **kwargs):
+    """
+    Check for low stock threshold (< 5) and notify vendor.
+    """
+    if instance.pk:
+        try:
+            old_product = Product.objects.get(pk=instance.pk)
+            
+            # Threshold
+            LOW_STOCK_THRESHOLD = 5
+            
+            # Check if stock dropped below threshold
+            # Trigger only if it crosses the boundary downwards
+            if instance.manage_stock and instance.stock < LOW_STOCK_THRESHOLD and old_product.stock >= LOW_STOCK_THRESHOLD:
+                if instance.vendor and instance.vendor.user.email:
+                    try:
+                        context = {
+                            'vendor_name': instance.vendor.store_name,
+                            'product_name': instance.name,
+                            'current_stock': instance.stock,
+                            'product_slug': instance.slug or ''
+                        }
+                        
+                        send_notification_email.delay('vendor_low_stock', instance.vendor.user.email, context)
+                        logger.info(f"Triggered Low Stock alert for {instance.name} to {instance.vendor.user.email}")
+                        
+                    except Exception as e:
+                        logger.error(f"Failed to trigger low stock email: {e}")
+                        
+        except Product.DoesNotExist:
+            pass

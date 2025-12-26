@@ -1,4 +1,5 @@
 from django.db.models.signals import post_save, pre_save
+import datetime
 from django.dispatch import receiver
 from .models import Order
 from .shiprocket_models import OrderTrackingStatus
@@ -33,8 +34,85 @@ def notify_order_placed(sender, instance, created, **kwargs):
                 msg = f"Hi {instance.user.first_name or 'there'}, your order #{instance.id} has been placed successfully! Total: {amount:.2f}. We will notify you when it ships."
                 send_sms_task.delay(user_phone, msg)
                 send_whatsapp_task.delay(user_phone, msg)
+
+            # 3. Notify Vendors
+            from collections import defaultdict
+            vendor_items = defaultdict(list)
+            
+            # Group items by vendor
+            for item in instance.items.all():
+                if item.product.vendor:
+                    vendor_items[item.product.vendor].append(item)
+            
+            # Send email to each vendor
+            for vendor_profile, items in vendor_items.items():
+                if not vendor_profile.user.email:
+                    continue
+                    
+                # Build items list HTML
+                items_html = ""
+                for item in items:
+                    items_html += f"<li>{item.product.name} (SKU: {item.product.sku or 'N/A'}) x {item.quantity}</li>"
+                
+                # Format shipping address
+                addr_data = instance.shipping_address_data
+                shipping_address = f"{addr_data.get('name', 'Customer')}<br>"
+                shipping_address += f"{addr_data.get('address_line1', '')}<br>"
+                if addr_data.get('address_line2'):
+                    shipping_address += f"{addr_data.get('address_line2', '')}<br>"
+                shipping_address += f"{addr_data.get('city', '')}, {addr_data.get('state', '')} - {addr_data.get('pincode', '')}<br>"
+                shipping_address += f"Phone: {addr_data.get('phone', '')}"
+
+                vendor_context = {
+                    'vendor_name': vendor_profile.store_name,
+                    'order_id': instance.id,
+                    'items_html': items_html,
+                    'shipping_address': shipping_address,
+                    'ship_by_date': (instance.created_at + datetime.timedelta(days=2)).strftime('%d %b %Y') # SLA: 48 hours
+                }
+                
+                send_notification_email.delay('vendor_new_order', vendor_profile.user.email, vendor_context)
+
         except Exception as e:
             logger.error(f"Failed to send order placed notification: {e}")
+
+@receiver(post_save, sender=Order)
+def notify_order_cancelled(sender, instance, **kwargs):
+    """Notify vendor when order is cancelled"""
+    if instance.pk:
+        try:
+            # We need to know previous status to detect change to CANCELLED
+            # However, post_save doesn't give 'previous' instance easily without dirty fields or pre_save check.
+            # But the 'refund_processed' signal uses pre_save. Let's move this logic there or use a separate pre_save.
+            pass 
+        except Exception:
+            pass
+
+@receiver(pre_save, sender=Order)
+def notify_order_status_change_pre(sender, instance, **kwargs):
+    """Handle status change notifications for Candidates/Vendors (Cancellation)"""
+    if instance.pk:
+        try:
+            old_order = Order.objects.get(pk=instance.pk)
+            
+            # Check for Cancellation
+            if instance.status == 'CANCELLED' and old_order.status != 'CANCELLED':
+                # Notify Vendors
+                vendor_ids = instance.items.values_list('product__vendor', flat=True).distinct()
+                from vendors.models import VendorProfile
+                vendors = VendorProfile.objects.filter(id__in=vendor_ids)
+                
+                for vendor in vendors:
+                    if vendor.user.email:
+                        context = {
+                            'vendor_name': vendor.store_name,
+                            'order_id': instance.id
+                        }
+                        send_notification_email.delay('vendor_order_cancelled', vendor.user.email, context)
+
+        except Order.DoesNotExist:
+            pass
+
 
 @receiver(post_save, sender=OrderTrackingStatus)
 def notify_order_status_update(sender, instance, created, **kwargs):
@@ -69,6 +147,23 @@ def notify_order_status_update(sender, instance, created, **kwargs):
                 
                 if email_template:
                     send_notification_email.delay(email_template, order.user.email, email_context)
+
+            # 3. Vendor RTO Notification
+            if 'RTO' in status and 'DELIVERED' in status:
+                 vendor_ids = order.items.values_list('product__vendor', flat=True).distinct()
+                 from vendors.models import VendorProfile
+                 vendors = VendorProfile.objects.filter(id__in=vendor_ids)
+                 
+                 for vendor in vendors:
+                    if vendor.user.email:
+                        context = {
+                            'vendor_name': vendor.store_name,
+                            'order_id': order.id
+                        }
+                        # We use send_notification_email.delay if template exists, or direct resend
+                        # Using direct resend here for simplicity as I didn't register this task in tasks.py yet
+                        # actually send_notification_email handles template lookup.
+                        send_notification_email.delay('vendor_rto_delivered', vendor.user.email, context)
 
             # 2. SMS/WhatsApp Notification
             user_phone = order.shipping_address_data.get('phone')

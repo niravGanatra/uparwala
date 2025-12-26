@@ -352,6 +352,192 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
+        },
+
+        # --- Vendor Notifications ---
+
+        # Phase 1: Onboarding
+        'vendor_registration_received': {
+            'subject': "We received your application for Uparwala",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #2563eb;">Application Received</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>Thanks for applying to sell on Uparwala. We've received your documents.</p>
+                    <p>We will verify your GST and PAN details within 48 hours.</p>
+                </div>
+            """
+        },
+        'vendor_account_approved': {
+            'subject': "Congratulations! Your Seller Account is Active",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #16a34a;">Welcome Aboard!</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>Your documents have been verified and your seller account is now ACTIVE.</p>
+                    <p>You can now log in and start uploading products.</p>
+                    
+                    <a href="{settings.FRONTEND_URL}/vendor/dashboard" 
+                       style="background-color: #16a34a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px;">
+                        Go to Dashboard
+                    </a>
+                </div>
+            """
+        },
+        'vendor_account_rejected': {
+            'subject': "Update on your Seller Application",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #dc2626;">Action Required</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>We reviewed your application but found some issues:</p>
+                    <div style="background-color: #fee2e2; padding: 15px; border-radius: 8px; border-left: 4px solid #dc2626; margin: 15px 0;">
+                        <p><strong>Reason:</strong> {context.get('reason')}</p>
+                    </div>
+                    <p>Please update your documents and re-apply.</p>
+                </div>
+            """
+        },
+
+        # Phase 2: Order Management
+        'vendor_new_order': {
+            'subject': f"New Order #{context.get('order_id')}: Ship by {context.get('ship_by_date')}",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #f97316;">New Order Received!</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>You have a new order to fulfill.</p>
+                    
+                    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p><strong>Order ID:</strong> #{context.get('order_id')}</p>
+                        <p><strong>Items:</strong></p>
+                        <ul>
+                            {context.get('items_html', '')}
+                        </ul>
+                    </div>
+
+                     <div style="background-color: #fff7ed; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #fed7aa;">
+                        <p><strong>Shipping Address:</strong><br>
+                        {context.get('shipping_address')}
+                        </p>
+                    </div>
+                    
+                    <a href="{settings.FRONTEND_URL}/vendor/orders/{context.get('order_id')}" 
+                       style="background-color: #f97316; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Process Order
+                    </a>
+                </div>
+            """
+        },
+        'vendor_order_cancelled': {
+            'subject': f"CANCELLED: Do not ship Order #{context.get('order_id')}",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #dc2626;">Order Cancelled</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p><strong>STOP!</strong> Do not pack or ship Order #{context.get('order_id')}.</p>
+                    <p>The customer has cancelled this order.</p>
+                </div>
+            """
+        },
+        'vendor_sla_warning': {
+            'subject': f"Urgent: Order #{context.get('order_id')} is overdue for shipping",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #b45309;">SLA Warning</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>Order #{context.get('order_id')} is overdue for shipping.</p>
+                    <p>Please ship it immediately to avoid penalties or auto-cancellation.</p>
+                    
+                     <a href="{settings.FRONTEND_URL}/vendor/orders/{context.get('order_id')}" 
+                       style="background-color: #b45309; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px;">
+                        Ship Now
+                    </a>
+                </div>
+            """
+        },
+
+        # Phase 3: Product & Inventory
+        'vendor_product_status_update': {
+            'subject': f"Your product {context.get('product_name')} is now {context.get('status')}",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: {'#16a34a' if context.get('status') == 'Live' else '#dc2626'};">Product {context.get('status')}</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>Your product <strong>{context.get('product_name')}</strong> has been reviewed.</p>
+                    
+                    {'<p>It is now live on the marketplace.</p>' if context.get('status') == 'Live' else f'<p>It requires changes: {context.get("reason")}</p>'}
+                </div>
+            """
+        },
+         'vendor_low_stock': {
+            'subject': f"Low Stock Alert: {context.get('product_name')}",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #b45309;">Low Stock Alert</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>You are running low on stock for <strong>{context.get('product_name')}</strong>.</p>
+                    <p>Current Quantity: <strong>{context.get('current_stock')}</strong></p>
+                    <p>Please restock soon to avoid missing sales.</p>
+                </div>
+            """
+        },
+
+        # Phase 4: Financials
+        'vendor_payout_processed': {
+            'subject': f"Payout of ₹{context.get('amount')} has been initiated",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #16a34a;">Payout Initiated</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>A payout of <strong>₹{context.get('amount')}</strong> has been initiated.</p>
+                    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p>Total Sales: ₹{context.get('total_sales')}</p>
+                        <p>Commission: -₹{context.get('commission')}</p>
+                        <hr>
+                        <p><strong>Net Payout: ₹{context.get('amount')}</strong></p>
+                    </div>
+                    <p>Funds should reach your bank in 2-3 business days.</p>
+                </div>
+            """
+        },
+        'vendor_commission_invoice': {
+            'subject': f"Tax Invoice for Platform Fees - {context.get('month')}",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>Commission Invoice: {context.get('month')}</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>Please find the details of platform fees for {context.get('month')} below.</p>
+                     <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p><strong>Total Commission Charged:</strong> ₹{context.get('total_commission')}</p>
+                    </div>
+                </div>
+            """
+        },
+        
+        # Phase 5: Returns
+        'vendor_return_requested': {
+            'subject': f"Return Requested for Order #{context.get('order_id')}",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #2563eb;">Return Initiated</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>The customer has requested a return for Order #{context.get('order_id')}.</p>
+                    <p><strong>Reason:</strong> {context.get('reason')}</p>
+                    <p>Please review and approve via your dashboard.</p>
+                </div>
+            """
+        },
+        'vendor_rto_delivered': {
+            'subject': f"RTO Delivered: Order #{context.get('order_id')} has been returned to you",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #4b5563;">RTO Delivered</h2>
+                    <p>Hi {context.get('vendor_name')},</p>
+                    <p>The package for Order #{context.get('order_id')} was undelivered and has been returned to you.</p>
+                    <p>Please update your inventory accordingly.</p>
+                </div>
+            """
         }
     }
     
