@@ -113,6 +113,42 @@ class VerifyPaymentView(APIView):
                 if product.stock < 0:
                     product.stock = 0  # Prevent negative stock
                 product.save()
+
+            # Send Email Notifications (Order Confirmation & Payment Received)
+            try:
+                from notifications.resend_service import send_email_via_resend
+                from notifications.email_templates import get_email_template
+                
+                # Determine recipient email
+                customer_email = order.guest_email if not order.user else order.user.email
+                customer_name = order.billing_address_data.get('full_name') if order.billing_address_data else (order.user.get_full_name() if order.user else 'Guest')
+                
+                if customer_email:
+                    # 1. Order Confirmation
+                    conf_context = {
+                        'customer_name': customer_name,
+                        'order_id': order.id,
+                        'total_amount': order.total_amount
+                    }
+                    conf_template = get_email_template('order_confirmation', conf_context)
+                    if conf_template:
+                        send_email_via_resend(customer_email, conf_template['subject'], conf_template['content'])
+                    
+                    # 2. Payment Received
+                    pay_context = {
+                        'customer_name': customer_name,
+                        'amount': order.total_amount,
+                        'order_id': order.id,
+                        'transaction_id': razorpay_payment_id
+                    }
+                    pay_template = get_email_template('payment_received', pay_context)
+                    if pay_template:
+                        send_email_via_resend(customer_email, pay_template['subject'], pay_template['content'])
+                        
+            except Exception as e:
+                import traceback
+                logger.error(f"Failed to send order emails for Order {order.id}: {e}")
+                logger.error(traceback.format_exc())
             
             
             # Auto-create Shiprocket shipments if enabled

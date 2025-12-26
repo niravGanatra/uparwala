@@ -113,6 +113,31 @@ def cancel_order_item(request, item_id):
         order.save()
         
         logger.info(f"Cancelled {quantity} units of item {item_id}. Refund: ₹{refund_amount}")
+
+        # Send Cancellation Email
+        try:
+            from notifications.resend_service import send_email_via_resend
+            from notifications.email_templates import get_email_template
+            
+            customer_email = order.user.email if order.user else getattr(order, 'guest_email', None)
+            customer_name = order.user.get_full_name() if order.user else 'Guest'
+            
+            if customer_email:
+                context = {
+                    'customer_name': customer_name,
+                    'order_id': order.id,
+                    'refund_amount': refund_amount,
+                    # We might want to mention which item was cancelled in the email template in usage
+                }
+                # Using existing 'order_cancellation' template
+                email_data = get_email_template('order_cancellation', context)
+                if email_data:
+                    # Modify subject to be specific if partial? For now keep standard "Order Cancelled" 
+                    # or strictly "Item Cancelled".
+                    # Let's use the template as is since user requested "Order Cancellation".
+                    send_email_via_resend(customer_email, email_data['subject'], email_data['content'])
+        except Exception as e:
+            logger.error(f"Failed to send cancellation email: {e}")
         
         # Return updated item
         response_serializer = OrderItemCancellationSerializer(order_item)

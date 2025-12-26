@@ -85,6 +85,10 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     shipped_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
+    
+    # Email flags
+    review_request_sent = models.BooleanField(default=False)
+    review_request_sent_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']

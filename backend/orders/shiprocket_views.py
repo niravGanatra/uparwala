@@ -373,6 +373,7 @@ def shiprocket_webhook(request):
                 
                 # Update order status if delivered
                 current_status = data.get('current_status', '').upper()
+                
                 if 'DELIVERED' in current_status:
                     shipment.order.status = 'DELIVERED'
                     shipment.order.delivered_at = timezone.now()
@@ -383,6 +384,43 @@ def shiprocket_webhook(request):
                     if not shipment.order.shipped_at:
                         shipment.order.shipped_at = timezone.now()
                     shipment.order.save()
+                
+                # Send Email Notifications
+                try:
+                    from notifications.resend_service import send_email_via_resend
+                    from notifications.email_templates import get_email_template
+                    
+                    customer_email = shipment.order.user.email if shipment.order.user else getattr(shipment.order, 'guest_email', None)
+                    customer_name = shipment.order.user.get_full_name() if shipment.order.user else 'Guest'
+                    
+                    if customer_email:
+                        email_template = None
+                        context = {'customer_name': customer_name, 'order_id': shipment.order.id}
+                        
+                        # 1. Delivered
+                        if 'DELIVERED' in current_status:
+                            email_template = 'order_delivered'
+                            
+                        # 2. Out for Delivery
+                        elif 'OUT FOR DELIVERY' in current_status:
+                            email_template = 'order_out_for_delivery'
+                            
+                        # 3. Shipped
+                        elif ('SHIPPED' in current_status or 'TRANSIT' in current_status) and not getattr(request, '_email_sent', False):
+                            if 'SHIPPED' in current_status or 'PICKED UP' in current_status:
+                                email_template = 'order_shipped'
+                                context.update({
+                                    'tracking_number': shipment.awb_code,
+                                    'courier_name': shipment.courier_name or 'Courier Partner'
+                                })
+
+                        if email_template:
+                            email_data = get_email_template(email_template, context)
+                            if email_data:
+                                send_email_via_resend(customer_email, email_data['subject'], email_data['content'])
+                                
+                except Exception as e:
+                    logger.error(f"Failed to send shipping email for order {shipment.order.id}: {e}")
                 
                 logger.info(f"Updated tracking for shipment {shipment.id}")
                 
