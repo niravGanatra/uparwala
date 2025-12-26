@@ -139,6 +139,8 @@ const VendorProducts = () => {
     const handleAddProduct = async (e) => {
         e.preventDefault();
 
+        const productData = new FormData();
+
         // Helper to append if value exists
         const appendIf = (key, value) => {
             if (value !== null && value !== undefined && value !== '') {

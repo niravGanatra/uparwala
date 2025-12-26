@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Wallet as WalletIcon, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import api from '../../services/api';
 
 const VendorWallet = () => {
     const [walletData, setWalletData] = useState({
