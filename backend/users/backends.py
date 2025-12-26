@@ -15,21 +15,31 @@ class AllowInactiveUserBackend(ModelBackend):
         if username is None:
             username = kwargs.get(User.USERNAME_FIELD)
         
+        print(f"Auth Debug: Attempting to authenticate user '{username}'")
+        
         if username is None or password is None:
+            print("Auth Debug: Missing username or password")
             return None
         
         try:
             user = User.objects.get(**{User.USERNAME_FIELD: username})
+            print(f"Auth Debug: User found: {user.username} (ID: {user.id}, Active: {user.is_active})")
         except User.DoesNotExist:
+            print(f"Auth Debug: User '{username}' not found in database")
             # Run the default password hasher once to reduce the timing
             # difference between an existing and a nonexistent user
             User().set_password(password)
             return None
         
         # Check password regardless of is_active status
-        if user.check_password(password):
+        password_valid = user.check_password(password)
+        print(f"Auth Debug: Check password result: {password_valid}")
+        
+        if password_valid:
+            print("Auth Debug: Authentication successful")
             return user
         
+        print("Auth Debug: Authentication failed - Invalid password")
         return None
     
     def user_can_authenticate(self, user):
