@@ -184,20 +184,33 @@ class RejectVendorView(APIView):
                 from notifications.resend_service import send_email_via_resend
                 from notifications.email_templates import get_email_template
                 
+                print(f"[VENDOR APP REJECT] Starting email send for vendor: {vendor.user.username}")
+                print(f"[VENDOR APP REJECT] Vendor email: {vendor.user.email}")
+                
                 context = {
                     'vendor_name': vendor.store_name or vendor.user.get_full_name() or vendor.user.username,
                     'reason': vendor.user.vendor_rejection_reason,
                 }
+                print(f"[VENDOR APP REJECT] Email context: {context}")
+                
                 email_data = get_email_template('vendor_rejected', context)
                 
                 if email_data:
-                    send_email_via_resend(
+                    print(f"[VENDOR APP REJECT] Template loaded. Subject: {email_data['subject']}")
+                    
+                    result = send_email_via_resend(
                         to_email=vendor.user.email,
                         subject=email_data['subject'],
                         html_content=email_data['content']
                     )
+                    print(f"[VENDOR APP REJECT] Email sent. Result: {result}")
+                else:
+                    print(f"[VENDOR APP REJECT] ERROR: Template not found")
             except Exception as e:
                 # Log error but don't fail the rejection
+                print(f"[VENDOR APP REJECT] ERROR sending email: {str(e)}")
+                import traceback
+                print(f"[VENDOR APP REJECT] Traceback: {traceback.format_exc()}")
                 print(f"Email sending failed: {e}")
             
             return Response({'message': 'Vendor application rejected and email sent'})
