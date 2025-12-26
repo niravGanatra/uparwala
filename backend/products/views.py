@@ -103,6 +103,11 @@ class VendorProductListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Product.objects.filter(vendor__user=self.request.user)
 
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ProductSerializer
+        return ProductCreateSerializer
+
     def perform_create(self, serializer):
         vendor = VendorProfile.objects.get(user=self.request.user)
         serializer.save(vendor=vendor)
@@ -114,6 +119,11 @@ class VendorProductDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Product.objects.filter(vendor__user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ProductSerializer
+        return ProductCreateSerializer
 
 class IsAdminUser(permissions.BasePermission):
     """Custom permission to only allow admin users"""
