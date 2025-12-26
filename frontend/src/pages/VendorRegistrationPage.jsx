@@ -134,17 +134,24 @@ const VendorRegistrationPage = () => {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
+                timeout: 60000, // 60 seconds for file uploads
             });
 
             toast.success('Vendor application submitted successfully! We will review and get back to you soon.');
             navigate('/login');
         } catch (error) {
             console.error('Vendor registration failed:', error);
-            const errorMessage = error.response?.data?.username?.[0] ||
-                error.response?.data?.email?.[0] ||
-                error.response?.data?.error ||
-                error.response?.data?.detail ||
-                'Registration failed. Please try again.';
+            let errorMessage;
+
+            if (error.code === 'ECONNABORTED') {
+                errorMessage = 'Request timed out. Please try again - the server may be busy.';
+            } else {
+                errorMessage = error.response?.data?.username?.[0] ||
+                    error.response?.data?.email?.[0] ||
+                    error.response?.data?.error ||
+                    error.response?.data?.detail ||
+                    'Registration failed. Please try again.';
+            }
             toast.error(errorMessage);
         } finally {
             setLoading(false);
