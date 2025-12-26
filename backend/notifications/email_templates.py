@@ -134,6 +134,82 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
+        'vendor_approved': {
+            'subject': "🎉 Your Vendor Application Has Been Approved!",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                        <h1 style="color: white; margin: 0;">Congratulations!</h1>
+                    </div>
+                    
+                    <div style="padding: 30px; background-color: #f9fafb; border-radius: 0 0 8px 8px;">
+                        <h2 style="color: #16a34a; margin-top: 0;">Welcome to Uparwala Marketplace</h2>
+                        
+                        <p>Hi <strong>{context.get('vendor_name')}</strong>,</p>
+                        
+                        <p>Great news! Your vendor application has been approved. You can now start selling on Uparwala.</p>
+                        
+                        <div style="background-color: #dcfce7; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #16a34a;">
+                            <p style="margin: 0; color: #166534;"><strong>✓ Your account is now active</strong></p>
+                            <p style="margin: 10px 0 0 0; color: #166534;">You can log in and start adding products right away!</p>
+                        </div>
+                        
+                        <h3 style="color: #374151;">Next Steps:</h3>
+                        <ul style="color: #6b7280; line-height: 1.8;">
+                            <li>Log in to your vendor dashboard</li>
+                            <li>Complete your store profile</li>
+                            <li>Add your first product</li>
+                            <li>Set up payment details for payouts</li>
+                        </ul>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{settings.FRONTEND_URL}/vendor/dashboard" 
+                               style="background-color: #16a34a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">
+                                Go to Dashboard
+                            </a>
+                        </div>
+                        
+                        <p style="color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                            If you need help getting started, check out our <a href="{settings.FRONTEND_URL}/vendor/help" style="color: #16a34a;">Vendor Guide</a> or contact support.
+                        </p>
+                    </div>
+                </div>
+            """
+        },
+        'vendor_rejected': {
+            'subject': "Update on Your Vendor Application",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background-color: #dc2626; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                        <h1 style="color: white; margin: 0;">Application Update</h1>
+                    </div>
+                    
+                    <div style="padding: 30px; background-color: #f9fafb; border-radius: 0 0 8px 8px;">
+                        <p>Hi <strong>{context.get('vendor_name')}</strong>,</p>
+                        
+                        <p>Thank you for your interest in selling on Uparwala. After careful review, we're unable to approve your vendor application at this time.</p>
+                        
+                        <div style="background-color: #fee2e2; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #dc2626;">
+                            <p style="margin: 0; color: #991b1b;"><strong>Reason:</strong></p>
+                            <p style="margin: 10px 0 0 0; color: #991b1b;">{context.get('reason', 'Please review our vendor guidelines and requirements.')}</p>
+                        </div>
+                        
+                        <p>You can reapply after addressing the issues mentioned above. We're here to help if you have any questions.</p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{settings.FRONTEND_URL}/vendor/register" 
+                               style="background-color: #6b7280; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">
+                                Reapply
+                            </a>
+                        </div>
+                        
+                        <p style="color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                            Need clarification? Contact us at <a href="mailto:support@uparwala.in" style="color: #dc2626;">support@uparwala.in</a>
+                        </p>
+                    </div>
+                </div>
+            """
+        },
         'welcome_email': {
             'subject': "Welcome to Uparwala!",
             'content': f"""

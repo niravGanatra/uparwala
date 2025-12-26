@@ -130,18 +130,27 @@ class ApproveVendorView(APIView):
             # Create wallet if not exists
             Wallet.objects.get_or_create(vendor=vendor)
             
-            # Try to send email if notification system is set up
+            # Send approval email
             try:
-                from notifications.tasks import send_notification_email
-                send_notification_email.delay(
-                    'welcome_email',
-                    vendor.user.email,
-                    {'name': vendor.user.get_full_name() or vendor.user.username}
-                )
-            except ImportError:
-                pass
+                from notifications.resend_service import send_email_via_resend
+                from notifications.email_templates import get_email_template
+                
+                context = {
+                    'vendor_name': vendor.store_name or vendor.user.get_full_name() or vendor.user.username,
+                }
+                email_data = get_email_template('vendor_approved', context)
+                
+                if email_data:
+                    send_email_via_resend(
+                        to_email=vendor.user.email,
+                        subject=email_data['subject'],
+                        html_content=email_data['content']
+                    )
+            except Exception as e:
+                # Log error but don't fail the approval
+                print(f"Email sending failed: {e}")
             
-            return Response({'message': 'Vendor approved successfully'})
+            return Response({'message': 'Vendor approved successfully and email sent'})
         except VendorProfile.DoesNotExist:
             return Response({'error': 'Vendor not found'}, status=404)
 
@@ -151,9 +160,36 @@ class RejectVendorView(APIView):
     def post(self, request, pk):
         try:
             vendor = VendorProfile.objects.get(pk=pk)
-            vendor.verification_status = 'REJECTED'
+            vendor.verification_status = 'rejected'
             vendor.save()
-            return Response({'message': 'Vendor application rejected'})
+            
+            # Update User model
+            vendor.user.vendor_status = 'rejected'
+            vendor.user.vendor_rejection_reason = request.data.get('reason', 'Application did not meet requirements')
+            vendor.user.save()
+            
+            # Send rejection email
+            try:
+                from notifications.resend_service import send_email_via_resend
+                from notifications.email_templates import get_email_template
+                
+                context = {
+                    'vendor_name': vendor.store_name or vendor.user.get_full_name() or vendor.user.username,
+                    'reason': vendor.user.vendor_rejection_reason,
+                }
+                email_data = get_email_template('vendor_rejected', context)
+                
+                if email_data:
+                    send_email_via_resend(
+                        to_email=vendor.user.email,
+                        subject=email_data['subject'],
+                        html_content=email_data['content']
+                    )
+            except Exception as e:
+                # Log error but don't fail the rejection
+                print(f"Email sending failed: {e}")
+            
+            return Response({'message': 'Vendor application rejected and email sent'})
         except VendorProfile.DoesNotExist:
             return Response({'error': 'Vendor not found'}, status=404)
 
