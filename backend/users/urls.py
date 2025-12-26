@@ -13,6 +13,7 @@ from .admin_views import (
     VendorRejectionView,
 )
 from .vendor_application import VendorApplicationView, VendorStatusView
+from .auth_views import CustomLoginView
 from .address_views import (
     AddressListCreateView,
     AddressDetailView,
@@ -22,6 +23,7 @@ from .address_views import (
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('login-simple/', CustomLoginView.as_view(), name='custom-login'),  # Simple token-based login
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('me/', UserDetailView.as_view(), name='user-detail'),
     path('profile/', user_profile, name='user-profile'),
