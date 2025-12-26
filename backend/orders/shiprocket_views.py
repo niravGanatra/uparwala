@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def create_shipment(request, order_id):
     """Create shipment in Shiprocket for an order"""
     order = get_object_or_404(Order, id=order_id)
@@ -41,7 +41,11 @@ def create_shipment(request, order_id):
     
     try:
         service = ShiprocketService()
-        shipments = service.create_orders(order)
+        
+        # Determine if we should filter by vendor
+        vendor_filter = request.user if not request.user.is_staff else None
+        
+        shipments = service.create_orders(order, vendor=vendor_filter)
         
         if not shipments:
              return Response(
@@ -61,11 +65,23 @@ def create_shipment(request, order_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def generate_awb(request, order_id):
     """Generate AWB for a shipment"""
     order = get_object_or_404(Order, id=order_id)
-    shipment = get_object_or_404(ShipmentTracking, order=order)
+    
+    # Get shipment based on user role
+    shipment_query = ShipmentTracking.objects.filter(order=order)
+    if not request.user.is_staff:
+        shipment_query = shipment_query.filter(vendor=request.user)
+        
+    shipment = shipment_query.first()
+    
+    if not shipment:
+        return Response(
+            {'error': 'No shipment found for this order'},
+            status=status.HTTP_404_NOT_FOUND
+        )
     
     if shipment.awb_code:
         return Response(
@@ -92,11 +108,23 @@ def generate_awb(request, order_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def generate_label(request, order_id):
     """Generate shipping label for a shipment"""
     order = get_object_or_404(Order, id=order_id)
-    shipment = get_object_or_404(ShipmentTracking, order=order)
+    
+    # Get shipment based on user role
+    shipment_query = ShipmentTracking.objects.filter(order=order)
+    if not request.user.is_staff:
+        shipment_query = shipment_query.filter(vendor=request.user)
+        
+    shipment = shipment_query.first()
+    
+    if not shipment:
+        return Response(
+            {'error': 'No shipment found for this order'},
+            status=status.HTTP_404_NOT_FOUND
+        )
     
     if not shipment.awb_code:
         return Response(
@@ -128,11 +156,23 @@ def generate_label(request, order_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def schedule_pickup(request, order_id):
     """Schedule courier pickup for a shipment"""
     order = get_object_or_404(Order, id=order_id)
-    shipment = get_object_or_404(ShipmentTracking, order=order)
+    
+    # Get shipment based on user role
+    shipment_query = ShipmentTracking.objects.filter(order=order)
+    if not request.user.is_staff:
+        shipment_query = shipment_query.filter(vendor=request.user)
+        
+    shipment = shipment_query.first()
+    
+    if not shipment:
+        return Response(
+            {'error': 'No shipment found for this order'},
+            status=status.HTTP_404_NOT_FOUND
+        )
     
     if not shipment.awb_code:
         return Response(
@@ -170,18 +210,35 @@ def get_tracking(request, order_id):
     """Get current tracking information for an order"""
     order = get_object_or_404(Order, id=order_id)
     
-    # Check if user owns the order or is admin
-    if order.user != request.user and not request.user.is_staff:
+    # Check permissions
+    is_vendor = False
+    if request.user.is_staff:
+        pass
+    elif order.user == request.user:
+        pass
+    elif order.items.filter(vendor=request.user).exists():
+        is_vendor = True
+    else:
         return Response(
             {'error': 'You do not have permission to view this order'},
             status=status.HTTP_403_FORBIDDEN
         )
     
     try:
-        shipment = ShipmentTracking.objects.get(order=order)
+        if is_vendor:
+            shipment = ShipmentTracking.objects.get(order=order, vendor=request.user)
+        else:
+            # specific logic for admin/customer ?
+            # For now return the first or handle multiple. 
+            # If multiple vendors, customer needs to see all.
+            # This view seems designed for single shipment.
+            # For admin, maybe filter by query param or default to first.
+             shipment = ShipmentTracking.objects.filter(order=order).first()
+             if not shipment:
+                 raise ShipmentTracking.DoesNotExist
         
         # Update tracking from Shiprocket
-        if shipment.awb_code:
+        if shipment and shipment.awb_code:
             try:
                 service = ShiprocketService()
                 service.track_shipment(shipment)
@@ -439,7 +496,7 @@ def shiprocket_webhook(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def cancel_shipment(request, order_id):
     """
     Cancel a shipment and reset order state.
@@ -447,7 +504,18 @@ def cancel_shipment(request, order_id):
     """
     order = get_object_or_404(Order, id=order_id)
     try:
-        shipment = ShipmentTracking.objects.get(order=order)
+        # Get shipment based on user role
+        shipment_query = ShipmentTracking.objects.filter(order=order)
+        if not request.user.is_staff:
+            shipment_query = shipment_query.filter(vendor=request.user)
+            
+        shipment = shipment_query.first()
+        
+        if not shipment:
+            return Response(
+                {'error': 'No shipment found to cancel'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         
         # Try to cancel on Shiprocket
         try:

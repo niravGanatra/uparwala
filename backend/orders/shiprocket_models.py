@@ -39,6 +39,9 @@ class ShipmentTracking(models.Model):
     courier_name = models.CharField(max_length=100, blank=True)
     courier_id = models.IntegerField(null=True, blank=True)
     
+    # Vendor association
+    vendor = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='vendor_shipments')
+    
     # Tracking
     current_status = models.CharField(max_length=100, blank=True)
     tracking_url = models.URLField(blank=True)

@@ -190,84 +190,81 @@ class ShiprocketService:
             # Always try to sync/re-sync pickup location to ensure it exists in Shiprocket
             try:
                 synced_location = self.sync_vendor_pickup_location(vendor)
-                if synced_location:
-                    pickup_location = synced_location
-            except Exception as e:
-                print(f"Warning: Could not sync pickup location for {vendor}: {e}")
+            # Check if order already exists for this vendor
+            # We use a suffix for multi-vendor orders: order_id-vendor_id
+            # Assuming order.order_number exists, if not, order.id might be used.
+            shiprocket_order_id = f"{order.id}-{vendor_id}" # Changed from order.order_number to order.id for consistency with original code's use of order.id
+
+            # Check existing
+            if ShipmentTracking.objects.filter(shiprocket_order_id=shiprocket_order_id).exists():
+                print(f"Shiprocket order {shiprocket_order_id} already exists, skipping creation.")
+                continue
+                
+            # Calculate totals for this vendor's items
+            subtotal = sum(item.price * item.quantity for item in items)
             
-            if not pickup_location:
-                raise Exception(f"Cannot create shipment: No pickup location for vendor {vendor.store_name}. Please ensure vendor has complete address details (phone, address, city, state, pincode).")
-
-            # Build Order Items Payload
-            sr_order_items = []
-            subtotal = 0
-            for item in items:
-                sr_order_items.append({
-                    "name": item.product.name,
-                    "sku": item.product.sku or f"PROD-{item.product.id}",
-                    "units": item.quantity,
-                    "selling_price": float(item.price),
-                    "discount": "",
-                    "tax": "",
-                    "hsn": "" 
-                })
-                subtotal += float(item.price) * item.quantity
-
-            # Calculate proportionate shipping/tax if needed, or just use subtotal
-            # Use 'payment_method' map
-            payment_method = "Prepaid" if order.payment_method == 'razorpay' else "COD"
-
-            # Create random sub-order ID suffix if multiple vendors
-            suffix = f"-V{vendor_id}" if len(files_by_vendor) > 1 else ""
-            order_id_str = f"{order.id}{suffix}"
-
+            # Logic for shipping charges and taxes would ideally be split too
+            # For now, we'll allocate shipping logic roughly or keep 0 if free shipping
+            
+            # Prepare order payload
             payload = {
-                "order_id": order_id_str,
-                "order_date": order.created_at.strftime("%Y-%m-%d %H:%M"),
+                "order_id": shiprocket_order_id,
+                "order_date": order.created_at.strftime('%Y-%m-%d %H:%M'),
                 "pickup_location": pickup_location,
-                "billing_customer_name": order.user.get_full_name() or order.user.username,
-                "billing_last_name": "",
-                "billing_address": order.shipping_address_data.get('address_line1', ''),
-                "billing_address_2": order.shipping_address_data.get('address_line2', ''),
-                "billing_city": order.shipping_address_data.get('city', ''),
-                "billing_pincode": order.shipping_address_data.get('pincode', ''),
-                "billing_state": order.shipping_address_data.get('state', ''),
+                "billing_customer_name": order.shipping_address_data.get('full_name', '').split()[0] if order.shipping_address_data.get('full_name') else '', # Adjusted to use shipping_address_data
+                "billing_last_name": " ".join(order.shipping_address_data.get('full_name', '').split()[1:]) if " " in order.shipping_address_data.get('full_name', '') else "", # Adjusted
+                "billing_address": order.shipping_address_data.get('address_line1', ''), # Adjusted
+                "billing_address_2": order.shipping_address_data.get('address_line2', ''), # Adjusted
+                "billing_city": order.shipping_address_data.get('city', ''), # Adjusted
+                "billing_pincode": order.shipping_address_data.get('pincode', ''), # Adjusted
+                "billing_state": order.shipping_address_data.get('state', ''), # Adjusted
                 "billing_country": "India",
                 "billing_email": order.user.email,
-                "billing_phone": self.sanitize_phone(order.shipping_address_data.get('phone')),
+                "billing_phone": self.sanitize_phone(order.shipping_address_data.get('phone')), # Adjusted
                 "shipping_is_billing": True,
-                "order_items": sr_order_items,
-                "payment_method": payment_method,
-                "sub_total": subtotal,
-                "length": 10,  # Defaults, should come from Product
+                "order_items": [
+                    {
+                        "name": item.product.name,
+                        "sku": item.product.sku or str(item.product.id),
+                        "units": item.quantity,
+                        "selling_price": float(item.price),
+                        "discount": 0,
+                        "tax": 0,
+                        "hsn": "" # Changed from 0 to "" to match original code's empty string
+                    } for item in items
+                ],
+                "payment_method": "COD" if order.payment_method == 'cod' else "Prepaid",
+                "sub_total":float(subtotal),
+                "length": 10,  # Default dimensions
                 "breadth": 10,
                 "height": 10,
                 "weight": 0.5
             }
-
+            
             try:
-                url = f"{self.BASE_URL}/orders/create/adhoc"
-                response = requests.post(url, json=payload, headers=self.get_headers())
+                response = requests.post(
+                    f"{self.BASE_URL}/orders/create/adhoc", # Changed from self.base_url to self.BASE_URL
+                    headers=self.get_headers(), # Changed from explicit headers to get_headers()
+                    json=payload
+                )
+                
                 data = response.json()
                 
                 if response.status_code == 200 and data.get('order_id'):
-                    # Success
+                    # Save tracking info
                     shipment = ShipmentTracking.objects.create(
                         order=order,
+                        vendor_id=vendor_id,  # Associate with vendor
                         shiprocket_order_id=data.get('order_id'),
                         shiprocket_shipment_id=data.get('shipment_id'),
-                        courier_name="Pending Assignment",
-                        pickup_scheduled=False
+                        courier_name="Pending Assignment", # Added to match original code's default
+                        pickup_scheduled=False, # Added to match original code's default
+                        current_status='CREATED'
                     )
                     created_shipments.append(shipment)
-                    
-                    # Log mapping
-                    print(f"Created Shiprocket Order {data.get('order_id')} for Vendor {vendor.store_name}")
+                    print(f"Created Shiprocket Order {data.get('order_id')} for Vendor {items[0].vendor.store_name}") # Added print statement
                 else:
                     error_msg = f"Shiprocket Error: {response.status_code} - {data}"
-                    print(f"Failed to create Shiprocket Order for Vendor {vendor.store_name}: {error_msg}")
-                    raise Exception(error_msg)
-
             except Exception as e:
                 print(f"Exception creating Shiprocket order: {e}")
                 raise

@@ -13,7 +13,14 @@ const VendorOrders = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [labelLoading, setLabelLoading] = useState({});
+
+    // Action loading states
+    const [actionLoading, setActionLoading] = useState({
+        create: false,
+        awb: false,
+        label: false,
+        pickup: false
+    });
 
     useEffect(() => {
         fetchOrders();
@@ -28,6 +35,12 @@ const VendorOrders = () => {
                 order.items && order.items.length > 0
             );
             setOrders(vendorOrders);
+
+            // If modal is open, update selected order
+            if (selectedOrder) {
+                const updated = vendorOrders.find(o => o.id === selectedOrder.id);
+                if (updated) setSelectedOrder(updated);
+            }
         } catch (error) {
             console.error('Failed to fetch orders:', error);
             toast.error('Failed to load orders');
@@ -41,28 +54,67 @@ const VendorOrders = () => {
         setIsViewModalOpen(true);
     };
 
-    // Generate shipping label for an order
+    // --- Logistics Actions ---
+
+    const handleCreateShipment = async (orderId) => {
+        setActionLoading(prev => ({ ...prev, create: true }));
+        try {
+            await api.post(`/orders/${orderId}/create-shipment/`);
+            toast.success('Shipment created successfully');
+            fetchOrders();
+        } catch (error) {
+            console.error('Create shipment failed:', error);
+            toast.error(error.response?.data?.error || 'Failed to create shipment');
+        } finally {
+            setActionLoading(prev => ({ ...prev, create: false }));
+        }
+    };
+
+    const handleGenerateAWB = async (orderId) => {
+        setActionLoading(prev => ({ ...prev, awb: true }));
+        try {
+            await api.post(`/orders/${orderId}/generate-awb/`);
+            toast.success('AWB generated successfully');
+            fetchOrders();
+        } catch (error) {
+            console.error('Generate AWB failed:', error);
+            toast.error(error.response?.data?.error || 'Failed to generate AWB');
+        } finally {
+            setActionLoading(prev => ({ ...prev, awb: false }));
+        }
+    };
+
     const handleGenerateLabel = async (orderId) => {
-        setLabelLoading(prev => ({ ...prev, [orderId]: true }));
+        setActionLoading(prev => ({ ...prev, label: true }));
         try {
             const response = await api.post(`/orders/${orderId}/generate-label/`);
             if (response.data.label_url) {
-                toast.success('Shipping label generated!');
-                // Open label in new tab
+                toast.success('Label generated');
                 window.open(response.data.label_url, '_blank');
-                // Refresh orders to get updated label_url
                 fetchOrders();
-            } else {
-                toast.error('Failed to generate label');
             }
         } catch (error) {
-            console.error('Failed to generate label:', error);
-            const errorMsg = error.response?.data?.error || 'Failed to generate shipping label';
-            toast.error(errorMsg);
+            console.error('Generate label failed:', error);
+            toast.error(error.response?.data?.error || 'Failed to generate label');
         } finally {
-            setLabelLoading(prev => ({ ...prev, [orderId]: false }));
+            setActionLoading(prev => ({ ...prev, label: false }));
         }
     };
+
+    const handleSchedulePickup = async (orderId) => {
+        setActionLoading(prev => ({ ...prev, pickup: true }));
+        try {
+            await api.post(`/orders/${orderId}/schedule-pickup/`);
+            toast.success('Pickup scheduled successfully');
+            fetchOrders();
+        } catch (error) {
+            console.error('Schedule pickup failed:', error);
+            toast.error(error.response?.data?.error || 'Failed to schedule pickup');
+        } finally {
+            setActionLoading(prev => ({ ...prev, pickup: false }));
+        }
+    };
+
 
     const filteredOrders = orders.filter(order =>
         order.id?.toString().includes(searchTerm) ||
@@ -124,75 +176,50 @@ const VendorOrders = () => {
                                                 <th className="pb-3 font-semibold text-slate-900">Items</th>
                                                 <th className="pb-3 font-semibold text-slate-900">Total</th>
                                                 <th className="pb-3 font-semibold text-slate-900">Status</th>
-                                                <th className="pb-3 font-semibold text-slate-900">AWB</th>
+                                                <th className="pb-3 font-semibold text-slate-900">Logistics</th>
                                                 <th className="pb-3 font-semibold text-slate-900">Date</th>
                                                 <th className="pb-3 font-semibold text-slate-900">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredOrders.map((order) => (
-                                                <tr key={order.id} className="border-b last:border-0">
-                                                    <td className="py-4 font-medium">#{order.id}</td>
-                                                    <td className="py-4">{order.user?.username || 'N/A'}</td>
-                                                    <td className="py-4">{order.items?.length || 0} items</td>
-                                                    <td className="py-4 font-semibold">₹{order.total_amount}</td>
-                                                    <td className="py-4">
-                                                        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
-                                                            {order.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-4">
-                                                        {order.awb_code ? (
-                                                            <span className="font-mono text-sm bg-slate-100 px-2 py-1 rounded">
-                                                                {order.awb_code}
+                                            {filteredOrders.map((order) => {
+                                                const shipment = order.shipment_details;
+                                                return (
+                                                    <tr key={order.id} className="border-b last:border-0">
+                                                        <td className="py-4 font-medium">#{order.id}</td>
+                                                        <td className="py-4">{order.user?.username || 'N/A'}</td>
+                                                        <td className="py-4">{order.items?.length || 0} items</td>
+                                                        <td className="py-4 font-semibold">₹{order.total_amount}</td>
+                                                        <td className="py-4">
+                                                            <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
+                                                                {order.status}
                                                             </span>
-                                                        ) : (
-                                                            <span className="text-slate-400 text-sm">Not assigned</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-4">
-                                                        {new Date(order.created_at).toLocaleDateString()}
-                                                    </td>
-                                                    <td className="py-4">
-                                                        <div className="flex items-center gap-1">
-                                                            <Button variant="ghost" size="sm" onClick={() => handleViewOrder(order)} title="View Order">
-                                                                <Eye className="h-4 w-4" />
-                                                            </Button>
-
-                                                            {/* Shipping Label Actions */}
-                                                            {order.awb_code && (
-                                                                order.label_url ? (
-                                                                    <a
-                                                                        href={order.label_url}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                        title="Download Shipping Label"
-                                                                    >
-                                                                        <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
-                                                                            <Download className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </a>
-                                                                ) : (
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        onClick={() => handleGenerateLabel(order.id)}
-                                                                        disabled={labelLoading[order.id]}
-                                                                        title="Generate Shipping Label"
-                                                                        className="text-blue-600 hover:text-blue-700"
-                                                                    >
-                                                                        {labelLoading[order.id] ? (
-                                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                                        ) : (
-                                                                            <Printer className="h-4 w-4" />
-                                                                        )}
-                                                                    </Button>
-                                                                )
+                                                        </td>
+                                                        <td className="py-4">
+                                                            {shipment ? (
+                                                                <div className="flex flex-col gap-1">
+                                                                    <span className="text-xs font-semibold text-blue-600">{shipment.current_status}</span>
+                                                                    {shipment.awb_code && (
+                                                                        <span className="font-mono text-xs bg-slate-100 px-1 rounded">
+                                                                            {shipment.awb_code}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-slate-400 text-sm">Not started</span>
                                                             )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                        </td>
+                                                        <td className="py-4">
+                                                            {new Date(order.created_at).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="py-4">
+                                                            <Button variant="outline" size="sm" onClick={() => handleViewOrder(order)}>
+                                                                Manage
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -200,12 +227,13 @@ const VendorOrders = () => {
                         </CardContent>
                     </Card>
 
-                    {/* View Order Modal */}
-                    <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title={`Order #${selectedOrder?.id}`} size="lg">
+                    {/* View/Manage Order Modal */}
+                    <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title={`Manage Order #${selectedOrder?.id}`} size="lg">
                         {selectedOrder && (
                             <div className="space-y-6">
                                 {/* Order Info */}
                                 <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
+                                    {/* ... existing order info ... */}
                                     <div>
                                         <label className="text-sm font-medium text-slate-600">Customer</label>
                                         <p className="text-lg font-semibold">{selectedOrder.user?.username}</p>
@@ -214,104 +242,119 @@ const VendorOrders = () => {
                                         <label className="text-sm font-medium text-slate-600">Order Date</label>
                                         <p className="text-lg">{new Date(selectedOrder.created_at).toLocaleString()}</p>
                                     </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-slate-600">Total Amount</label>
-                                        <p className="text-lg font-semibold text-orange-600">₹{selectedOrder.total_amount}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-slate-600">Status</label>
-                                        <p className="text-lg">
-                                            <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(selectedOrder.status)}`}>
-                                                {selectedOrder.status}
-                                            </span>
-                                        </p>
-                                    </div>
                                 </div>
 
-                                {/* Shipping Info */}
-                                {selectedOrder.awb_code && (
-                                    <div className="p-4 bg-blue-50 rounded-lg">
-                                        <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                            <Truck className="h-5 w-5 text-blue-600" />
-                                            Shipping Information
-                                        </h3>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-sm font-medium text-slate-600">AWB Number</label>
-                                                <p className="font-mono text-lg">{selectedOrder.awb_code}</p>
-                                            </div>
-                                            {selectedOrder.courier_name && (
+                                {/* Logistics Management Section */}
+                                <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                    <h3 className="font-semibold mb-4 flex items-center gap-2 text-blue-800">
+                                        <Truck className="h-5 w-5" />
+                                        Logistics Management
+                                    </h3>
+
+                                    {!selectedOrder.shipment_details ? (
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-sm text-blue-600">No shipment created yet.</p>
+                                            <Button
+                                                onClick={() => handleCreateShipment(selectedOrder.id)}
+                                                disabled={actionLoading.create}
+                                            >
+                                                {actionLoading.create && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Create Shipment
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {/* Status Grid */}
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
                                                 <div>
-                                                    <label className="text-sm font-medium text-slate-600">Courier</label>
-                                                    <p className="text-lg">{selectedOrder.courier_name}</p>
+                                                    <span className="text-slate-500">Status:</span>
+                                                    <span className="ml-2 font-medium">{selectedOrder.shipment_details.current_status}</span>
                                                 </div>
-                                            )}
-                                        </div>
+                                                <div>
+                                                    <span className="text-slate-500">AWB:</span>
+                                                    <span className="ml-2 font-mono">{selectedOrder.shipment_details.awb_code || 'Pending'}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-slate-500">Courier:</span>
+                                                    <span className="ml-2">{selectedOrder.shipment_details.courier_name || '-'}</span>
+                                                </div>
+                                                {selectedOrder.shipment_details.pickup_scheduled && (
+                                                    <div>
+                                                        <span className="text-slate-500">Pickup Token:</span>
+                                                        <span className="ml-2 font-mono">{selectedOrder.shipment_details.pickup_token}</span>
+                                                    </div>
+                                                )}
+                                            </div>
 
-                                        {/* Label Download Button */}
-                                        <div className="mt-4">
-                                            {selectedOrder.label_url ? (
-                                                <a
-                                                    href={selectedOrder.label_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    <Button className="gap-2 bg-green-600 hover:bg-green-700">
-                                                        <Download className="h-4 w-4" />
-                                                        Download Shipping Label
+                                            {/* Action Buttons */}
+                                            <div className="flex flex-wrap gap-2 pt-2 border-t border-blue-200">
+                                                {!selectedOrder.shipment_details.awb_code && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleGenerateAWB(selectedOrder.id)}
+                                                        disabled={actionLoading.awb}
+                                                    >
+                                                        {actionLoading.awb && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                        Generate AWB
                                                     </Button>
-                                                </a>
-                                            ) : (
-                                                <Button
-                                                    className="gap-2"
-                                                    onClick={() => handleGenerateLabel(selectedOrder.id)}
-                                                    disabled={labelLoading[selectedOrder.id]}
-                                                >
-                                                    {labelLoading[selectedOrder.id] ? (
-                                                        <>
-                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                            Generating...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Printer className="h-4 w-4" />
-                                                            Generate Shipping Label
-                                                        </>
-                                                    )}
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
+                                                )}
 
-                                {/* Shipping Address */}
-                                <div>
-                                    <h3 className="font-semibold mb-2">Shipping Address</h3>
-                                    <p className="text-slate-700 whitespace-pre-line">{selectedOrder.shipping_address}</p>
+                                                {selectedOrder.shipment_details.awb_code && (
+                                                    <>
+                                                        {selectedOrder.shipment_details.label_url ? (
+                                                            <a href={selectedOrder.shipment_details.label_url} target="_blank" rel="noreferrer">
+                                                                <Button size="sm" variant="outline" className="gap-2">
+                                                                    <Download className="h-4 w-4" /> Download Label
+                                                                </Button>
+                                                            </a>
+                                                        ) : (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="default"
+                                                                onClick={() => handleGenerateLabel(selectedOrder.id)}
+                                                                disabled={actionLoading.label}
+                                                            >
+                                                                {actionLoading.label && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                                Generate Label
+                                                            </Button>
+                                                        )}
+
+                                                        {!selectedOrder.shipment_details.pickup_scheduled ? (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="secondary"
+                                                                onClick={() => handleSchedulePickup(selectedOrder.id)}
+                                                                disabled={actionLoading.pickup}
+                                                            >
+                                                                {actionLoading.pickup && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                                Schedule Pickup
+                                                            </Button>
+                                                        ) : (
+                                                            <div className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full flex items-center">
+                                                                <Truck className="w-3 h-3 mr-1" /> Pickup Scheduled
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Order Items */}
+                                {/* Order Items List */}
                                 <div>
                                     <h3 className="font-semibold mb-3">Order Items</h3>
                                     <div className="space-y-3">
                                         {selectedOrder.items?.map((item, idx) => (
                                             <div key={idx} className="flex items-center gap-4 p-3 border rounded-lg">
-                                                {item.product?.images && item.product.images.length > 0 ? (
-                                                    <img
-                                                        src={item.product.images[0].image}
-                                                        alt={item.product.name}
-                                                        className="w-16 h-16 object-cover rounded"
-                                                    />
-                                                ) : (
-                                                    <div className="w-16 h-16 bg-slate-100 rounded flex items-center justify-center">
-                                                        <Package className="h-8 w-8 text-slate-400" />
-                                                    </div>
-                                                )}
-                                                <div className="flex-1">
-                                                    <p className="font-medium">{item.product?.name}</p>
-                                                    <p className="text-sm text-slate-500">Qty: {item.quantity} × ₹{item.price}</p>
+                                                <div className="w-12 h-12 bg-slate-100 rounded flex items-center justify-center">
+                                                    <Package className="h-6 w-6 text-slate-400" />
                                                 </div>
-                                                <p className="font-semibold">₹{item.quantity * item.price}</p>
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-sm">{item.product?.name}</p>
+                                                    <p className="text-xs text-slate-500">Qty: {item.quantity}</p>
+                                                </div>
+                                                <p className="font-semibold text-sm">₹{item.price}</p>
                                             </div>
                                         ))}
                                     </div>

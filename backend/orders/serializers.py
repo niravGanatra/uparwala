@@ -63,7 +63,7 @@ class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     user = UserBasicSerializer(read_only=True)
     notes = OrderNoteSerializer(many=True, read_only=True)
-    label_url = serializers.SerializerMethodField()
+    shipment_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -71,10 +71,44 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = ('total_amount', 'created_at')
     
     def get_label_url(self, obj):
-        """Get label_url from related ShipmentTracking if exists"""
-        if hasattr(obj, 'shipment') and obj.shipment:
-            return obj.shipment.label_url or ''
-        return ''
+        """Legacy field for backward compatibility"""
+        details = self.get_shipment_details(obj)
+        return details.get('label_url') if details else ''
+
+    def get_shipment_details(self, obj):
+        """
+        Get shipment details relevant to the requesting user.
+        - Vendors see their own shipment.
+        - Admins see the latest (or ideally all, but for list view strictness 1).
+        - Customers see all (or prioritized).
+        """
+        request = self.context.get('request')
+        if not request:
+            return None
+            
+        shipments = obj.shipments.all()
+        
+        # Filter for vendors
+        if not request.user.is_staff and request.user != obj.user:
+            # Check if user is seller
+            if hasattr(request.user, 'vendor_profile'): # Or however we identify vendors
+                 shipments = shipments.filter(vendor=request.user)
+            elif request.user.pk: # If authenticated but logic is diff
+                 shipments = shipments.filter(vendor=request.user)
+
+        shipment = shipments.order_by('-created_at').first()
+        
+        if shipment:
+            return {
+                'id': shipment.id,
+                'awb_code': shipment.awb_code,
+                'label_url': shipment.label_url,
+                'pickup_scheduled': shipment.pickup_scheduled,
+                'pickup_token': shipment.pickup_token_number,
+                'current_status': shipment.current_status,
+                'courier_name': shipment.courier_name
+            }
+        return None
 
 
 # Gift Option Serializer
