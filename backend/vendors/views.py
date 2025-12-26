@@ -277,30 +277,34 @@ def approve_vendor(request, vendor_id):
         vendor.user.vendor_status = 'approved'
         vendor.user.save()
         
-        # Send email notification
+        # Send approval email
         try:
-            send_mail(
-                subject='Your Vendor Application has been Approved!',
-                message=f'''Dear {vendor.store_name},
-
-Congratulations! Your vendor application has been approved.
-
-You can now start adding products and managing your store on Uparwala.
-
-Login to your vendor dashboard to get started:
-{settings.FRONTEND_URL}/vendor/dashboard
-
-If you have any questions, please contact our support team.
-
-Best regards,
-Uparwala Team
-''',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[vendor.user.email],
-                fail_silently=True,
-            )
+            from notifications.resend_service import send_email_via_resend
+            from notifications.email_templates import get_email_template
+            
+            print(f"[VENDOR FUNC APPROVE] Starting email send for vendor: {vendor.user.username}")
+            print(f"[VENDOR FUNC APPROVE] Vendor email: {vendor.user.email}")
+            
+            context = {
+                'vendor_name': vendor.store_name or vendor.user.get_full_name() or vendor.user.username,
+            }
+            email_data = get_email_template('vendor_approved', context)
+            
+            if email_data:
+                print(f"[VENDOR FUNC APPROVE] Template loaded. Subject: {email_data['subject']}")
+                result = send_email_via_resend(
+                    to_email=vendor.user.email,
+                    subject=email_data['subject'],
+                    html_content=email_data['content']
+                )
+                print(f"[VENDOR FUNC APPROVE] Email sent. Result: {result}")
+            else:
+                print(f"[VENDOR FUNC APPROVE] ERROR: Email template not found")
+                
         except Exception as e:
-            print(f"Failed to send approval email: {e}")
+            print(f"[VENDOR FUNC APPROVE] ERROR sending email: {str(e)}")
+            import traceback
+            print(f"[VENDOR FUNC APPROVE] Traceback: {traceback.format_exc()}")
         
         return Response({
             'message': 'Vendor approved successfully',
@@ -336,29 +340,35 @@ def reject_vendor(request, vendor_id):
         vendor.user.vendor_status = 'rejected'
         vendor.user.save()
         
-        # Send email notification
+        # Send rejection email
         try:
-            send_mail(
-                subject='Update on Your Vendor Application',
-                message=f'''Dear {vendor.store_name},
+            from notifications.resend_service import send_email_via_resend
+            from notifications.email_templates import get_email_template
+            
+            print(f"[VENDOR FUNC REJECT] Starting email send for vendor: {vendor.user.username}")
+            print(f"[VENDOR FUNC REJECT] Vendor email: {vendor.user.email}")
+            
+            context = {
+                'vendor_name': vendor.store_name or vendor.user.get_full_name() or vendor.user.username,
+                'reason': reason,
+            }
+            email_data = get_email_template('vendor_rejected', context)
+            
+            if email_data:
+                print(f"[VENDOR FUNC REJECT] Template loaded. Subject: {email_data['subject']}")
+                result = send_email_via_resend(
+                    to_email=vendor.user.email,
+                    subject=email_data['subject'],
+                    html_content=email_data['content']
+                )
+                print(f"[VENDOR FUNC REJECT] Email sent. Result: {result}")
+            else:
+                print(f"[VENDOR FUNC REJECT] ERROR: Email template not found")
 
-Thank you for your interest in becoming a vendor on Uparwala.
-
-Unfortunately, we are unable to approve your application at this time.
-
-Reason: {reason}
-
-If you believe this is a mistake or would like to reapply, please contact our support team.
-
-Best regards,
-Uparwala Team
-''',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[vendor.user.email],
-                fail_silently=True,
-            )
         except Exception as e:
-            print(f"Failed to send rejection email: {e}")
+            print(f"[VENDOR FUNC REJECT] ERROR sending email: {str(e)}")
+            import traceback
+            print(f"[VENDOR FUNC REJECT] Traceback: {traceback.format_exc()}")
         
         return Response({
             'message': 'Vendor rejected',
