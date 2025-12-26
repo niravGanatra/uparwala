@@ -33,7 +33,7 @@ const AdminLayout = () => {
 
     const handleLogout = () => {
         logout();
-        navigate('/login');
+        navigate('/');
     };
 
     // Group menu items for better organization

@@ -46,7 +46,7 @@ const MainLayout = () => {
     const handleLogout = () => {
         logout();
         setShowUserMenu(false);
-        navigate('/login');
+        navigate('/');
     };
 
     return (
