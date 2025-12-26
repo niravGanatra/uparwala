@@ -143,6 +143,32 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('vendor', 'created_at', 'updated_at', 'slug', 'price')
 
+    def create(self, validated_data):
+        print(f"DEBUG: ProductCreateSerializer.create() called")
+        # Create the product first
+        product = Product.objects.create(**validated_data)
+        
+        # Handle image uploads from request.FILES
+        request = self.context.get('request')
+        
+        if request and request.FILES:
+            # Images are sent as image_0, image_1, etc.
+            for key in request.FILES:
+                if key.startswith('image_'):
+                    image_file = request.FILES[key]
+                    try:
+                        ProductImage.objects.create(
+                            product=product,
+                            image=image_file,
+                            is_primary=(key == 'image_0')  # First image is primary
+                        )
+                    except Exception as e:
+                        print(f"ERROR: Failed to create ProductImage: {e}")
+                        # We don't raise here to allow product creation even if image fails, 
+                        # but typically valid validation would catch this earlier.
+        
+        return product
+
 class ProductListSerializer(ProductSerializer):
     """Serializer for listing products (reusing ProductSerializer for now)"""
     pass
