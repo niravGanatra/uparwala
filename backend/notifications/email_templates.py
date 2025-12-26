@@ -226,6 +226,151 @@ def get_email_template(template_name, context):
                 </div>
             """
         }
+                </div>
+            """
+        },
+        'welcome_email': {
+            'subject': "You're all set! Welcome to the Uparwala community",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #f97316;">Welcome to Uparwala!</h2>
+                    <p>Hi {context.get('customer_name')},</p>
+                    <p>We're thrilled to have you on board! Your account has been successfully created.</p>
+                    
+                    <p>At Uparwala, we bring you the best products directly from verified vendors.</p>
+                    
+                    <a href="{settings.FRONTEND_URL}/" 
+                       style="background-color: #f97316; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px;">
+                        Start Shopping
+                    </a>
+                </div>
+            """
+        },
+        'password_reset': {
+            'subject': "Reset your password",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #f97316;">Password Reset Request</h2>
+                    <p>Hi {context.get('customer_name', 'there')},</p>
+                    <p>We received a request to reset your password. If you didn't make this request, you can ignore this email.</p>
+                    
+                    <a href="{context.get('reset_url')}" 
+                       style="background-color: #f97316; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0;">
+                        Reset Password
+                    </a>
+                    
+                    <p style="font-size: 12px; color: #666;">Or copy and paste this link into your browser:<br>{context.get('reset_url')}</p>
+                </div>
+            """
+        },
+        'payment_received': {
+            'subject': f"Payment Received: ₹{context.get('amount')}",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #16a34a;">Payment Successful</h2>
+                    <p>Hi {context.get('customer_name')},</p>
+                    <p>We have received your payment of <strong>₹{context.get('amount')}</strong>.</p>
+                    
+                    <div style="background-color: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p><strong>Order ID:</strong> #{context.get('order_id')}</p>
+                        <p><strong>Transaction ID:</strong> {context.get('transaction_id')}</p>
+                    </div>
+                </div>
+            """
+        },
+        'order_cancellation': {
+            'subject': f"Order #{context.get('order_id')} has been cancelled",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #dc2626;">Order Cancelled</h2>
+                    <p>Hi {context.get('customer_name')},</p>
+                    <p>Your Order #{context.get('order_id')} has been cancelled as requested.</p>
+                    
+                    {f'<p><strong>Refund Status:</strong> A refund of ₹{context.get("refund_amount")} has been initiated and will reflect in 5-7 days.</p>' if context.get('refund_amount') else ''}
+                    
+                    <a href="{settings.FRONTEND_URL}/orders/{context.get('order_id')}" 
+                       style="background-color: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px;">
+                        View Order Status
+                    </a>
+                </div>
+            """
+        },
+        'rate_and_review': {
+            'subject': "How did you like your purchase?",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #f97316;">Rate Your Purchase</h2>
+                    <p>Hi {context.get('customer_name')},</p>
+                    <p>It's been a few days since you received your order. We'd love to hear your thoughts!</p>
+                    
+                    <p><strong>{context.get('product_name')}</strong></p>
+                    
+                    <a href="{settings.FRONTEND_URL}/products/{context.get('product_slug')}" 
+                       style="background-color: #f97316; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px;">
+                        Write a Review
+                    </a>
+                </div>
+            """
+        },
+        'return_request_received': {
+            'subject': f"We received your return request for Order #{context.get('order_id')}",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #2563eb;">Return Request Received</h2>
+                    <p>Hi {context.get('customer_name')},</p>
+                    <p>We've received your return request for Order #{context.get('order_id')}.</p>
+                    <p>Our team will review it and get back to you shortly.</p>
+                    
+                    <a href="{settings.FRONTEND_URL}/orders/{context.get('order_id')}" 
+                       style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px;">
+                        Track Return Status
+                    </a>
+                </div>
+            """
+        },
+        'refund_processed': {
+            'subject': f"Refund of ₹{context.get('amount')} initiated",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #16a34a;">Refund Initiated</h2>
+                    <p>Hi {context.get('customer_name')},</p>
+                    <p>A refund of <strong>₹{context.get('amount')}</strong> for Order #{context.get('order_id')} has been initiated.</p>
+                    <p>It should reflect in your original payment method within 5-7 business days.</p>
+                </div>
+            """
+        },
+        'abandoned_cart': {
+            'subject': "You left something behind...",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #f97316;">Still Interested?</h2>
+                    <p>Hi {context.get('customer_name')},</p>
+                    <p>We noticed you left some items in your cart. They're selling out fast!</p>
+                    
+                    <a href="{settings.FRONTEND_URL}/cart" 
+                       style="background-color: #f97316; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px;">
+                        Complete Checkout
+                    </a>
+                </div>
+            """
+        },
+        'back_in_stock': {
+            'subject': f"Good news! {context.get('product_name')} is back!",
+            'content': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #f97316;">Back in Stock!</h2>
+                    <p>Hi {context.get('customer_name')},</p>
+                    <p>The item you were looking for is back in stock:</p>
+                    
+                    <p><strong>{context.get('product_name')}</strong></p>
+                    
+                    <a href="{settings.FRONTEND_URL}/products/{context.get('product_slug')}" 
+                       style="background-color: #f97316; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px;">
+                        Buy Now
+                    </a>
+                </div>
+            """
+        }
     }
     
     return templates.get(template_name)

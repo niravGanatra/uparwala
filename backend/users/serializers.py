@@ -80,3 +80,55 @@ class AddressSerializer(serializers.ModelSerializer):
         # Automatically set user from request context
         user = self.context['request'].user
         return Address.objects.create(user=user, **validated_data)
+
+from dj_rest_auth.serializers import PasswordResetSerializer
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+from notifications.resend_service import send_email_via_resend
+from notifications.email_templates import get_email_template
+
+class CustomPasswordResetSerializer(PasswordResetSerializer):
+    """
+    Custom serializer to send password reset emails via Resend API
+    instead of Django's default SMTP to avoid blocking issues.
+    """
+    def save(self):
+        request = self.context.get('request')
+        email = self.validated_data['email']
+        
+        # Filter active users with this email (Django logic)
+        active_users = User.objects.filter(email__iexact=email, is_active=True)
+        
+        for user in active_users:
+            if not user.has_usable_password():
+                continue
+                
+            # Generate token and uid
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            
+            # Construct reset URL (frontend)
+            # Typically: https://uparwala.in/reset-password/<uid>/<token>
+            # Ensure FRONTEND_URL doesn't have trailing slash for clean concatenation
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+            reset_url = f"{frontend_url}/password-reset/{uid}/{token}/"
+            
+            # Send email via Resend
+            try:
+                context = {
+                    'customer_name': user.get_full_name() or user.username or 'there',
+                    'reset_url': reset_url
+                }
+                email_data = get_email_template('password_reset', context)
+                
+                if email_data:
+                    send_email_via_resend(
+                        to_email=user.email,
+                        subject=email_data['subject'],
+                        html_content=email_data['content']
+                    )
+            except Exception as e:
+                # Log error but don't expose to user (security)
+                print(f"Failed to send password reset email to {email}: {e}")
