@@ -101,8 +101,28 @@ class VendorApprovalView(APIView):
             vendor.vendor_rejection_reason = ''  # Clear any previous rejection reason
             vendor.save()
             
+            # Send approval email
+            try:
+                from notifications.resend_service import send_email_via_resend
+                from notifications.email_templates import get_email_template
+                
+                context = {
+                    'vendor_name': vendor.business_name or vendor.get_full_name() or vendor.username,
+                }
+                email_data = get_email_template('vendor_approved', context)
+                
+                if email_data:
+                    send_email_via_resend(
+                        to_email=vendor.email,
+                        subject=email_data['subject'],
+                        html_content=email_data['content']
+                    )
+            except Exception as e:
+                # Log error but don't fail the approval
+                print(f"Email sending failed: {e}")
+            
             return Response({
-                'message': f'Vendor {vendor.username} approved successfully',
+                'message': f'Vendor {vendor.username} approved successfully and email sent',
                 'vendor': UserSerializer(vendor).data
             })
         except User.DoesNotExist:
@@ -125,8 +145,29 @@ class VendorRejectionView(APIView):
             vendor.vendor_rejection_reason = request.data.get('reason', 'Application rejected by admin')
             vendor.save()
             
+            # Send rejection email
+            try:
+                from notifications.resend_service import send_email_via_resend
+                from notifications.email_templates import get_email_template
+                
+                context = {
+                    'vendor_name': vendor.business_name or vendor.get_full_name() or vendor.username,
+                    'reason': vendor.vendor_rejection_reason,
+                }
+                email_data = get_email_template('vendor_rejected', context)
+                
+                if email_data:
+                    send_email_via_resend(
+                        to_email=vendor.email,
+                        subject=email_data['subject'],
+                        html_content=email_data['content']
+                    )
+            except Exception as e:
+                # Log error but don't fail the rejection
+                print(f"Email sending failed: {e}")
+            
             return Response({
-                'message': f'Vendor {vendor.username} rejected',
+                'message': f'Vendor {vendor.username} rejected and email sent',
                 'vendor': UserSerializer(vendor).data
             })
         except User.DoesNotExist:
@@ -134,3 +175,4 @@ class VendorRejectionView(APIView):
                 {'error': 'Vendor not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
