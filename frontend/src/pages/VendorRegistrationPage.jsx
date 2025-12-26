@@ -91,10 +91,59 @@ const VendorRegistrationPage = () => {
         setLoading(true);
 
         try {
+            // Build FormData for file uploads
+            const submitData = new FormData();
+
+            // Account fields
+            submitData.append('username', formData.username);
+            submitData.append('email', formData.email);
+            submitData.append('password', formData.password);
+            submitData.append('password2', formData.confirmPassword);
+
+            // Business fields
+            submitData.append('business_name', formData.business_name);
+            submitData.append('business_email', formData.business_email);
+            submitData.append('business_phone', formData.business_phone);
+            submitData.append('business_address', formData.business_address);
+            submitData.append('city', formData.city);
+            submitData.append('state', formData.state);
+            submitData.append('zip_code', formData.zip_code);
+            submitData.append('store_description', formData.store_description);
+            submitData.append('tax_number', formData.tax_number || '');
+
+            // Compliance
+            submitData.append('is_food_vendor', formData.is_food_vendor);
+            if (formData.is_food_vendor) {
+                submitData.append('food_license_number', formData.food_license_number);
+                if (formData.food_license_certificate) {
+                    submitData.append('food_license_certificate', formData.food_license_certificate);
+                }
+            }
+
+            // Bank details
+            submitData.append('bank_account_holder_name', formData.bank_account_holder_name);
+            submitData.append('bank_name', formData.bank_name);
+            submitData.append('bank_branch', formData.bank_branch);
+            submitData.append('bank_account_number', formData.bank_account_number);
+            submitData.append('bank_ifsc_code', formData.bank_ifsc_code);
+            if (formData.cancelled_cheque) {
+                submitData.append('cancelled_cheque', formData.cancelled_cheque);
+            }
+
+            await api.post('/users/vendor/apply/', submitData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            toast.success('Vendor application submitted successfully! We will review and get back to you soon.');
+            navigate('/login');
         } catch (error) {
             console.error('Vendor registration failed:', error);
             const errorMessage = error.response?.data?.username?.[0] ||
                 error.response?.data?.email?.[0] ||
+                error.response?.data?.error ||
+                error.response?.data?.detail ||
                 'Registration failed. Please try again.';
             toast.error(errorMessage);
         } finally {
