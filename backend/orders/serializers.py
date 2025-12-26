@@ -63,11 +63,18 @@ class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     user = UserBasicSerializer(read_only=True)
     notes = OrderNoteSerializer(many=True, read_only=True)
+    label_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = '__all__'
         read_only_fields = ('total_amount', 'created_at')
+    
+    def get_label_url(self, obj):
+        """Get label_url from related ShipmentTracking if exists"""
+        if hasattr(obj, 'shipment') and obj.shipment:
+            return obj.shipment.label_url or ''
+        return ''
 
 
 # Gift Option Serializer

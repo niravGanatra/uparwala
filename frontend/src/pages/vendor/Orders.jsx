@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
-import { Search, Eye, Package } from 'lucide-react';
+import { Search, Eye, Package, Printer, Download, Loader2, Truck } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -13,6 +13,7 @@ const VendorOrders = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [labelLoading, setLabelLoading] = useState({});
 
     useEffect(() => {
         fetchOrders();
@@ -38,6 +39,29 @@ const VendorOrders = () => {
     const handleViewOrder = (order) => {
         setSelectedOrder(order);
         setIsViewModalOpen(true);
+    };
+
+    // Generate shipping label for an order
+    const handleGenerateLabel = async (orderId) => {
+        setLabelLoading(prev => ({ ...prev, [orderId]: true }));
+        try {
+            const response = await api.post(`/orders/${orderId}/generate-label/`);
+            if (response.data.label_url) {
+                toast.success('Shipping label generated!');
+                // Open label in new tab
+                window.open(response.data.label_url, '_blank');
+                // Refresh orders to get updated label_url
+                fetchOrders();
+            } else {
+                toast.error('Failed to generate label');
+            }
+        } catch (error) {
+            console.error('Failed to generate label:', error);
+            const errorMsg = error.response?.data?.error || 'Failed to generate shipping label';
+            toast.error(errorMsg);
+        } finally {
+            setLabelLoading(prev => ({ ...prev, [orderId]: false }));
+        }
     };
 
     const filteredOrders = orders.filter(order =>
@@ -100,6 +124,7 @@ const VendorOrders = () => {
                                                 <th className="pb-3 font-semibold text-slate-900">Items</th>
                                                 <th className="pb-3 font-semibold text-slate-900">Total</th>
                                                 <th className="pb-3 font-semibold text-slate-900">Status</th>
+                                                <th className="pb-3 font-semibold text-slate-900">AWB</th>
                                                 <th className="pb-3 font-semibold text-slate-900">Date</th>
                                                 <th className="pb-3 font-semibold text-slate-900">Actions</th>
                                             </tr>
@@ -117,12 +142,54 @@ const VendorOrders = () => {
                                                         </span>
                                                     </td>
                                                     <td className="py-4">
+                                                        {order.awb_code ? (
+                                                            <span className="font-mono text-sm bg-slate-100 px-2 py-1 rounded">
+                                                                {order.awb_code}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-slate-400 text-sm">Not assigned</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-4">
                                                         {new Date(order.created_at).toLocaleDateString()}
                                                     </td>
                                                     <td className="py-4">
-                                                        <Button variant="ghost" size="sm" onClick={() => handleViewOrder(order)}>
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
+                                                        <div className="flex items-center gap-1">
+                                                            <Button variant="ghost" size="sm" onClick={() => handleViewOrder(order)} title="View Order">
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+
+                                                            {/* Shipping Label Actions */}
+                                                            {order.awb_code && (
+                                                                order.label_url ? (
+                                                                    <a
+                                                                        href={order.label_url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        title="Download Shipping Label"
+                                                                    >
+                                                                        <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
+                                                                            <Download className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </a>
+                                                                ) : (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => handleGenerateLabel(order.id)}
+                                                                        disabled={labelLoading[order.id]}
+                                                                        title="Generate Shipping Label"
+                                                                        className="text-blue-600 hover:text-blue-700"
+                                                                    >
+                                                                        {labelLoading[order.id] ? (
+                                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                                        ) : (
+                                                                            <Printer className="h-4 w-4" />
+                                                                        )}
+                                                                    </Button>
+                                                                )
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -160,6 +227,62 @@ const VendorOrders = () => {
                                         </p>
                                     </div>
                                 </div>
+
+                                {/* Shipping Info */}
+                                {selectedOrder.awb_code && (
+                                    <div className="p-4 bg-blue-50 rounded-lg">
+                                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                            <Truck className="h-5 w-5 text-blue-600" />
+                                            Shipping Information
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-600">AWB Number</label>
+                                                <p className="font-mono text-lg">{selectedOrder.awb_code}</p>
+                                            </div>
+                                            {selectedOrder.courier_name && (
+                                                <div>
+                                                    <label className="text-sm font-medium text-slate-600">Courier</label>
+                                                    <p className="text-lg">{selectedOrder.courier_name}</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Label Download Button */}
+                                        <div className="mt-4">
+                                            {selectedOrder.label_url ? (
+                                                <a
+                                                    href={selectedOrder.label_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <Button className="gap-2 bg-green-600 hover:bg-green-700">
+                                                        <Download className="h-4 w-4" />
+                                                        Download Shipping Label
+                                                    </Button>
+                                                </a>
+                                            ) : (
+                                                <Button
+                                                    className="gap-2"
+                                                    onClick={() => handleGenerateLabel(selectedOrder.id)}
+                                                    disabled={labelLoading[selectedOrder.id]}
+                                                >
+                                                    {labelLoading[selectedOrder.id] ? (
+                                                        <>
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                            Generating...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Printer className="h-4 w-4" />
+                                                            Generate Shipping Label
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Shipping Address */}
                                 <div>
