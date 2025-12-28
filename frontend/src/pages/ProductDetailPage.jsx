@@ -10,7 +10,6 @@ import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import ProductReviews from '../components/ProductReviews';
 import ProductRecommendations from '../components/ProductRecommendations';
-import ProductQA from '../components/ProductQA';
 import NotifyMeModal from '../components/NotifyMeModal';
 import SpiritualLoader from '../components/SpiritualLoader';
 
@@ -330,8 +329,6 @@ const ProductDetailPage = () => {
                     {/* Product Reviews Section */}
                     <ProductReviews productId={product.id} />
 
-                    {/* Product Q&A Section */}
-                    <ProductQA productId={product?.id} />
 
                     {/* Recommendations */}
                     <ProductRecommendations currentProductid={product?.id} />
