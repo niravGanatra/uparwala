@@ -39,6 +39,8 @@ import TermsOfUsePage from './pages/TermsOfUsePage';
 import PrivacyPage from './pages/PrivacyPage';
 import FAQPage from './pages/FAQPage';
 import EPRCompliancePage from './pages/EPRCompliancePage';
+import PaymentsPage from './pages/PaymentsPage';
+import ShippingPage from './pages/ShippingPage';
 
 // Vendor pages (existing old structure)
 import VendorLayout from './layouts/VendorLayout';
@@ -118,7 +120,10 @@ function App() {
                 <Route path="terms-of-use" element={<TermsOfUsePage />} />
                 <Route path="privacy-policy" element={<PrivacyPage />} />
                 <Route path="faq" element={<FAQPage />} />
+                <Route path="faq" element={<FAQPage />} />
                 <Route path="epr-compliance" element={<EPRCompliancePage />} />
+                <Route path="payments" element={<PaymentsPage />} />
+                <Route path="shipping" element={<ShippingPage />} />
                 <Route path="pages/:slug" element={<CMSPage />} />
 
                 {/* Protected User Routes */}
