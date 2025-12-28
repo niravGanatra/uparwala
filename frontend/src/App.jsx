@@ -76,6 +76,7 @@ import AdminDashboard from './pages/AdminDashboard';
 
 import AnalyticsTracker from './components/AnalyticsTracker';
 import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   // Track UTM parameters on mount (Phase 8)
@@ -88,6 +89,7 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <Router>
+            <ScrollToTop />
             <AnalyticsTracker />
             <Toaster position="top-right" />
             <Routes>
