@@ -105,6 +105,19 @@ const Checkout = () => {
         }
     }, [orderSummary, selectedShippingAddress, step]);
 
+    // Load Razorpay Script
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        return () => {
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
+        };
+    }, []);
+
     const fetchAddresses = async () => {
         try {
             const response = await api.get('/users/addresses/');
