@@ -249,3 +249,8 @@ class CareerApplicationCreateView(generics.CreateAPIView):
             )
         except Exception as e:
             print(f"Error sending career application email: {e}")
+
+class CareerApplicationListView(generics.ListAPIView):
+    queryset = CareerApplication.objects.all().order_by('-created_at')
+    serializer_class = CareerApplicationSerializer
+    permission_classes = [permissions.IsAdminUser]

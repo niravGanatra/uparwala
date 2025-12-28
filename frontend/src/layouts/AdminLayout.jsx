@@ -55,6 +55,7 @@ const AdminLayout = () => {
                 { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
                 { path: '/admin/shipments', icon: Package, label: 'Shipments' },
                 { path: '/admin/serviceability', icon: Map, label: 'Delivery Zones' },
+                { path: '/admin/career-applications', icon: Users, label: 'Career Applications' },
             ]
         },
         {

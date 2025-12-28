@@ -59,6 +59,7 @@ import AdminLayout from './layouts/AdminLayout';
 import AdminUsers from './pages/admin/Users';
 import AdminProducts from './pages/admin/Products';
 import AdminOrders from './pages/admin/Orders';
+import CareerApplications from './pages/admin/CareerApplications'; // New
 import AdminVendors from './pages/admin/Vendors';
 import AdminSettings from './pages/admin/Settings';
 import VendorApprovals from './pages/admin/VendorApprovals';
@@ -158,6 +159,7 @@ function App() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="analytics" element={<AnalyticsDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="career-applications" element={<CareerApplications />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="vendors" element={<AdminVendors />} />
