@@ -7,20 +7,21 @@ const HelpCenterPage = () => {
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
             {/* Search Hero */}
-            <div className="bg-slate-900 text-white py-16 px-4 text-center">
-                <h1 className="text-3xl font-bold mb-6">How can we help you?</h1>
+            {/* Search Hero */}
+            <div className="bg-slate-900 text-white pt-20 pb-32 px-4 text-center">
+                <h1 className="text-3xl md:text-4xl font-bold mb-6">How can we help you?</h1>
                 <div className="max-w-2xl mx-auto relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <Input
                         placeholder="Search for help (e.g. return order, track package)"
-                        className="pl-12 py-6 text-slate-900 text-lg rounded-full shadow-lg border-0"
+                        className="pl-12 py-6 text-slate-900 text-lg rounded-full shadow-2xl border-0 focus-visible:ring-offset-2 focus-visible:ring-orange-500"
                     />
                 </div>
             </div>
 
             {/* Quick Categories */}
-            <div className="max-w-6xl mx-auto px-4 -mt-10 mb-16 relative z-10">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="max-w-6xl mx-auto px-4 -mt-16 mb-20 relative z-10">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
                     {[
                         { icon: Package, label: "Orders", link: "/orders" },
                         { icon: RefreshCw, label: "Returns", link: "/refund-policy" },
@@ -29,10 +30,12 @@ const HelpCenterPage = () => {
                         { icon: HelpCircle, label: "FAQ", link: "/faq" }
                     ].map((item, idx) => (
                         <Link key={idx} to={item.link}>
-                            <Card className="hover:shadow-lg transition-all cursor-pointer h-full border-0 shadow-md">
+                            <Card className="hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer h-full border-0 shadow-lg bg-white">
                                 <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                                    <item.icon className="h-8 w-8 text-orange-600 mb-3" />
-                                    <span className="font-semibold text-slate-700">{item.label}</span>
+                                    <div className="h-12 w-12 bg-orange-50 rounded-full flex items-center justify-center mb-4">
+                                        <item.icon className="h-6 w-6 text-orange-600" />
+                                    </div>
+                                    <span className="font-semibold text-slate-800">{item.label}</span>
                                 </CardContent>
                             </Card>
                         </Link>
