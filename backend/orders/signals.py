@@ -11,7 +11,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Order)
-@receiver(post_save, sender=Order)
 def notify_order_placed(sender, instance, created, **kwargs):
     """Notify user when order is placed"""
     if created:
