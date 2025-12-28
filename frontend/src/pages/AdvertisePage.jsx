@@ -75,7 +75,7 @@ const AdvertisePage = () => {
                         Contact our advertising team today to discuss custom packages tailored to your business needs.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a href="mailto:ads@uparwala.in" className="inline-flex items-center justify-center gap-2 bg-white text-indigo-900 px-6 py-3 rounded-lg font-bold hover:bg-slate-100 transition-colors">
+                        <a href="mailto:support@uparwala.in" className="inline-flex items-center justify-center gap-2 bg-white text-indigo-900 px-6 py-3 rounded-lg font-bold hover:bg-slate-100 transition-colors">
                             <Mail className="h-5 w-5" />
                             Contact Sales
                         </a>
