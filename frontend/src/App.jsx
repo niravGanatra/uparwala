@@ -41,6 +41,7 @@ import FAQPage from './pages/FAQPage';
 import EPRCompliancePage from './pages/EPRCompliancePage';
 import PaymentsPage from './pages/PaymentsPage';
 import ShippingPage from './pages/ShippingPage';
+import AboutPage from './pages/AboutPage';
 
 // Vendor pages (existing old structure)
 import VendorLayout from './layouts/VendorLayout';
@@ -113,7 +114,7 @@ function App() {
                 <Route path="cart" element={<CartPage />} />
 
                 {/* CMS Pages */}
-                <Route path="about" element={<CMSPage slug="about-us" />} />
+                <Route path="about-us" element={<AboutPage />} />
                 <Route path="contact" element={<CMSPage slug="contact-us" />} />
                 <Route path="refund-policy" element={<RefundPolicyPage />} />
                 <Route path="security" element={<SecurityPage />} />
