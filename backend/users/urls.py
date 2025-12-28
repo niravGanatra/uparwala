@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 # from .google_auth import GoogleLoginView  <-- REMOVED: Using the one in views.py
-from .views import RegisterView, UserDetailView, user_profile, GoogleLoginView, ConvertGuestView, CareerApplicationCreateView, CareerApplicationListView
+from .views import RegisterView, UserDetailView, user_profile, GoogleLoginView, ConvertGuestView, CareerApplicationCreateView, CareerApplicationListView, CareerApplicationDeleteView
 from .admin_views import (
     AdminUserStatsView,
     AdminProductStatsView,
@@ -25,6 +25,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('career/apply/', CareerApplicationCreateView.as_view(), name='career-apply'),
     path('career/applications/', CareerApplicationListView.as_view(), name='career-application-list'),
+    path('career/applications/<int:pk>/', CareerApplicationDeleteView.as_view(), name='career-application-delete'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('login-simple/', CustomLoginView.as_view(), name='custom-login'),  # Simple token-based login
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

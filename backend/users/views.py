@@ -275,3 +275,7 @@ class CareerApplicationListView(generics.ListAPIView):
     queryset = CareerApplication.objects.all().order_by('-created_at')
     serializer_class = CareerApplicationSerializer
     permission_classes = [permissions.IsAdminUser]
+
+class CareerApplicationDeleteView(generics.DestroyAPIView):
+    queryset = CareerApplication.objects.all()
+    permission_classes = [permissions.IsAdminUser]

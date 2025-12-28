@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
-import { Search, FileText, Download, Mail, Phone, Calendar } from 'lucide-react';
+import { Search, FileText, Download, Mail, Phone, Calendar, Trash2 } from 'lucide-react';
+import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { Button } from '../../components/ui/button';
@@ -81,6 +82,7 @@ const CareerApplications = () => {
                                                 <th className="pb-3 font-semibold text-slate-900">Message</th>
                                                 <th className="pb-3 font-semibold text-slate-900">Date</th>
                                                 <th className="pb-3 font-semibold text-slate-900">Resume</th>
+                                                <th className="pb-3 font-semibold text-slate-900 text-right pr-4">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -127,6 +129,16 @@ const CareerApplications = () => {
                                                             <span className="text-slate-400 text-sm">No resume</span>
                                                         )}
                                                     </td>
+                                                    <td className="py-4 text-right pr-4">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                                            onClick={() => handleDeleteClick(app.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -137,7 +149,17 @@ const CareerApplications = () => {
                     </Card>
                 </div>
             </div>
-        </div>
+
+            <ConfirmDialog
+                isOpen={!!deleteId}
+                onClose={() => setDeleteId(null)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Application"
+                message="Are you sure you want to delete this application? This action cannot be undone."
+                confirmText={isDeleting ? "Deleting..." : "Delete"}
+                confirmVariant="destructive"
+            />
+        </div >
     );
 };
 
