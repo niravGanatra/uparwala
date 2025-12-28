@@ -64,11 +64,30 @@ class OrderSerializer(serializers.ModelSerializer):
     user = UserBasicSerializer(read_only=True)
     notes = OrderNoteSerializer(many=True, read_only=True)
     shipment_details = serializers.SerializerMethodField()
+    shipments = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = '__all__'
         read_only_fields = ('total_amount', 'created_at')
+    
+    def get_shipments(self, obj):
+        """Return all shipments for this order as an array"""
+        shipments = obj.shipments.all()
+        return [
+            {
+                'id': s.id,
+                'awb_code': s.awb_code,
+                'label_url': s.label_url,
+                'pickup_scheduled': s.pickup_scheduled,
+                'pickup_token_number': s.pickup_token_number,
+                'current_status': s.current_status,
+                'courier_name': s.courier_name,
+                'shiprocket_order_id': s.shiprocket_order_id,
+                'shiprocket_shipment_id': s.shiprocket_shipment_id,
+            }
+            for s in shipments
+        ]
     
     def get_label_url(self, obj):
         """Legacy field for backward compatibility"""
