@@ -303,8 +303,10 @@ class CheckoutView(APIView):
             # NOTE: Stock reduction moved to payment verification
             # Stock should only be reduced when payment is confirmed
         
-        # Clear only the items that were checked out from cart
-        cart_items.delete()
+        # NOTE: For Razorpay, we do NOT clear cart here. 
+        # We clear it only after successful payment in VerifyPaymentView.
+        if payment_method == 'cod':
+            cart_items.delete()
         
         # Create payment based on method
         if payment_method == 'razorpay':

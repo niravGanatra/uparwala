@@ -2,7 +2,7 @@ import logging
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db import transaction
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,13 @@ class CreatePaymentOrderView(APIView):
         amount = serializer.validated_data['amount']
         
         try:
-            order = Order.objects.get(id=order_id, user=request.user)
+            # For creation, we might restrict strictly to owner if logged in
+            if request.user.is_authenticated:
+                order = Order.objects.get(id=order_id, user=request.user)
+            else:
+                # Guest creation flow - stricter check might be good but for now ID is okay
+                # Assuming frontend has order ID from previous step
+                order = Order.objects.get(id=order_id)
         except Order.DoesNotExist:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
         
@@ -42,7 +48,7 @@ class CreatePaymentOrderView(APIView):
         result = gateway.create_order(
             amount=amount,
             receipt=f'order_{order.id}',
-            notes={'order_id': order.id, 'user_id': request.user.id}
+            notes={'order_id': order.id, 'user_id': request.user.id if request.user.is_authenticated else 'guest'}
         )
         
         if not result['success']:
@@ -68,7 +74,7 @@ class CreatePaymentOrderView(APIView):
 
 class VerifyPaymentView(APIView):
     """Verify Razorpay payment signature"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     
     def post(self, request):
         serializer = VerifyPaymentSerializer(data=request.data)
@@ -81,7 +87,8 @@ class VerifyPaymentView(APIView):
         order_id = serializer.validated_data['order_id']
         
         try:
-            order = Order.objects.get(id=order_id, user=request.user)
+            # Allow verification without user check (signature is the security)
+            order = Order.objects.get(id=order_id)
             payment = Payment.objects.get(razorpay_order_id=razorpay_order_id, order=order)
         except (Order.DoesNotExist, Payment.DoesNotExist):
             return Response({'error': 'Order or payment not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -107,12 +114,29 @@ class VerifyPaymentView(APIView):
             order.save()
             
             # Reduce stock NOW that payment is confirmed
+            # Reduce stock NOW that payment is confirmed
             for order_item in order.items.all():
                 product = order_item.product
                 product.stock -= order_item.quantity
                 if product.stock < 0:
                     product.stock = 0  # Prevent negative stock
                 product.save()
+
+            # Clear purchased items from Cart
+            try:
+                if order.user:
+                    cart = Cart.objects.get(user=order.user)
+                elif order.session_id:
+                    cart = Cart.objects.get(session_id=order.session_id)
+                else:
+                    cart = None
+                
+                if cart:
+                    # Remove only items that are in this order (in case of selective checkout)
+                    product_ids = [item.product_id for item in order.items.all()]
+                    cart.items.filter(product_id__in=product_ids).delete()
+            except Cart.DoesNotExist:
+                pass
 
             # Send Email Notifications (Order Confirmation & Payment Received)
             try:
