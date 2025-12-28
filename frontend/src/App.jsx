@@ -48,6 +48,7 @@ import CorporatePage from './pages/CorporatePage';
 import AdvertisePage from './pages/AdvertisePage';
 import GiftCardsPage from './pages/GiftCardsPage';
 import HelpCenterPage from './pages/HelpCenterPage';
+import ContactPage from './pages/ContactPage';
 
 // Vendor pages (existing old structure)
 import VendorLayout from './layouts/VendorLayout';
@@ -138,6 +139,8 @@ function App() {
                 <Route path="pages/advertise" element={<AdvertisePage />} />
                 <Route path="pages/gift-cards" element={<GiftCardsPage />} />
                 <Route path="pages/help-center" element={<HelpCenterPage />} />
+                <Route path="contact" element={<ContactPage />} />
+                <Route path="pages/contact-us" element={<ContactPage />} />
                 <Route path="pages/:slug" element={<CMSPage />} />
 
                 {/* Protected User Routes */}

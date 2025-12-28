@@ -93,8 +93,8 @@ const Footer = () => {
                             <span>•</span>
                             <Link to="/pages/advertise" className="hover:text-white transition-colors">Advertise</Link>
                             <span>•</span>
-                            <Link to="/pages/gift-cards" className="hover:text-white transition-colors">Gift Cards</Link>
-                            <span>•</span>
+                            {/* <Link to="/pages/gift-cards" className="hover:text-white transition-colors">Gift Cards</Link>
+                            <span>•</span> */}
                             <Link to="/pages/help-center" className="hover:text-white transition-colors">Help Center</Link>
                         </div>
                     </div>
