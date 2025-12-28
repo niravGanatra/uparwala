@@ -228,27 +228,48 @@ class CareerApplicationCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         application = serializer.save()
         # Send email to candidate
-        try:
-            from django.core.mail import send_mail
-            send_mail(
-                subject=f"Application Received: {application.full_name}",
-                message=f"Dear {application.full_name},\n\nWe have received your application for a career at Uparwala.in. We will review it and get back to you shortly.\n\nBest Regards,\nUparwala Team",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[application.email],
-                fail_silently=True,
-            )
-            print(f"DEBUG: Career application email sent to {application.email}")
-            
-            # Send email to admin
-            send_mail(
-                subject=f"New Career Application: {application.full_name}",
-                message=f"Name: {application.full_name}\nEmail: {application.email}\nPhone: {application.phone}\nMessage: {application.message}\n\nPlease check the admin panel for the resume.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.DEFAULT_FROM_EMAIL], 
-                fail_silently=True,
-            )
-        except Exception as e:
-            print(f"Error sending career application email: {e}")
+        # Send emails asynchronously to prevent timeouts
+        import threading
+        from notifications.resend_service import send_email_via_resend
+        from django.conf import settings
+
+        def send_notifications():
+            try:
+                # 1. Send confirmation to candidate
+                candidate_subject = f"Application Received: {application.full_name}"
+                candidate_message = (
+                    f"<p>Dear {application.full_name},</p>"
+                    f"<p>We have received your application for a career at Uparwala.in. We will review it and get back to you shortly.</p>"
+                    f"<p>Best Regards,<br>Uparwala Team</p>"
+                )
+                send_email_via_resend(
+                    to_email=application.email,
+                    subject=candidate_subject,
+                    html_content=candidate_message
+                )
+                
+                # 2. Send notification to admin
+                admin_subject = f"New Career Application: {application.full_name}"
+                admin_message = (
+                    f"<p><strong>Name:</strong> {application.full_name}</p>"
+                    f"<p><strong>Email:</strong> {application.email}</p>"
+                    f"<p><strong>Phone:</strong> {application.phone}</p>"
+                    f"<p><strong>Message:</strong><br>{application.message}</p>"
+                    f"<p>Please check the admin panel for the resume.</p>"
+                )
+                send_email_via_resend(
+                    to_email=settings.DEFAULT_FROM_EMAIL,
+                    subject=admin_subject,
+                    html_content=admin_message
+                )
+                print(f"DEBUG: Career application emails sent via Resend for {application.email}")
+            except Exception as e:
+                print(f"Error sending career application emails via Resend: {e}")
+
+        # Start background thread
+        email_thread = threading.Thread(target=send_notifications)
+        email_thread.daemon = True
+        email_thread.start()
 
 class CareerApplicationListView(generics.ListAPIView):
     queryset = CareerApplication.objects.all().order_by('-created_at')

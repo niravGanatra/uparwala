@@ -67,7 +67,18 @@ const CareersPage = () => {
             window.scrollTo(0, 0);
         } catch (error) {
             console.error("Application failed:", error);
-            const msg = error.response?.data?.detail || "Failed to submit application. Please try again.";
+            let msg = "Failed to submit application. Please try again.";
+            if (error.response?.data) {
+                if (error.response.data.detail) {
+                    msg = error.response.data.detail;
+                } else {
+                    // Collect all field errors
+                    const errors = Object.values(error.response.data).flat();
+                    if (errors.length > 0) {
+                        msg = errors.join(', ');
+                    }
+                }
+            }
             toast.error(msg);
         } finally {
             setLoading(false);
