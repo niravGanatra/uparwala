@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart, User, Menu, LogOut, UserCircle, Package, Heart } from 'lucide-react';
+import { ShoppingCart, User, Menu, LogOut, UserCircle, Package, Heart, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -76,9 +76,7 @@ const MainLayout = () => {
                                 </Link>
                             ))}
 
-                            {user && user.is_vendor && (
-                                <Link to="/vendor/dashboard" className="text-sm font-medium hover:text-orange-600 transition-colors whitespace-nowrap">Dashboard</Link>
-                            )}
+
                         </nav>
 
 
@@ -156,6 +154,17 @@ const MainLayout = () => {
                                                                 <Package className="h-6 w-6 md:h-5 md:w-5 mr-4 md:mr-3 flex-shrink-0" />
                                                                 <span className="font-semibold md:font-medium">My Orders</span>
                                                             </Link>
+
+                                                            {(user.is_staff || user.is_superuser) && (
+                                                                <Link
+                                                                    to="/admin/dashboard"
+                                                                    className="flex items-center px-6 py-4 md:py-3 text-lg md:text-base text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors min-h-[56px] md:min-h-[48px] active:bg-orange-100"
+                                                                    onClick={() => setShowUserMenu(false)}
+                                                                >
+                                                                    <LayoutDashboard className="h-6 w-6 md:h-5 md:w-5 mr-4 md:mr-3 flex-shrink-0" />
+                                                                    <span className="font-semibold md:font-medium">Admin Dashboard</span>
+                                                                </Link>
+                                                            )}
 
                                                             {user.is_vendor && (
                                                                 <Link
