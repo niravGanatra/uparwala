@@ -11,70 +11,86 @@ import logging
 logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Order)
+@receiver(post_save, sender=Order)
 def notify_order_placed(sender, instance, created, **kwargs):
     """Notify user when order is placed"""
     if created:
-        try:
-            # 1. Email Notification
-            if instance.user and instance.user.email:
-                send_notification_email.delay(
-                    'order_confirmation',
-                    instance.user.email,
-                    {
-                        'order_id': instance.id,
-                        'customer_name': instance.user.first_name or 'there',
-                        'total_amount': float(instance.total_amount)
-                    }
-                )
+        def _send_notifications():
+            try:
+                # 1. Email Notification
+                if instance.user and instance.user.email:
+                    try:
+                        send_notification_email.delay(
+                            'order_confirmation',
+                            instance.user.email,
+                            {
+                                'order_id': instance.id,
+                                'customer_name': instance.user.first_name or 'there',
+                                'total_amount': float(instance.total_amount)
+                            }
+                        )
+                    except Exception as e:
+                        logger.error(f"Broker connection failed for customer email: {e}")
+                        return # Fail fast if broker is down
 
-            # 2. SMS/WhatsApp Notification
-            user_phone = instance.shipping_address_data.get('phone')
-            if user_phone:
-                amount = float(instance.total_amount)
-                msg = f"Hi {instance.user.first_name or 'there'}, your order #{instance.id} has been placed successfully! Total: {amount:.2f}. We will notify you when it ships."
-                send_sms_task.delay(user_phone, msg)
-                send_whatsapp_task.delay(user_phone, msg)
+                # 2. SMS/WhatsApp Notification
+                user_phone = instance.shipping_address_data.get('phone')
+                if user_phone:
+                    try:
+                        amount = float(instance.total_amount)
+                        msg = f"Hi {instance.user.first_name if instance.user else 'there'}, your order #{instance.id} has been placed successfully! Total: {amount:.2f}. We will notify you when it ships."
+                        send_sms_task.delay(user_phone, msg)
+                        send_whatsapp_task.delay(user_phone, msg)
+                    except Exception:
+                        pass # Ignore secondary failures if first succeeded, or maybe break too?
 
-            # 3. Notify Vendors
-            from collections import defaultdict
-            vendor_items = defaultdict(list)
-            
-            # Group items by vendor
-            for item in instance.items.all():
-                if item.product.vendor:
-                    vendor_items[item.product.vendor].append(item)
-            
-            # Send email to each vendor
-            for vendor_profile, items in vendor_items.items():
-                if not vendor_profile.user.email:
-                    continue
+                # 3. Notify Vendors
+                from collections import defaultdict
+                vendor_items = defaultdict(list)
+                
+                # Group items by vendor
+                for item in instance.items.all():
+                    if item.product.vendor:
+                        vendor_items[item.product.vendor].append(item)
+                
+                # Send email to each vendor
+                for vendor_profile, items in vendor_items.items():
+                    if not vendor_profile.user.email:
+                        continue
+                        
+                    # Build items list HTML
+                    items_html = ""
+                    for item in items:
+                        items_html += f"<li>{item.product.name} (SKU: {item.product.sku or 'N/A'}) x {item.quantity}</li>"
                     
-                # Build items list HTML
-                items_html = ""
-                for item in items:
-                    items_html += f"<li>{item.product.name} (SKU: {item.product.sku or 'N/A'}) x {item.quantity}</li>"
-                
-                # Format shipping address
-                addr_data = instance.shipping_address_data
-                shipping_address = f"{addr_data.get('name', 'Customer')}<br>"
-                shipping_address += f"{addr_data.get('address_line1', '')}<br>"
-                if addr_data.get('address_line2'):
-                    shipping_address += f"{addr_data.get('address_line2', '')}<br>"
-                shipping_address += f"{addr_data.get('city', '')}, {addr_data.get('state', '')} - {addr_data.get('pincode', '')}<br>"
-                shipping_address += f"Phone: {addr_data.get('phone', '')}"
+                    # Format shipping address
+                    addr_data = instance.shipping_address_data
+                    shipping_address = f"{addr_data.get('name', 'Customer')}<br>"
+                    shipping_address += f"{addr_data.get('address_line1', '')}<br>"
+                    if addr_data.get('address_line2'):
+                        shipping_address += f"{addr_data.get('address_line2', '')}<br>"
+                    shipping_address += f"{addr_data.get('city', '')}, {addr_data.get('state', '')} - {addr_data.get('pincode', '')}<br>"
+                    shipping_address += f"Phone: {addr_data.get('phone', '')}"
 
-                vendor_context = {
-                    'vendor_name': vendor_profile.store_name,
-                    'order_id': instance.id,
-                    'items_html': items_html,
-                    'shipping_address': shipping_address,
-                    'ship_by_date': (instance.created_at + datetime.timedelta(days=2)).strftime('%d %b %Y') # SLA: 48 hours
-                }
-                
-                send_notification_email.delay('vendor_new_order', vendor_profile.user.email, vendor_context)
+                    vendor_context = {
+                        'vendor_name': vendor_profile.store_name,
+                        'order_id': instance.id,
+                        'items_html': items_html,
+                        'shipping_address': shipping_address,
+                        'ship_by_date': (instance.created_at + datetime.timedelta(days=2)).strftime('%d %b %Y') # SLA: 48 hours
+                    }
+                    
+                    try:
+                        send_notification_email.delay('vendor_new_order', vendor_profile.user.email, vendor_context)
+                    except Exception:
+                        pass
 
-        except Exception as e:
-            logger.error(f"Failed to send order placed notification: {e}")
+            except Exception as e:
+                logger.error(f"Failed to send order placed notification: {e}")
+
+        # Execute after transaction commit to avoid holding DB lock and blocking response excessively
+        from django.db import transaction
+        transaction.on_commit(_send_notifications)
 
 @receiver(post_save, sender=Order)
 def notify_order_cancelled(sender, instance, **kwargs):
