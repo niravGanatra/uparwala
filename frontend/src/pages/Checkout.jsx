@@ -5,7 +5,8 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import {
     MapPin, CreditCard, ShoppingBag, ChevronRight,
-    Plus, Check, Loader, Truck, Shield, Gift
+    Plus, Check, Loader, Truck, Shield, Gift,
+    User, Phone, Building
 } from 'lucide-react';
 import GiftWrapSelector from '../components/GiftWrapSelector';
 import SpiritualLoader from '../components/SpiritualLoader';
@@ -602,50 +603,128 @@ const Checkout = () => {
                         className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4"
                     >
                         {/* ... Existing form inputs but styled better ... */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" placeholder="Full Name" value={addressForm.full_name} onChange={(e) => setAddressForm({ ...addressForm, full_name: e.target.value })} className="input-field" required />
-                            <input type="tel" placeholder="Phone Number" value={addressForm.phone} onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })} className="input-field" required />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">Full Name</label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="John Doe"
+                                        value={addressForm.full_name}
+                                        onChange={(e) => setAddressForm({ ...addressForm, full_name: e.target.value })}
+                                        className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">Phone Number</label>
+                                <div className="relative">
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <input
+                                        type="tel"
+                                        placeholder="+91 9876543210"
+                                        value={addressForm.phone}
+                                        onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
+                                        className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                        required
+                                    />
+                                </div>
+                            </div>
                         </div>
-                        <input type="text" placeholder="Address Line 1" value={addressForm.address_line1} onChange={(e) => setAddressForm({ ...addressForm, address_line1: e.target.value })} className="input-field w-full" required />
-                        <input type="text" placeholder="Address Line 2 (Optional)" value={addressForm.address_line2} onChange={(e) => setAddressForm({ ...addressForm, address_line2: e.target.value })} className="input-field w-full" />
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">Address Line 1</label>
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="House No., Street Name"
+                                    value={addressForm.address_line1}
+                                    onChange={(e) => setAddressForm({ ...addressForm, address_line1: e.target.value })}
+                                    className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">Address Line 2 <span className="text-gray-400 font-normal">(Optional)</span></label>
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Apartment, Suite, etc."
+                                    value={addressForm.address_line2}
+                                    onChange={(e) => setAddressForm({ ...addressForm, address_line2: e.target.value })}
+                                    className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">City</label>
+                                <div className="relative">
+                                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Mumbai"
+                                        value={addressForm.city}
+                                        onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                                        className={`w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all ${isAddressLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                        readOnly={isAddressLocked}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">State</label>
+                                <input
+                                    type="text"
+                                    placeholder="Maharashtra"
+                                    value={addressForm.state}
+                                    onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
+                                    className={`w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all ${isAddressLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                    readOnly={isAddressLocked}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">State Code</label>
+                                <input
+                                    type="text"
+                                    placeholder="DL"
+                                    value={addressForm.state_code}
+                                    onChange={(e) => setAddressForm({ ...addressForm, state_code: e.target.value.toUpperCase() })}
+                                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                    maxLength={2}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">Pincode</label>
                             <input
                                 type="text"
-                                placeholder="City"
-                                value={addressForm.city}
-                                onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                                className={`input-field ${isAddressLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                                readOnly={isAddressLocked}
+                                placeholder="400001"
+                                value={addressForm.pincode}
+                                onChange={(e) => {
+                                    setAddressForm({ ...addressForm, pincode: e.target.value });
+                                    setIsAddressLocked(false);
+                                }}
+                                onBlur={handlePincodeBlur}
+                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
                                 required
+                                maxLength={6}
                             />
-                            <input
-                                type="text"
-                                placeholder="State"
-                                value={addressForm.state}
-                                onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
-                                className={`input-field ${isAddressLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                                readOnly={isAddressLocked}
-                                required
-                            />
-                            <input type="text" placeholder="State Code (e.g., DL)" value={addressForm.state_code} onChange={(e) => setAddressForm({ ...addressForm, state_code: e.target.value.toUpperCase() })} className="input-field" maxLength={2} required />
                         </div>
-                        <input
-                            type="text"
-                            placeholder="Pincode"
-                            value={addressForm.pincode}
-                            onChange={(e) => {
-                                setAddressForm({ ...addressForm, pincode: e.target.value });
-                                setIsAddressLocked(false);
-                            }}
-                            onBlur={handlePincodeBlur}
-                            className="input-field w-full"
-                            required
-                            maxLength={6}
-                        />
 
                         <div className="flex items-center gap-2 mt-2">
                             <input type="checkbox" id="default" checked={addressForm.is_default} onChange={(e) => setAddressForm({ ...addressForm, is_default: e.target.checked })} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" />
-                            <label htmlFor="default" className="text-sm text-gray-700">Set as default address</label>
+                            <label htmlFor="default" className="text-sm text-gray-700 cursor-pointer">Set as default address</label>
                         </div>
 
                         <div className="flex gap-3 mt-4">
