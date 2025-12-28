@@ -1,13 +1,9 @@
 import api from './api';
 
-export const login = async (username, password) => {
-    // Detect if input is an email
-    const isEmail = username.includes('@');
-
-    // Construct payload based on input type to avoid validation errors
+export const login = async (email, password) => {
     const payload = {
+        email,
         password,
-        ...(isEmail ? { email: username } : { username: username })
     };
 
     // dj-rest-auth login endpoint

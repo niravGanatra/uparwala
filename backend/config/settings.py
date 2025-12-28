@@ -279,8 +279,10 @@ LOGIN_URL = 'http://localhost:5173/login'
 ACCOUNT_ADAPTER = 'users.adapters.CustomAccountAdapter'
 
 # New Allauth Configuration
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'username', 'password1', 'password2']
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1', 'password2'] # Removed username
 ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
 
@@ -365,8 +367,8 @@ SIMPLE_JWT = {
 }
 
 # Allauth settings - allow both username and email login
-ACCOUNT_LOGIN_METHODS = {'email', 'username'}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'username', 'password1'] # password1 = password, password1 + password2 = password + confirmation? 
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1'] 
 # The warning suggested ['email*', 'username', 'password1', 'password2']
 # But typically REST APIs don't force double password entry unless configured.
 # Let's stick to standard map if possible or the list if that's what updated allauth wants.

@@ -10,7 +10,6 @@ const RegisterPage = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
-        username: '',
         email: '',
         password: '',
         password2: '',
@@ -34,7 +33,6 @@ const RegisterPage = () => {
             navigate('/login');
         } catch (error) {
             const errorMsg = error.response?.data?.email?.[0] ||
-                error.response?.data?.username?.[0] ||
                 'Registration failed. Please try again.';
             toast.error(errorMsg);
         } finally {
@@ -87,21 +85,7 @@ const RegisterPage = () => {
                             </div>
                         </div>
 
-                        {/* Username */}
-                        <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-2">
-                                Username
-                            </label>
-                            <Input
-                                id="username"
-                                type="text"
-                                value={formData.username}
-                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                placeholder="johndoe"
-                                autoComplete="username"
-                                required
-                            />
-                        </div>
+
 
                         {/* Email */}
                         <div>

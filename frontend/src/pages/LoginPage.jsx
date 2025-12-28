@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 
 const LoginPage = () => {
-    const [credentials, setCredentials] = useState({ identifier: '', password: '' });
+    const [credentials, setCredentials] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { login } = useAuth();
@@ -20,7 +20,7 @@ const LoginPage = () => {
         setLoading(true);
 
         try {
-            const user = await login(credentials.identifier, credentials.password);
+            const user = await login(credentials.email, credentials.password);
             toast.success('Login successful!');
 
             // Redirect based on user role
@@ -128,21 +128,21 @@ const LoginPage = () => {
 
                     {/* Email/Username Login Form */}
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Email/Username */}
+                        {/* Email */}
                         <div>
-                            <label htmlFor="identifier" className="block text-sm font-medium text-slate-700 mb-2">
-                                Email or Username
+                            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+                                Email Address
                             </label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
                                 <Input
-                                    id="identifier"
-                                    type="text"
-                                    placeholder="john@example.com or johndoe"
-                                    value={credentials.identifier}
-                                    onChange={(e) => setCredentials({ ...credentials, identifier: e.target.value })}
+                                    id="email"
+                                    type="email"
+                                    placeholder="john@example.com"
+                                    value={credentials.email}
+                                    onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
                                     className="pl-12"
-                                    autoComplete="username"
+                                    autoComplete="email"
                                     required
                                 />
                             </div>
