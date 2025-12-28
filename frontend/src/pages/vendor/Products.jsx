@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
-import { Search, Plus, Eye, Trash2, Ban, Package, Upload } from 'lucide-react';
+import { Search, Plus, Eye, Trash2, Ban, Package, Upload, Pencil } from 'lucide-react';
 import SpiritualLoader from '../../components/ui/spiritual-loader';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -62,6 +62,7 @@ const VendorProducts = () => {
         expiry_date: '',
     });
     const [imageFiles, setImageFiles] = useState([]);
+    const [isEditMode, setIsEditMode] = useState(false);
 
     useEffect(() => {
         fetchProducts();
@@ -136,7 +137,64 @@ const VendorProducts = () => {
         setImageFiles(files);
     };
 
-    const handleAddProduct = async (e) => {
+    const resetForm = () => {
+        setFormData({
+            name: '', description: '', short_description: '', sku: '',
+            price: '', regular_price: '', sale_price: '', stock: '',
+            category: '', brand: '', is_active: true,
+            is_returnable: false, is_exchangeable: false,
+            length: '', width: '', height: '', weight: '',
+            tax_status: 'taxable', tax_slab: '', tax_class: '',
+            manage_stock: true, stock_status: 'instock', backorders: 'no', low_stock_threshold: '',
+            shipping_class: '', virtual: false, downloadable: false,
+            manufacturing_country: '', whats_in_box: '', safety_instructions: '',
+            handling_time: 2, expiry_date: ''
+        });
+        setImageFiles([]);
+        setIsEditMode(false);
+        setSelectedProduct(null);
+    };
+
+    const handleEditProduct = (product) => {
+        setSelectedProduct(product);
+        setIsEditMode(true);
+        setFormData({
+            name: product.name || '',
+            description: product.description || '',
+            short_description: product.short_description || '',
+            sku: product.sku || '',
+            regular_price: product.regular_price || '',
+            sale_price: product.sale_price || '',
+            stock: product.stock || '',
+            category: product.category || '',
+            brand: product.brand || '',
+            is_active: product.is_active,
+            is_returnable: product.is_returnable,
+            is_exchangeable: product.is_exchangeable,
+            length: product.length || '',
+            width: product.width || '',
+            height: product.height || '',
+            weight: product.weight || '',
+            tax_status: product.tax_status || 'taxable',
+            tax_slab: product.tax_slab || '',
+            tax_class: product.tax_class || '',
+            manage_stock: product.manage_stock,
+            stock_status: product.stock_status || 'instock',
+            backorders: product.backorders || 'no',
+            low_stock_threshold: product.low_stock_threshold || '',
+            shipping_class: product.shipping_class || '',
+            virtual: product.virtual,
+            downloadable: product.downloadable,
+            manufacturing_country: product.manufacturing_country || '',
+            whats_in_box: product.whats_in_box || '',
+            safety_instructions: product.safety_instructions || '',
+            handling_time: product.handling_time || 2,
+            expiry_date: product.expiry_date || ''
+        });
+        setIsAddModalOpen(true);
+    };
+
+    const handleSubmitProduct = async (e) => {
         e.preventDefault();
 
         const productData = new FormData();
@@ -171,7 +229,6 @@ const VendorProducts = () => {
         appendIf('width', formData.width);
         appendIf('height', formData.height);
         appendIf('weight', formData.weight);
-        appendIf('tax_status', formData.tax_status);
         appendIf('tax_class', formData.tax_class);
         appendIf('stock_status', formData.stock_status);
         appendIf('backorders', formData.backorders);
@@ -189,30 +246,24 @@ const VendorProducts = () => {
         });
 
         try {
-            await api.post('/products/vendor/my-products/', productData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-            toast.success('Product added successfully!');
+            if (isEditMode && selectedProduct) {
+                await api.patch(`/products/vendor/my-products/${selectedProduct.slug}/`, productData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+                toast.success('Product updated successfully!');
+            } else {
+                await api.post('/products/vendor/my-products/', productData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+                toast.success('Product added successfully!');
+            }
             setIsAddModalOpen(false);
-            setFormData({
-                name: '', description: '', short_description: '', sku: '',
-                price: '', regular_price: '', sale_price: '', stock: '',
-                category: '', brand: '', is_active: true,
-                is_returnable: false, is_exchangeable: false,
-                length: '', width: '', height: '', weight: '',
-                tax_status: 'taxable', tax_class: '',
-                manage_stock: true, stock_status: 'instock', backorders: 'no', low_stock_threshold: '',
-                shipping_class: '', virtual: false, downloadable: false,
-                manufacturing_country: '', whats_in_box: '', safety_instructions: '',
-                handling_time: 2, expiry_date: ''
-            });
-            setImageFiles([]);
+            resetForm();
             fetchProducts();
         } catch (error) {
-            console.error('Failed to add product:', error);
-            toast.error(error.response?.data?.name?.[0] || 'Failed to add product');
+            console.error('Failed to save product:', error);
+            const msg = error.response?.data?.detail || error.response?.data?.name?.[0] || 'Failed to save product';
+            toast.error(msg);
         }
     };
 
@@ -234,7 +285,7 @@ const VendorProducts = () => {
                                 <Upload className="h-4 w-4 mr-2" />
                                 Bulk Upload
                             </Button>
-                            <Button onClick={() => setIsAddModalOpen(true)}>
+                            <Button onClick={() => { resetForm(); setIsAddModalOpen(true); }}>
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Product
                             </Button>
@@ -270,7 +321,7 @@ const VendorProducts = () => {
                                             <Upload className="h-4 w-4 mr-2" />
                                             Bulk Upload
                                         </Button>
-                                        <Button onClick={() => setIsAddModalOpen(true)}>
+                                        <Button onClick={() => { resetForm(); setIsAddModalOpen(true); }}>
                                             <Plus className="h-4 w-4 mr-2" />
                                             Add Product
                                         </Button>
@@ -334,6 +385,9 @@ const VendorProducts = () => {
                                                             <Button variant="ghost" size="sm" onClick={() => handleViewProduct(product)}>
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
+                                                            <Button variant="ghost" size="sm" onClick={() => handleEditProduct(product)}>
+                                                                <Pencil className="h-4 w-4 text-blue-600" />
+                                                            </Button>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
@@ -361,9 +415,9 @@ const VendorProducts = () => {
                         </CardContent>
                     </Card>
 
-                    {/* Add Product Modal */}
-                    <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Product" size="lg">
-                        <form onSubmit={handleAddProduct} className="space-y-4">
+                    {/* Add/Edit Product Modal */}
+                    <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title={isEditMode ? "Edit Product" : "Add New Product"} size="lg">
+                        <form onSubmit={handleSubmitProduct} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium mb-2">Product Name *</label>
                                 <Input
@@ -618,7 +672,7 @@ const VendorProducts = () => {
                                 <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
                                     Cancel
                                 </Button>
-                                <Button type="submit">Add Product</Button>
+                                <Button type="submit">{isEditMode ? 'Update Product' : 'Add Product'}</Button>
                             </div>
                         </form>
                     </Modal>

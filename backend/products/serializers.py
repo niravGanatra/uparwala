@@ -169,6 +169,32 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         
         return product
 
+    def update(self, instance, validated_data):
+        print(f"DEBUG: ProductCreateSerializer.update() called for {instance.slug}")
+        # Update the product fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Handle image uploads from request.FILES
+        request = self.context.get('request')
+        
+        if request and request.FILES:
+            # Images are sent as image_0, image_1, etc.
+            for key in request.FILES:
+                if key.startswith('image_'):
+                    image_file = request.FILES[key]
+                    try:
+                        ProductImage.objects.create(
+                            product=instance,
+                            image=image_file,
+                            is_primary=False # Appended images are not primary by default
+                        )
+                    except Exception as e:
+                        print(f"ERROR: Failed to create ProductImage during update: {e}")
+        
+        return instance
+
 class ProductListSerializer(ProductSerializer):
     """Serializer for listing products (reusing ProductSerializer for now)"""
     pass
