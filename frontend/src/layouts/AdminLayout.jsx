@@ -20,7 +20,8 @@ import {
     FolderTree,
     Receipt,
     Columns,
-    Map
+    Map,
+    Star
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
@@ -52,6 +53,7 @@ const AdminLayout = () => {
                 { path: '/admin/categories', icon: FolderTree, label: 'Categories' },
                 { path: '/admin/tax-slabs', icon: Receipt, label: 'Tax Slabs' },
                 { path: '/admin/product-moderation', icon: CheckCircle, label: 'Moderation' },
+                { path: '/admin/review-management', icon: Star, label: 'Reviews' },
                 { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
                 { path: '/admin/shipments', icon: Package, label: 'Shipments' },
                 { path: '/admin/serviceability', icon: Map, label: 'Delivery Zones' },
