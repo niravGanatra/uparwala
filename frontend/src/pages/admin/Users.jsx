@@ -88,6 +88,19 @@ const AdminUsers = () => {
         }
     };
 
+    const handleToggleManager = async (userId, isCurrentlyManager) => {
+        try {
+            const action = isCurrentlyManager ? 'remove_manager' : 'make_manager';
+            await api.post(`/users/admin/users/${userId}/toggle-manager/`, { action });
+            setUsers(users.map(u =>
+                u.id === userId ? { ...u, is_manager: !isCurrentlyManager } : u
+            ));
+            toast.success(isCurrentlyManager ? 'Manager role removed' : 'User is now a Manager');
+        } catch (error) {
+            toast.error('Failed to update manager status');
+        }
+    };
+
     const filteredUsers = users.filter(user =>
         user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -143,12 +156,19 @@ const AdminUsers = () => {
                                                     <td className="py-4">{user.username}</td>
                                                     <td className="py-4">{user.email}</td>
                                                     <td className="py-4">
-                                                        <span className={`px-2 py-1 rounded-full text-xs ${user.is_staff ? 'bg-purple-100 text-purple-700' :
-                                                            user.is_vendor ? 'bg-orange-100 text-orange-700' :
-                                                                'bg-blue-100 text-blue-700'
-                                                            }`}>
-                                                            {user.is_staff ? 'Admin' : user.is_vendor ? 'Vendor' : 'Customer'}
-                                                        </span>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            <span className={`px-2 py-1 rounded-full text-xs ${user.is_staff ? 'bg-purple-100 text-purple-700' :
+                                                                user.is_vendor ? 'bg-orange-100 text-orange-700' :
+                                                                    'bg-blue-100 text-blue-700'
+                                                                }`}>
+                                                                {user.is_staff ? 'Admin' : user.is_vendor ? 'Vendor' : 'Customer'}
+                                                            </span>
+                                                            {user.is_manager && (
+                                                                <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">
+                                                                    Manager
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                     <td className="py-4">
                                                         <button
@@ -167,6 +187,16 @@ const AdminUsers = () => {
                                                     </td>
                                                     <td className="py-4">
                                                         <div className="flex gap-2">
+                                                            {!user.is_staff && (
+                                                                <Button
+                                                                    variant={user.is_manager ? "outline" : "default"}
+                                                                    size="sm"
+                                                                    onClick={() => handleToggleManager(user.id, user.is_manager)}
+                                                                    className={user.is_manager ? "border-red-300 text-red-600 hover:bg-red-50" : "bg-green-600 hover:bg-green-700"}
+                                                                >
+                                                                    {user.is_manager ? 'Remove Manager' : 'Make Manager'}
+                                                                </Button>
+                                                            )}
                                                             <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
                                                                 <Edit className="h-4 w-4" />
                                                             </Button>
