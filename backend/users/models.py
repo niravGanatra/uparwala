@@ -66,6 +66,17 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+class CareerApplication(models.Model):
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    resume = models.FileField(upload_to='resumes/')
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.full_name} - {self.email}"
+
 
 class Address(models.Model):
     """Customer shipping and billing addresses"""

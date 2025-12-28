@@ -8,7 +8,8 @@ from django.contrib.auth import get_user_model
 # from google.oauth2 import id_token
 # from google.auth.transport import requests
 from django.conf import settings
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import RegisterSerializer, UserSerializer, CareerApplicationSerializer
+from .models import CareerApplication
 from .profile_serializers import UserProfileSerializer
 
 User = get_user_model()
@@ -218,3 +219,33 @@ class ConvertGuestView(APIView):
                 {'error': f'Failed to create account: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class CareerApplicationCreateView(generics.CreateAPIView):
+    queryset = CareerApplication.objects.all()
+    serializer_class = CareerApplicationSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def perform_create(self, serializer):
+        application = serializer.save()
+        # Send email to candidate
+        try:
+            from django.core.mail import send_mail
+            send_mail(
+                subject=f"Application Received: {application.full_name}",
+                message=f"Dear {application.full_name},\n\nWe have received your application for a career at Uparwala.in. We will review it and get back to you shortly.\n\nBest Regards,\nUparwala Team",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[application.email],
+                fail_silently=True,
+            )
+            print(f"DEBUG: Career application email sent to {application.email}")
+            
+            # Send email to admin
+            send_mail(
+                subject=f"New Career Application: {application.full_name}",
+                message=f"Name: {application.full_name}\nEmail: {application.email}\nPhone: {application.phone}\nMessage: {application.message}\n\nPlease check the admin panel for the resume.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.DEFAULT_FROM_EMAIL], 
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f"Error sending career application email: {e}")

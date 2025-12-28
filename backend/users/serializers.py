@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Address
+from .models import Address, CareerApplication
 from vendors.serializers import VendorProfileSerializer
 
 User = get_user_model()
@@ -136,3 +136,8 @@ class CustomPasswordResetSerializer(PasswordResetSerializer):
             except Exception as e:
                 # Log error but don't expose to user (security)
                 print(f"Failed to send password reset email to {email}: {e}")
+
+class CareerApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CareerApplication
+        fields = '__all__'
