@@ -16,7 +16,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             'vendor_response', 'vendor_response_date', 'created_at', 'updated_at',
             'is_user_review', 'user_vote'
         ]
-        read_only_fields = ['id', 'user', 'helpful_count', 'not_helpful_count', 'created_at', 'updated_at', 'is_verified_purchase']
+        read_only_fields = ['id', 'user', 'product', 'helpful_count', 'not_helpful_count', 'created_at', 'updated_at', 'is_verified_purchase']
     
     def get_is_user_review(self, obj):
         request = self.context.get('request')
