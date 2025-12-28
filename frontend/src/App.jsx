@@ -43,6 +43,7 @@ import PaymentsPage from './pages/PaymentsPage';
 import ShippingPage from './pages/ShippingPage';
 import AboutPage from './pages/AboutPage';
 import CareersPage from './pages/CareersPage';
+import SitemapPage from './pages/SitemapPage';
 
 // Vendor pages (existing old structure)
 import VendorLayout from './layouts/VendorLayout';
@@ -128,6 +129,7 @@ function App() {
                 <Route path="epr-compliance" element={<EPRCompliancePage />} />
                 <Route path="payments" element={<PaymentsPage />} />
                 <Route path="shipping" element={<ShippingPage />} />
+                <Route path="pages/sitemap" element={<SitemapPage />} />
                 <Route path="pages/:slug" element={<CMSPage />} />
 
                 {/* Protected User Routes */}

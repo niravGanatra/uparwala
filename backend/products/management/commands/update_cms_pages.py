@@ -88,3 +88,52 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f'Created CMS page: {page.title}'))
         else:
             self.stdout.write(self.style.SUCCESS(f'Updated CMS page: {page.title}'))
+
+        # Corporate Information Page
+        corporate_content = """
+<h2>Corporate Information</h2>
+<p><strong>About Uparwala Traders LLP</strong></p>
+<p>Uparwala.in is operated by Uparwala Traders LLP, a company dedicated to providing high-quality religious products and services. We are committed to transparency, ethical business practices, and customer satisfaction.</p>
+
+<h3>Registered Office Address</h3>
+<address style="margin-bottom: 20px; font-style: normal;">
+    <strong>Uparwala Traders LLP</strong><br>
+    11, Kohinoor Society,<br>
+    Vijay Nagar Road,<br>
+    Naranpura,<br>
+    Ahmedabad, 380013,<br>
+    Gujarat, India
+</address>
+
+<h3>Contact Details</h3>
+<ul>
+    <li><strong>Telephone:</strong> <a href="tel:0448447878">044-8447878</a></li>
+    <li><strong>Email:</strong> <a href="mailto:support@uparwala.in">support@uparwala.in</a></li>
+</ul>
+
+<h3>Company Identification</h3>
+<ul>
+    <li><strong>CIN (Corporate Identity Number):</strong> U51109KA2012PTC066107</li>
+    <li><strong>Business Type:</strong> Limited Liability Partnership (LLP)</li>
+</ul>
+
+<h3>Our Mission</h3>
+<p>To connect devotees with authentic spiritual products and support our vendor community through fair commerce.</p>
+"""
+
+        corp_page, created = CMSPage.objects.update_or_create(
+            slug='corporate-information',
+            defaults={
+                'title': 'Corporate Information',
+                'content': corporate_content.strip(),
+                'meta_title': 'Corporate Information - Uparwala',
+                'meta_description': 'Corporate details, registered address, and contact information for Uparwala Traders LLP.',
+                'is_published': True,
+                'published_at': timezone.now(),
+            }
+        )
+
+        if created:
+            self.stdout.write(self.style.SUCCESS(f'Created CMS page: {corp_page.title}'))
+        else:
+            self.stdout.write(self.style.SUCCESS(f'Updated CMS page: {corp_page.title}'))
