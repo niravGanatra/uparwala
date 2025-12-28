@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { ArrowLeft, CreditCard, Truck } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, User, Phone, MapPin, Building } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -203,85 +203,106 @@ const CheckoutPage = () => {
                                     Shipping Address
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-5 overflow-hidden">
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">Full Name *</label>
-                                        <Input
-                                            name="full_name"
-                                            value={shippingAddress.full_name}
-                                            onChange={handleInputChange}
-                                            placeholder="John Doe"
-                                        />
+                            <CardContent className="space-y-6">
+                                <div className="grid md:grid-cols-2 gap-5">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Full Name <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <Input
+                                                name="full_name"
+                                                value={shippingAddress.full_name}
+                                                onChange={handleInputChange}
+                                                placeholder="John Doe"
+                                                className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                            />
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">Phone Number *</label>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Phone Number <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <Input
+                                                name="phone"
+                                                value={shippingAddress.phone}
+                                                onChange={handleInputChange}
+                                                placeholder="+91 9876543210"
+                                                className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-700">Address Line 1 <span className="text-red-500">*</span></label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         <Input
-                                            name="phone"
-                                            value={shippingAddress.phone}
+                                            name="address_line1"
+                                            value={shippingAddress.address_line1}
                                             onChange={handleInputChange}
-                                            placeholder="+91 9876543210"
+                                            placeholder="House No., Street Name"
+                                            className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                                         />
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Address Line 1 *</label>
-                                    <Input
-                                        name="address_line1"
-                                        value={shippingAddress.address_line1}
-                                        onChange={handleInputChange}
-                                        placeholder="House No., Street Name"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Address Line 2</label>
-                                    <Input
-                                        name="address_line2"
-                                        value={shippingAddress.address_line2}
-                                        onChange={handleInputChange}
-                                        placeholder="Apartment, Suite, etc. (optional)"
-                                    />
-                                </div>
-
-                                <div className="grid md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">City *</label>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-700">Address Line 2 <span className="text-slate-400 font-normal">(Optional)</span></label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         <Input
-                                            name="city"
-                                            value={shippingAddress.city}
+                                            name="address_line2"
+                                            value={shippingAddress.address_line2}
                                             onChange={handleInputChange}
-                                            placeholder="Mumbai"
+                                            placeholder="Apartment, Suite, etc."
+                                            className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">State *</label>
+                                </div>
+
+                                <div className="grid md:grid-cols-3 gap-5">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">City <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <Input
+                                                name="city"
+                                                value={shippingAddress.city}
+                                                onChange={handleInputChange}
+                                                placeholder="Mumbai"
+                                                className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">State <span className="text-red-500">*</span></label>
                                         <Input
                                             name="state"
                                             value={shippingAddress.state}
                                             onChange={handleInputChange}
                                             placeholder="Maharashtra"
+                                            className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">Postal Code *</label>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Pincode <span className="text-red-500">*</span></label>
                                         <Input
                                             name="postal_code"
                                             value={shippingAddress.postal_code}
                                             onChange={handleInputChange}
                                             placeholder="400001"
+                                            className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                                         />
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Country</label>
+                                <div className="hidden">
+                                    {/* Country is typically fixed or hidden if domestic only */}
                                     <Input
                                         name="country"
                                         value={shippingAddress.country}
-                                        onChange={handleInputChange}
-                                        disabled
+                                        readOnly
                                     />
                                 </div>
                             </CardContent>
