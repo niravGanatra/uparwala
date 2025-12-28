@@ -44,6 +44,7 @@ import ShippingPage from './pages/ShippingPage';
 import AboutPage from './pages/AboutPage';
 import CareersPage from './pages/CareersPage';
 import SitemapPage from './pages/SitemapPage';
+import CorporatePage from './pages/CorporatePage';
 
 // Vendor pages (existing old structure)
 import VendorLayout from './layouts/VendorLayout';
@@ -130,6 +131,7 @@ function App() {
                 <Route path="payments" element={<PaymentsPage />} />
                 <Route path="shipping" element={<ShippingPage />} />
                 <Route path="pages/sitemap" element={<SitemapPage />} />
+                <Route path="pages/corporate-information" element={<CorporatePage />} />
                 <Route path="pages/:slug" element={<CMSPage />} />
 
                 {/* Protected User Routes */}
