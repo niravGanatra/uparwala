@@ -80,6 +80,7 @@ import HomepageManager from './pages/admin/HomepageManager';
 import TaxSlabs from './pages/admin/TaxSlabs';
 import ShipmentManager from './pages/admin/ShipmentManager';
 import ServiceabilityManager from './pages/admin/ServiceabilityManager';
+import ReviewManagement from './pages/admin/ReviewManagement';
 
 // Phase 7: NEW Analytics Dashboards
 import VendorDashboard from './pages/VendorDashboard';
@@ -181,6 +182,7 @@ function App() {
                 <Route path="vendor-applications" element={<VendorApplications />} />
                 <Route path="payout-requests" element={<PayoutRequests />} />
                 <Route path="product-moderation" element={<ProductModeration />} />
+                <Route path="review-management" element={<ReviewManagement />} />
                 <Route path="commission-settings" element={<CommissionSettings />} />
                 <Route path="shipping" element={<ShippingSettings />} />
                 <Route path="categories" element={<AdminCategories />} />

@@ -161,3 +161,76 @@ class VendorResponseView(APIView):
         
         serializer = ProductReviewSerializer(review, context={'request': request})
         return Response(serializer.data)
+
+
+class AdminReviewListView(generics.ListAPIView):
+    """Admin view to list all reviews with filtering options"""
+    serializer_class = ProductReviewSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            return ProductReview.objects.none()
+        
+        queryset = ProductReview.objects.all().select_related('product', 'user').order_by('-created_at')
+        
+        # Filter by product
+        product_id = self.request.query_params.get('product_id')
+        if product_id:
+            queryset = queryset.filter(product_id=product_id)
+        
+        # Filter by rating
+        rating = self.request.query_params.get('rating')
+        if rating:
+            queryset = queryset.filter(rating=rating)
+        
+        # Filter by approval status
+        is_approved = self.request.query_params.get('is_approved')
+        if is_approved == 'true':
+            queryset = queryset.filter(is_approved=True)
+        elif is_approved == 'false':
+            queryset = queryset.filter(is_approved=False)
+        
+        return queryset
+
+
+class AdminReviewDeleteView(APIView):
+    """Admin view to delete any review"""
+    permission_classes = [IsAuthenticated]
+    
+    def delete(self, request, review_id):
+        if not request.user.is_staff:
+            return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            review = ProductReview.objects.get(id=review_id)
+            review.delete()
+            return Response({'message': 'Review deleted successfully'}, status=status.HTTP_200_OK)
+        except ProductReview.DoesNotExist:
+            return Response({'error': 'Review not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class AdminReviewApprovalView(APIView):
+    """Admin view to approve/unapprove reviews"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, review_id):
+        if not request.user.is_staff:
+            return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            review = ProductReview.objects.get(id=review_id)
+            action = request.data.get('action')  # 'approve' or 'unapprove'
+            
+            if action == 'approve':
+                review.is_approved = True
+            elif action == 'unapprove':
+                review.is_approved = False
+            else:
+                return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            review.save()
+            serializer = ProductReviewSerializer(review, context={'request': request})
+            return Response(serializer.data)
+        except ProductReview.DoesNotExist:
+            return Response({'error': 'Review not found'}, status=status.HTTP_404_NOT_FOUND)

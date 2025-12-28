@@ -25,6 +25,9 @@ from .review_views import (
     ReviewHelpfulVoteView,
     ProductRatingStatsView,
     VendorResponseView,
+    AdminReviewListView,
+    AdminReviewDeleteView,
+    AdminReviewApprovalView,
 )
 from .search_views import (
     ProductSearchView,
@@ -87,6 +90,11 @@ urlpatterns = [
     path('admin/moderation/<int:pk>/reject/', RejectProductView.as_view(), name='admin-product-reject'),
     path('admin/moderation/<int:pk>/request-changes/', RequestChangesView.as_view(), name='admin-product-request-changes'),
     path('admin/moderation/stats/', ModerationStatsView.as_view(), name='admin-moderation-stats'),
+    
+    # Review Management (Admin)
+    path('admin/reviews/', AdminReviewListView.as_view(), name='admin-review-list'),
+    path('admin/reviews/<int:review_id>/delete/', AdminReviewDeleteView.as_view(), name='admin-review-delete'),
+    path('admin/reviews/<int:review_id>/approval/', AdminReviewApprovalView.as_view(), name='admin-review-approval'),
     
     # Commission Management (Admin)
     path('admin/commission/categories/', CategoryCommissionListView.as_view(), name='admin-commission-categories'),
