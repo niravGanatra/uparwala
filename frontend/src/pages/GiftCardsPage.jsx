@@ -16,7 +16,7 @@ const GiftCardsPage = () => {
                         <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-purple-900 font-bold">
                             Buy Gift Card
                         </Button>
-                        <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10">
+                        <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-purple-900 font-semibold">
                             Check Balance
                         </Button>
                     </div>
