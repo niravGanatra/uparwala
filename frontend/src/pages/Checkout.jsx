@@ -299,6 +299,24 @@ const Checkout = () => {
         }
     };
 
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            if (window.Razorpay) {
+                resolve(true);
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => {
+                resolve(true);
+            };
+            script.onerror = () => {
+                resolve(false);
+            };
+            document.body.appendChild(script);
+        });
+    };
+
     const handlePlaceOrder = async () => {
         // Validation for logged-in users
         if (!selectedShippingAddress) {
@@ -340,6 +358,13 @@ const Checkout = () => {
             const response = await api.post('/orders/checkout/', payload);
 
             if (paymentMethod === 'razorpay') {
+                const isLoaded = await loadRazorpayScript();
+                if (!isLoaded) {
+                    toast.error('Razorpay SDK failed to load. Please check your connection.');
+                    setProcessingPayment(false);
+                    return;
+                }
+
                 // Initialize Razorpay
                 const selectedAddress = addresses.find(a => a.id === selectedShippingAddress);
                 const prefillData = {
@@ -385,6 +410,12 @@ const Checkout = () => {
                         color: '#3b82f6'
                     }
                 };
+
+                if (!window.Razorpay) {
+                    toast.error('Razorpay SDK not found');
+                    setProcessingPayment(false);
+                    return;
+                }
 
                 const razorpay = new window.Razorpay(options);
                 razorpay.open();
