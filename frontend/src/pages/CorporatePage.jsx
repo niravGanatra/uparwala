@@ -59,7 +59,7 @@ const CorporatePage = () => {
                                     <Phone className="h-5 w-5 text-slate-400 mt-0.5" />
                                     <div>
                                         <span className="block text-sm font-semibold text-slate-900">Telephone</span>
-                                        <a href="tel:0448447878" className="hover:text-orange-600 transition-colors">044-8447878</a>
+                                        <a href="tel:+917990100510" className="hover:text-orange-600 transition-colors">+91 7990100510</a>
                                     </div>
                                 </li>
                                 <li className="flex items-start gap-3">

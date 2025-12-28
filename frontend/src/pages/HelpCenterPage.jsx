@@ -74,7 +74,7 @@ const HelpCenterPage = () => {
                             <MessageSquare className="h-5 w-5" />
                             Email Support
                         </a>
-                        <a href="tel:0448447878" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors">
+                        <a href="tel:+917990100510" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors">
                             Call Us
                         </a>
                     </div>

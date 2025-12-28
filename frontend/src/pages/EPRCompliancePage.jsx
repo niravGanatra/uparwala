@@ -161,7 +161,7 @@ const EPRCompliancePage = () => {
                             <h2 className="text-xl font-semibold text-slate-900">Contact Us</h2>
                         </div>
                         <p className="text-slate-700">
-                            For EPR-related queries, contact us at <a href="mailto:epr@uparwala.in" className="text-green-600 hover:underline font-medium">epr@uparwala.in</a> or call <a href="tel:+91XXXXXXXXXX" className="text-green-600 hover:underline font-medium">+91-XXXXXXXXXX</a>.
+                            For EPR-related queries, contact us at <a href="mailto:epr@uparwala.in" className="text-green-600 hover:underline font-medium">epr@uparwala.in</a> or call <a href="tel:+917990100510" className="text-green-600 hover:underline font-medium">+91 7990100510</a>.
                         </p>
                     </section>
 

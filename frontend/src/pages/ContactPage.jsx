@@ -50,8 +50,8 @@ const ContactPage = () => {
                             <div className="space-y-4">
                                 <div>
                                     <p className="text-sm text-slate-500 mb-1">Call Us</p>
-                                    <a href="tel:0448447878" className="text-lg font-semibold text-slate-900 hover:text-orange-600 transition-colors">
-                                        044-8447878
+                                    <a href="tel:+917990100510" className="text-lg font-semibold text-slate-900 hover:text-orange-600 transition-colors">
+                                        +91 7990100510
                                     </a>
                                 </div>
                                 <div>

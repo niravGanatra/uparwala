@@ -241,7 +241,7 @@ const PrivacyPage = () => {
                             <h2 className="text-xl font-semibold text-slate-900">Contact Our Data Protection Officer</h2>
                         </div>
                         <p className="text-slate-700">
-                            For queries or to exercise Your rights, contact Our DPO at <a href="mailto:privacy@uparwala.in" className="text-orange-600 hover:underline font-medium">privacy@uparwala.in</a> or call <a href="tel:+91XXXXXXXXXX" className="text-orange-600 hover:underline font-medium">+91-XXXXXXXXXX</a>.
+                            For queries or to exercise Your rights, contact Our DPO at <a href="mailto:privacy@uparwala.in" className="text-orange-600 hover:underline font-medium">privacy@uparwala.in</a> or call <a href="tel:+917990100510" className="text-orange-600 hover:underline font-medium">+91 7990100510</a>.
                         </p>
                     </section>
                 </div>

@@ -76,7 +76,7 @@ const Footer = () => {
                                 Ahmedabad, 380013,<br />
                                 Gujarat, India<br />
                                 <span className="inline-block mt-2">CIN: U51109KA2012PTC066107</span><br />
-                                <span>Telephone: <a href="tel:0448447878" className="hover:text-white">044-8447878</a></span>
+                                <span>Telephone: <a href="tel:+917990100510" className="hover:text-white">+91 7990100510</a></span>
                             </address>
                         </div>
                     </div>
