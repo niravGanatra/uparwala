@@ -11,6 +11,8 @@ const CareerApplications = () => {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [deleteId, setDeleteId] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         fetchApplications();
@@ -25,6 +27,27 @@ const CareerApplications = () => {
             toast.error('Failed to load career applications');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteClick = (id) => {
+        setDeleteId(id);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteId) return;
+
+        setIsDeleting(true);
+        try {
+            await api.delete(`/users/career/applications/${deleteId}/`);
+            setApplications(applications.filter(app => app.id !== deleteId));
+            toast.success('Application deleted successfully');
+        } catch (error) {
+            console.error('Failed to delete application:', error);
+            toast.error('Failed to delete application');
+        } finally {
+            setIsDeleting(false);
+            setDeleteId(null);
         }
     };
 
