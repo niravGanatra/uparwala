@@ -88,9 +88,17 @@ def notify_order_placed(sender, instance, created, **kwargs):
             except Exception as e:
                 logger.error(f"Failed to send order placed notification: {e}")
 
-        # Execute after transaction commit to avoid holding DB lock and blocking response excessively
+        # Execute in a separate thread after transaction commit to ensure
+        # the response is NOT blocked even if Redis/Celery times out.
         from django.db import transaction
-        transaction.on_commit(_send_notifications)
+        import threading
+
+        def start_notification_thread():
+            thread = threading.Thread(target=_send_notifications)
+            thread.daemon = True # Ensure thread doesn't block shutdown
+            thread.start()
+
+        transaction.on_commit(start_notification_thread)
 
 @receiver(post_save, sender=Order)
 def notify_order_cancelled(sender, instance, **kwargs):
