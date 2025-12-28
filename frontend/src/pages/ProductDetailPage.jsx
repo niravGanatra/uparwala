@@ -119,9 +119,14 @@ const ProductDetailPage = () => {
                     >
                         <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
                             <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">{product.name}</h1>
-                            <p className="text-base md:text-lg text-slate-600">
+                            <p className="text-base md:text-lg text-slate-600 mb-3">
                                 Sold by <span className="text-orange-600 font-medium">{product.vendor_name}</span>
                             </p>
+                            {product.short_description && (
+                                <p className="text-slate-600 text-base leading-relaxed whitespace-pre-line">
+                                    {product.short_description}
+                                </p>
+                            )}
                         </div>
 
                         <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
@@ -147,7 +152,8 @@ const ProductDetailPage = () => {
                         </div>
 
                         <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
-                            <p className="text-slate-600 leading-relaxed text-base">
+                            <h3 className="font-semibold text-lg mb-3">Product Description</h3>
+                            <p className="text-slate-600 leading-relaxed text-base whitespace-pre-line">
                                 {product.description}
                             </p>
                         </div>
