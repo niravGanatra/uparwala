@@ -45,7 +45,7 @@ const ContactPage = () => {
                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                             <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                                 <Phone className="h-5 w-5 text-orange-600" />
-                                Support
+                                Sales & Support
                             </h3>
                             <div className="space-y-4">
                                 <div>
@@ -55,7 +55,7 @@ const ContactPage = () => {
                                     </a>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-slate-500 mb-1">Email Us</p>
+                                    <p className="text-sm text-slate-500 mb-1">Sales & Support Email</p>
                                     <a href="mailto:support@uparwala.in" className="text-lg font-semibold text-slate-900 hover:text-orange-600 transition-colors">
                                         support@uparwala.in
                                     </a>
