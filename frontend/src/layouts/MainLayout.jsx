@@ -83,22 +83,26 @@ const MainLayout = () => {
 
 
                         <div className="flex items-center space-x-4">
-                            <Link to="/wishlist">
-                                <Button variant="ghost" size="icon" title="Wishlist">
-                                    <Heart className="h-5 w-5" />
-                                </Button>
-                            </Link>
+                            {user && (
+                                <Link to="/wishlist">
+                                    <Button variant="ghost" size="icon" title="Wishlist">
+                                        <Heart className="h-5 w-5" />
+                                    </Button>
+                                </Link>
+                            )}
 
-                            <Link to="/cart">
-                                <Button variant="ghost" size="icon" className="relative">
-                                    <ShoppingCart className="h-5 w-5" />
-                                    {cartCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                                            {cartCount}
-                                        </span>
-                                    )}
-                                </Button>
-                            </Link>
+                            {user && (
+                                <Link to="/cart">
+                                    <Button variant="ghost" size="icon" className="relative">
+                                        <ShoppingCart className="h-5 w-5" />
+                                        {cartCount > 0 && (
+                                            <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                                                {cartCount}
+                                            </span>
+                                        )}
+                                    </Button>
+                                </Link>
+                            )}
 
                             {/* User Menu */}
                             <div className="relative">
@@ -182,8 +186,8 @@ const MainLayout = () => {
                                     </>
                                 ) : (
                                     <Link to="/login">
-                                        <Button variant="ghost" size="icon">
-                                            <User className="h-5 w-5" />
+                                        <Button className="bg-orange-600 hover:bg-orange-700 text-white font-semibold">
+                                            Login
                                         </Button>
                                     </Link>
                                 )}
