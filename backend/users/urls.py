@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 # from .google_auth import GoogleLoginView  <-- REMOVED: Using the one in views.py
-from .views import RegisterView, UserDetailView, user_profile, GoogleLoginView, ConvertGuestView, CareerApplicationCreateView, CareerApplicationListView, CareerApplicationDeleteView
+from .views import RegisterView, UserDetailView, user_profile, GoogleLoginView, ConvertGuestView, CareerApplicationCreateView, CareerApplicationListView, CareerApplicationDeleteView, ToggleManagerView
 from .admin_views import (
     AdminUserStatsView,
     AdminProductStatsView,
@@ -44,6 +44,7 @@ urlpatterns = [
     path('admin/stats/orders/', AdminOrderStatsView.as_view(), name='admin-order-stats'),
     path('admin/users/', AdminUserListView.as_view(), name='admin-user-list'),
     path('admin/users/<int:pk>/', AdminUserDetailView.as_view(), name='admin-user-detail'),
+    path('admin/users/<int:user_id>/toggle-manager/', ToggleManagerView.as_view(), name='toggle-manager'),
     
     # Admin vendor management
     path('admin/vendor-applications/', VendorApplicationListView.as_view(), name='vendor-applications'),

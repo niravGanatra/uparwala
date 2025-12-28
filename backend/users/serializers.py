@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'email', 'is_active', 'is_vendor', 'is_staff', 'is_superuser',
+            'id', 'username', 'email', 'is_active', 'is_vendor', 'is_manager', 'is_staff', 'is_superuser',
             'date_joined', 'last_login',
             'vendor_status', 'vendor_application_date', 'vendor_approval_date',
             'vendor_rejection_reason', 'business_name', 'business_email',

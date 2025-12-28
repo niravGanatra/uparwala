@@ -90,6 +90,10 @@ import AnalyticsTracker from './components/AnalyticsTracker';
 import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
 import ScrollToTop from './components/ScrollToTop';
 
+// Manager Pages
+import ManagerLayout from './layouts/ManagerLayout';
+import ManagerDashboard from './pages/ManagerDashboard';
+
 function App() {
   // Track UTM parameters on mount (Phase 8)
   useEffect(() => {
@@ -166,6 +170,13 @@ function App() {
                 <Route path="bulk-upload" element={<BulkUpload />} />
                 <Route path="settings" element={<VendorSettings />} />
                 <Route path="analytics" element={<VendorAnalytics />} />
+              </Route>
+
+              {/* Manager Routes (Limited access - vendor management only) */}
+              <Route path="/manager" element={<ManagerLayout />}>
+                <Route index element={<ManagerDashboard />} />
+                <Route path="vendors" element={<AdminVendors />} />
+                <Route path="vendor-applications" element={<VendorApplications />} />
               </Route>
 
               {/* Admin Routes (Old Structure + New Dashboard) */}

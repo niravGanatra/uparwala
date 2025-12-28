@@ -279,3 +279,28 @@ class CareerApplicationListView(generics.ListAPIView):
 class CareerApplicationDeleteView(generics.DestroyAPIView):
     queryset = CareerApplication.objects.all()
     permission_classes = [permissions.IsAdminUser]
+
+
+class ToggleManagerView(APIView):
+    """Admin view to toggle manager status for a user"""
+    permission_classes = [permissions.IsAdminUser]
+    
+    def post(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Toggle is_manager status
+        action = request.data.get('action')  # 'make_manager' or 'remove_manager'
+        
+        if action == 'make_manager':
+            user.is_manager = True
+            user.save()
+            return Response({'message': f'{user.username} is now a manager', 'is_manager': True})
+        elif action == 'remove_manager':
+            user.is_manager = False
+            user.save()
+            return Response({'message': f'{user.username} is no longer a manager', 'is_manager': False})
+        else:
+            return Response({'error': 'Invalid action. Use make_manager or remove_manager'}, status=status.HTTP_400_BAD_REQUEST)
