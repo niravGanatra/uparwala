@@ -300,6 +300,111 @@ const AdminOrders = () => {
                                     </div>
                                 </div>
 
+                                {/* Shipment Section */}
+                                <div>
+                                    <h3 className="font-semibold mb-3">Shipment</h3>
+                                    {selectedOrder.shipments && selectedOrder.shipments.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {selectedOrder.shipments.map((shipment, idx) => (
+                                                <div key={idx} className="p-4 border rounded-lg bg-slate-50">
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <div>
+                                                            <p className="text-sm text-slate-600">AWB Code</p>
+                                                            <p className="font-mono font-semibold">{shipment.awb_code || 'Not Generated'}</p>
+                                                        </div>
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${shipment.current_status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                                                                shipment.current_status === 'Cancelled' ? 'bg-red-100 text-red-800' :
+                                                                    'bg-blue-100 text-blue-800'
+                                                            }`}>
+                                                            {shipment.current_status || 'Pending'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex gap-2 flex-wrap">
+                                                        {!shipment.awb_code && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        await api.post(`/orders/${selectedOrder.id}/generate-awb/`);
+                                                                        toast.success('AWB generated!');
+                                                                        const response = await api.get(`/orders/orders/${selectedOrder.id}/`);
+                                                                        setSelectedOrder(response.data);
+                                                                    } catch (error) {
+                                                                        toast.error(error.response?.data?.error || 'Failed to generate AWB');
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Generate AWB
+                                                            </Button>
+                                                        )}
+                                                        {shipment.awb_code && (
+                                                            <>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            const response = await api.post(`/orders/${selectedOrder.id}/generate-label/`);
+                                                                            if (response.data.label_url) {
+                                                                                window.open(response.data.label_url, '_blank');
+                                                                                toast.success('Label opened');
+                                                                            }
+                                                                        } catch (error) {
+                                                                            toast.error(error.response?.data?.error || 'Failed to generate label');
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Print Label
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            await api.get(`/orders/${selectedOrder.id}/tracking/`);
+                                                                            toast.success('Tracking updated');
+                                                                            const response = await api.get(`/orders/orders/${selectedOrder.id}/`);
+                                                                            setSelectedOrder(response.data);
+                                                                        } catch (error) {
+                                                                            toast.error('Failed to refresh tracking');
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Refresh Tracking
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-4 border rounded-lg bg-slate-50 text-center">
+                                            <p className="text-slate-600 mb-3">No shipment created yet</p>
+                                            {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
+                                                <Button
+                                                    size="sm"
+                                                    onClick={async () => {
+                                                        try {
+                                                            await api.post(`/orders/${selectedOrder.id}/create-shipment/`);
+                                                            toast.success('Shipment created!');
+                                                            const response = await api.get(`/orders/orders/${selectedOrder.id}/`);
+                                                            setSelectedOrder(response.data);
+                                                            fetchOrders();
+                                                        } catch (error) {
+                                                            toast.error(error.response?.data?.error || 'Failed to create shipment');
+                                                        }
+                                                    }}
+                                                >
+                                                    <Package className="h-4 w-4 mr-2" />
+                                                    Create Shipment
+                                                </Button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Update Status */}
                                 <div>
                                     <h3 className="font-semibold mb-3">Update Order Status</h3>
