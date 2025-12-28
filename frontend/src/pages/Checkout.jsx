@@ -11,11 +11,13 @@ import {
 import GiftWrapSelector from '../components/GiftWrapSelector';
 import SpiritualLoader from '../components/SpiritualLoader';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 const Checkout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
+    const { clearCart } = useCart();
     const selectedItemIds = location.state?.selectedItemIds || [];
     const [step, setStep] = useState(1); // 1: Address, 2: Payment, 3: Review
     const [loading, setLoading] = useState(false);
@@ -400,6 +402,8 @@ const Checkout = () => {
                             toast.success('Payment successful!');
                             // Clear gift data
                             localStorage.removeItem('checkout_gift_data');
+                            // Clear the cart context to update navbar badge
+                            clearCart();
                             // Reset processing state before navigation
                             setProcessingPayment(false);
                             navigate(`/order-confirmation/${response.data.order_id}`);
@@ -433,10 +437,11 @@ const Checkout = () => {
                     setProcessingPayment(false);
                 });
             } else {
-                // COD
                 toast.success('Order placed successfully!');
                 // Clear gift data
                 localStorage.removeItem('checkout_gift_data');
+                // Clear the cart context to update navbar badge
+                clearCart();
                 navigate(`/order-confirmation/${response.data.order_id}`);
             }
         } catch (error) {
