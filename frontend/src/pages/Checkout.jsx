@@ -355,10 +355,14 @@ const Checkout = () => {
                 payload.selected_item_ids = selectedItemIds;
             }
 
+            console.log('Sending checkout request with payload:', payload);
             const response = await api.post('/orders/checkout/', payload);
+            console.log('Checkout response:', response.data);
 
             if (paymentMethod === 'razorpay') {
+                console.log('Payment method is Razorpay. Loading script...');
                 const isLoaded = await loadRazorpayScript();
+                console.log('Razorpay script loaded status:', isLoaded);
                 if (!isLoaded) {
                     toast.error('Razorpay SDK failed to load. Please check your connection.');
                     setProcessingPayment(false);
@@ -381,6 +385,7 @@ const Checkout = () => {
                     description: `Order #${response.data.order_number}`,
                     order_id: response.data.payment.razorpay_order_id,
                     handler: async function (paymentResponse) {
+                        console.log('Razorpay payment handler triggered. Payment response:', paymentResponse);
                         // Verify payment
                         try {
                             const verifyResponse = await api.post('/payments/verify/', {
@@ -411,6 +416,8 @@ const Checkout = () => {
                     }
                 };
 
+                console.log('Razorpay options:', options);
+
                 if (!window.Razorpay) {
                     toast.error('Razorpay SDK not found');
                     setProcessingPayment(false);
@@ -421,6 +428,7 @@ const Checkout = () => {
                 razorpay.open();
 
                 razorpay.on('payment.failed', function (response) {
+                    console.error('Razorpay payment failed event:', response);
                     toast.error('Payment failed. Please try again.');
                     setProcessingPayment(false);
                 });
