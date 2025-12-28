@@ -48,16 +48,18 @@ const HelpCenterPage = () => {
                 <h2 className="text-2xl font-bold text-slate-900 mb-6">Popular Topics</h2>
                 <div className="space-y-4">
                     {[
-                        "How do I track my order status?",
-                        "What is the return policy for spiritual items?",
-                        "How can I change my delivery address?",
-                        "Do you offer international shipping?",
-                        "How to contact a seller directly?"
+                        { text: "How do I track my order status?", link: "/tickets" },
+                        { text: "What is the return policy for spiritual items?", link: "/refund-policy" },
+                        { text: "How can I change my delivery address?", link: "/profile" },
+                        { text: "Do you offer international shipping?", link: "/shipping" },
+                        { text: "How to contact a seller directly?", link: "/faq" }
                     ].map((topic, idx) => (
-                        <div key={idx} className="bg-white p-4 rounded-lg border border-slate-200 hover:border-orange-300 cursor-pointer transition-colors flex justify-between items-center group">
-                            <span className="text-slate-700 group-hover:text-orange-700">{topic}</span>
-                            <MessageSquare className="h-4 w-4 text-slate-400 group-hover:text-orange-500" />
-                        </div>
+                        <Link key={idx} to={topic.link} className="block">
+                            <div className="bg-white p-4 rounded-lg border border-slate-200 hover:border-orange-300 cursor-pointer transition-colors flex justify-between items-center group">
+                                <span className="text-slate-700 group-hover:text-orange-700">{topic.text}</span>
+                                <MessageSquare className="h-4 w-4 text-slate-400 group-hover:text-orange-500" />
+                            </div>
+                        </Link>
                     ))}
                 </div>
             </div>
