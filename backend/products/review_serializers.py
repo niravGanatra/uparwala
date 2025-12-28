@@ -7,6 +7,8 @@ class ProductReviewSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
     is_user_review = serializers.SerializerMethodField()
     user_vote = serializers.SerializerMethodField()
+    user_details = serializers.SerializerMethodField()
+    product_details = serializers.SerializerMethodField()
     
     class Meta:
         model = ProductReview
@@ -14,9 +16,35 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             'id', 'product', 'user', 'user_name', 'rating', 'title', 'comment',
             'is_approved', 'is_verified_purchase', 'helpful_count', 'not_helpful_count',
             'vendor_response', 'vendor_response_date', 'created_at', 'updated_at',
-            'is_user_review', 'user_vote'
+            'is_user_review', 'user_vote', 'user_details', 'product_details'
         ]
         read_only_fields = ['id', 'user', 'product', 'helpful_count', 'not_helpful_count', 'created_at', 'updated_at', 'is_verified_purchase']
+    
+    def get_user_details(self, obj):
+        """Return user contact details for admin view"""
+        request = self.context.get('request')
+        # Only return details to admin users
+        if request and request.user.is_authenticated and request.user.is_staff:
+            return {
+                'id': obj.user.id,
+                'username': obj.user.username,
+                'email': obj.user.email,
+                'phone': getattr(obj.user, 'phone', ''),
+                'first_name': obj.user.first_name,
+                'last_name': obj.user.last_name,
+            }
+        return None
+    
+    def get_product_details(self, obj):
+        """Return product summary"""
+        product = obj.product
+        return {
+            'id': product.id,
+            'name': product.name,
+            'slug': product.slug,
+            'price': float(product.selling_price) if product.selling_price else 0,
+            'image': product.images.first().image.url if product.images.exists() else None,
+        }
     
     def get_is_user_review(self, obj):
         request = self.context.get('request')

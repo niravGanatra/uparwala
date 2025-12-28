@@ -165,68 +165,121 @@ const ReviewManagement = () => {
                                 <div className="space-y-4">
                                     {filteredReviews.map((review) => (
                                         <div key={review.id} className="border rounded-lg p-4 hover:bg-slate-50">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-3 mb-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <User className="h-4 w-4 text-slate-400" />
-                                                            <span className="font-medium">{review.user_name}</span>
+                                            <div className="flex gap-4">
+                                                {/* Product Image */}
+                                                <div className="flex-shrink-0">
+                                                    {review.product_details?.image ? (
+                                                        <img
+                                                            src={review.product_details.image}
+                                                            alt={review.product_details.name}
+                                                            className="w-20 h-20 object-cover rounded-lg"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-20 h-20 bg-slate-200 rounded-lg flex items-center justify-center">
+                                                            <Package className="h-8 w-8 text-slate-400" />
                                                         </div>
-                                                        <StarRating rating={review.rating} />
-                                                        {review.is_verified_purchase && (
-                                                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                                                Verified Purchase
+                                                    )}
+                                                </div>
+
+                                                {/* Review Content */}
+                                                <div className="flex-1">
+                                                    {/* Header Row */}
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="flex items-center gap-3 flex-wrap">
+                                                            <StarRating rating={review.rating} />
+                                                            {review.is_verified_purchase && (
+                                                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                                                    Verified Purchase
+                                                                </span>
+                                                            )}
+                                                            <span className={`text-xs px-2 py-1 rounded ${review.is_approved
+                                                                    ? 'bg-green-100 text-green-800'
+                                                                    : 'bg-yellow-100 text-yellow-800'
+                                                                }`}>
+                                                                {review.is_approved ? 'Approved' : 'Pending'}
+                                                            </span>
+                                                            <span className="text-xs text-slate-500">
+                                                                {new Date(review.created_at).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex gap-2 ml-4">
+                                                            {review.is_approved ? (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handleApproval(review.id, 'unapprove')}
+                                                                    className="text-yellow-600"
+                                                                >
+                                                                    <XCircle className="h-4 w-4 mr-1" />
+                                                                    Unapprove
+                                                                </Button>
+                                                            ) : (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handleApproval(review.id, 'approve')}
+                                                                    className="text-green-600"
+                                                                >
+                                                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                                                    Approve
+                                                                </Button>
+                                                            )}
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setReviewToDelete(review);
+                                                                    setDeleteDialogOpen(true);
+                                                                }}
+                                                                className="text-red-600 hover:text-red-700"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Product Info */}
+                                                    <div className="mb-2">
+                                                        <a
+                                                            href={`/products/${review.product_details?.slug}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-blue-600 hover:underline font-medium"
+                                                        >
+                                                            {review.product_details?.name || `Product #${review.product}`}
+                                                        </a>
+                                                        {review.product_details?.price > 0 && (
+                                                            <span className="text-slate-500 ml-2">
+                                                                ₹{review.product_details.price.toLocaleString()}
                                                             </span>
                                                         )}
-                                                        <span className={`text-xs px-2 py-1 rounded ${review.is_approved
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : 'bg-yellow-100 text-yellow-800'
-                                                            }`}>
-                                                            {review.is_approved ? 'Approved' : 'Pending'}
-                                                        </span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
-                                                        <Package className="h-4 w-4" />
-                                                        <span>Product ID: {review.product}</span>
-                                                        <span>•</span>
-                                                        <span>{new Date(review.created_at).toLocaleDateString()}</span>
-                                                    </div>
+
+                                                    {/* Review Content */}
                                                     <h4 className="font-semibold mb-1">{review.title}</h4>
-                                                    <p className="text-slate-700">{review.comment}</p>
-                                                </div>
-                                                <div className="flex gap-2 ml-4">
-                                                    {review.is_approved ? (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleApproval(review.id, 'unapprove')}
-                                                            className="text-yellow-600"
-                                                        >
-                                                            <XCircle className="h-4 w-4 mr-1" />
-                                                            Unapprove
-                                                        </Button>
-                                                    ) : (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleApproval(review.id, 'approve')}
-                                                            className="text-green-600"
-                                                        >
-                                                            <CheckCircle className="h-4 w-4 mr-1" />
-                                                            Approve
-                                                        </Button>
+                                                    <p className="text-slate-700 mb-3">{review.comment}</p>
+
+                                                    {/* Customer Info */}
+                                                    {review.user_details && (
+                                                        <div className="bg-slate-100 rounded-lg p-3 text-sm">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <User className="h-4 w-4 text-slate-500" />
+                                                                <span className="font-medium">
+                                                                    {review.user_details.first_name || review.user_details.last_name
+                                                                        ? `${review.user_details.first_name} ${review.user_details.last_name}`.trim()
+                                                                        : review.user_details.username}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-4 text-slate-600">
+                                                                {review.user_details.email && (
+                                                                    <span>📧 {review.user_details.email}</span>
+                                                                )}
+                                                                {review.user_details.phone && (
+                                                                    <span>📱 {review.user_details.phone}</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     )}
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => {
-                                                            setReviewToDelete(review);
-                                                            setDeleteDialogOpen(true);
-                                                        }}
-                                                        className="text-red-600 hover:text-red-700"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
                                                 </div>
                                             </div>
                                         </div>
