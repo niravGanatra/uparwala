@@ -68,13 +68,23 @@ const ProductCard = ({ product }) => {
         setShowNotifyModal(true);
     };
 
-    // Calculate price (check for deals)
-    const finalPrice = product.active_deal
-        ? parseFloat(product.active_deal.discounted_price)
-        : parseFloat(product.price);
+    // Calculate price (check for deals AND sale prices)
+    const regularPrice = parseFloat(product.regular_price || product.price);
+    const salePrice = product.sale_price ? parseFloat(product.sale_price) : null;
 
-    const originalPrice = parseFloat(product.price);
-    const hasDiscount = product.active_deal && finalPrice < originalPrice;
+    // Priority: active_deal > sale_price > regular_price
+    let finalPrice = regularPrice;
+    let hasDiscount = false;
+
+    if (product.active_deal) {
+        finalPrice = parseFloat(product.active_deal.discounted_price);
+        hasDiscount = finalPrice < regularPrice;
+    } else if (salePrice && salePrice < regularPrice) {
+        finalPrice = salePrice;
+        hasDiscount = true;
+    }
+
+    const originalPrice = regularPrice;
 
     return (
         <>

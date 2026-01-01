@@ -130,23 +130,43 @@ const ProductDetailPage = () => {
 
                         <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
                             <div className="flex items-baseline gap-3 flex-wrap">
-                                {product.active_deal ? (
-                                    <>
-                                        <span className="text-3xl md:text-4xl font-bold text-red-600">
-                                            ₹{product.active_deal.discounted_price}
+                                {(() => {
+                                    // Calculate prices - priority: active_deal > sale_price > regular_price
+                                    const regularPrice = parseFloat(product.regular_price || product.price);
+                                    const salePrice = product.sale_price ? parseFloat(product.sale_price) : null;
+
+                                    let finalPrice = regularPrice;
+                                    let hasDiscount = false;
+                                    let discountPercent = 0;
+
+                                    if (product.active_deal) {
+                                        finalPrice = parseFloat(product.active_deal.discounted_price);
+                                        discountPercent = parseInt(product.active_deal.discount_percentage);
+                                        hasDiscount = finalPrice < regularPrice;
+                                    } else if (salePrice && salePrice < regularPrice) {
+                                        finalPrice = salePrice;
+                                        discountPercent = Math.round(((regularPrice - salePrice) / regularPrice) * 100);
+                                        hasDiscount = true;
+                                    }
+
+                                    return hasDiscount ? (
+                                        <>
+                                            <span className="text-3xl md:text-4xl font-bold text-red-600">
+                                                ₹{finalPrice.toFixed(2)}
+                                            </span>
+                                            <span className="text-lg md:text-xl text-slate-400 line-through">
+                                                ₹{regularPrice.toFixed(2)}
+                                            </span>
+                                            <span className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-sm font-bold">
+                                                {discountPercent}% OFF
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <span className="text-3xl md:text-4xl font-bold text-slate-900">
+                                            ₹{regularPrice.toFixed(2)}
                                         </span>
-                                        <span className="text-lg md:text-xl text-slate-400 line-through">
-                                            ₹{product.price}
-                                        </span>
-                                        <span className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-sm font-bold">
-                                            {parseInt(product.active_deal.discount_percentage)}% OFF
-                                        </span>
-                                    </>
-                                ) : (
-                                    <span className="text-3xl md:text-4xl font-bold text-slate-900">
-                                        ₹{product.price}
-                                    </span>
-                                )}
+                                    );
+                                })()}
                             </div>
                         </div>
 
