@@ -6,14 +6,17 @@ import toast from 'react-hot-toast';
 const SectionsManager = () => {
     const [hosting, setHosting] = useState([]);
     const [premium, setPremium] = useState([]);
+    const [categoryPromos, setCategoryPromos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [categories, setCategories] = useState([]); // For category selector
 
     // Modals
     const [showHostingModal, setShowHostingModal] = useState(false);
     const [showPremiumModal, setShowPremiumModal] = useState(false);
+    const [showPromoModal, setShowPromoModal] = useState(false);
     const [editingHosting, setEditingHosting] = useState(null);
     const [editingPremium, setEditingPremium] = useState(null);
+    const [editingPromo, setEditingPromo] = useState(null);
 
     // Form Data
     const [hostingForm, setHostingForm] = useState({
@@ -34,6 +37,15 @@ const SectionsManager = () => {
         is_active: true
     });
 
+    const [promoForm, setPromoForm] = useState({
+        name: '',
+        discount_text: '',
+        background_color: '#334155',
+        link_url: '',
+        is_active: true,
+        priority: 0
+    });
+
     // Helper for URL selection
     const [linkType, setLinkType] = useState('category'); // 'category' or 'custom'
 
@@ -51,12 +63,14 @@ const SectionsManager = () => {
 
     const fetchSections = async () => {
         try {
-            const [hostRes, premRes] = await Promise.all([
+            const [hostRes, premRes, promoRes] = await Promise.all([
                 api.get('/homepage/hosting/'),
-                api.get('/homepage/premium/')
+                api.get('/homepage/premium/'),
+                api.get('/homepage/category-promotions/')
             ]);
             setHosting(hostRes.data);
             setPremium(premRes.data);
+            setCategoryPromos(promoRes.data);
         } catch (error) {
             toast.error('Failed to load sections');
         } finally {
@@ -178,6 +192,60 @@ const SectionsManager = () => {
             fetchSections();
         } catch (error) {
             toast.error('Failed to delete section');
+        }
+    };
+
+    // --- Category Promotion Handlers ---
+    const handleCreatePromo = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        Object.keys(promoForm).forEach(key => {
+            formData.append(key, promoForm[key]);
+        });
+
+        try {
+            if (editingPromo) {
+                await api.put(`/homepage/category-promotions/${editingPromo.id}/`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success('Category promotion updated');
+            } else {
+                await api.post('/homepage/category-promotions/', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success('Category promotion added');
+            }
+            setShowPromoModal(false);
+            setEditingPromo(null);
+            fetchSections();
+            setPromoForm({ name: '', discount_text: '', background_color: '#334155', link_url: '', is_active: true, priority: 0 });
+        } catch (error) {
+            toast.error(editingPromo ? 'Failed to update promotion' : 'Failed to add promotion');
+        }
+    };
+
+    const handleEditPromo = (item) => {
+        setEditingPromo(item);
+        setPromoForm({
+            name: item.name,
+            discount_text: item.discount_text,
+            background_color: item.background_color || '#334155',
+            link_url: item.link_url,
+            is_active: item.is_active,
+            priority: item.priority || 0
+        });
+        setLinkType(item.link_url?.startsWith('/category') ? 'category' : 'custom');
+        setShowPromoModal(true);
+    };
+
+    const handleDeletePromo = async (id) => {
+        if (!window.confirm("Delete this category promotion?")) return;
+        try {
+            await api.delete(`/homepage/category-promotions/${id}/`);
+            toast.success('Promotion deleted');
+            fetchSections();
+        } catch (error) {
+            toast.error('Failed to delete promotion');
         }
     };
 
@@ -324,6 +392,50 @@ const SectionsManager = () => {
                 </div>
             </div>
 
+            {/* Category Promotions */}
+            <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Layout className="w-5 h-5 text-green-600" />
+                        Category Promotions (Colored Cards)
+                    </h3>
+                    <button
+                        onClick={() => setShowPromoModal(true)}
+                        className="flex items-center gap-2 text-sm bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700"
+                    >
+                        <Plus className="w-4 h-4" /> Add Promotion
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {categoryPromos.map((item) => (
+                        <div
+                            key={item.id}
+                            className="p-4 rounded-lg text-white relative"
+                            style={{ backgroundColor: item.background_color }}
+                        >
+                            <h4 className="font-bold">{item.name}</h4>
+                            <p className="text-sm opacity-90">{item.discount_text}</p>
+                            <div className="mt-2 flex gap-1">
+                                <button
+                                    onClick={() => handleEditPromo(item)}
+                                    className="p-1 bg-white/20 hover:bg-white/30 rounded"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => handleDeletePromo(item.id)}
+                                    className="p-1 bg-white/20 hover:bg-white/30 rounded"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    {categoryPromos.length === 0 && <p className="col-span-4 text-center text-gray-500 py-4">No category promotions</p>}
+                </div>
+            </div>
+
             {/* Hosting Modal */}
             {showHostingModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -375,6 +487,39 @@ const SectionsManager = () => {
                             <div className="flex justify-end gap-3 pt-4">
                                 <button type="button" onClick={() => { setShowPremiumModal(false); setEditingPremium(null); }} className="px-4 py-2 border rounded">Cancel</button>
                                 <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">{editingPremium ? 'Update' : 'Create'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Category Promotion Modal */}
+            {showPromoModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                        <div className="p-6 border-b"><h2 className="text-xl font-bold">{editingPromo ? 'Edit' : 'Add'} Category Promotion</h2></div>
+                        <form onSubmit={handleCreatePromo} className="p-6 space-y-4">
+                            <input type="text" placeholder="Name (e.g., Mirrors)" className="w-full border rounded px-3 py-2"
+                                value={promoForm.name} onChange={e => setPromoForm({ ...promoForm, name: e.target.value })} required />
+                            <input type="text" placeholder="Discount Text (e.g., UPTO 60% OFF)" className="w-full border rounded px-3 py-2"
+                                value={promoForm.discount_text} onChange={e => setPromoForm({ ...promoForm, discount_text: e.target.value })} required />
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Background Color</label>
+                                <div className="flex gap-2 items-center">
+                                    <input type="color" value={promoForm.background_color} onChange={e => setPromoForm({ ...promoForm, background_color: e.target.value })} className="w-12 h-10 border rounded cursor-pointer" />
+                                    <input type="text" value={promoForm.background_color} onChange={e => setPromoForm({ ...promoForm, background_color: e.target.value })} className="flex-1 border rounded px-3 py-2" placeholder="#334155" />
+                                </div>
+                            </div>
+
+                            {renderLinkInput(promoForm, setPromoForm)}
+
+                            <input type="number" placeholder="Priority (lower = first)" className="w-full border rounded px-3 py-2"
+                                value={promoForm.priority} onChange={e => setPromoForm({ ...promoForm, priority: parseInt(e.target.value) || 0 })} />
+
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button type="button" onClick={() => { setShowPromoModal(false); setEditingPromo(null); }} className="px-4 py-2 border rounded">Cancel</button>
+                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">{editingPromo ? 'Update' : 'Create'}</button>
                             </div>
                         </form>
                     </div>
