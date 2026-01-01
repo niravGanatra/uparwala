@@ -75,12 +75,15 @@ const ProductCard = ({ product }) => {
     // Priority: active_deal > sale_price > regular_price
     let finalPrice = regularPrice;
     let hasDiscount = false;
+    let discountPercent = 0;
 
     if (product.active_deal) {
         finalPrice = parseFloat(product.active_deal.discounted_price);
+        discountPercent = parseInt(product.active_deal.discount_percentage);
         hasDiscount = finalPrice < regularPrice;
     } else if (salePrice && salePrice < regularPrice) {
         finalPrice = salePrice;
+        discountPercent = Math.round(((regularPrice - salePrice) / regularPrice) * 100);
         hasDiscount = true;
     }
 
@@ -104,7 +107,7 @@ const ProductCard = ({ product }) => {
                         )}
                         {hasDiscount && (
                             <span className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
-                                {parseInt(product.active_deal.discount_percentage)}% OFF
+                                {discountPercent}% OFF
                             </span>
                         )}
                         {isOutOfStock && (
