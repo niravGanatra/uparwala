@@ -69,6 +69,18 @@ class VendorApplicationView(APIView):
                 print(f"Vendor Application: Generated slug {store_slug}. Creating VendorProfile...")
                 
                 try:
+                    # Get client IP for Non-GST declaration
+                    def get_client_ip(req):
+                        x_forwarded_for = req.META.get('HTTP_X_FORWARDED_FOR')
+                        if x_forwarded_for:
+                            return x_forwarded_for.split(',')[0].strip()
+                        return req.META.get('REMOTE_ADDR')
+                    
+                    # Check Non-GST declaration status
+                    non_gst_accepted = request.data.get('non_gst_declaration_accepted', '')
+                    if isinstance(non_gst_accepted, str):
+                        non_gst_accepted = non_gst_accepted.lower() == 'true'
+                    
                     VendorProfile.objects.create(
                         user=user,
                         store_name=store_name,
@@ -85,6 +97,22 @@ class VendorApplicationView(APIView):
                         is_food_vendor=is_food_vendor,
                         food_license_number=request.data.get('food_license_number', ''),
                         food_license_certificate=request.FILES.get('food_license_certificate'),
+                        
+                        # ID Proof Documents
+                        pan_card=request.FILES.get('pan_card'),
+                        aadhar_card=request.FILES.get('aadhar_card'),
+                        
+                        # GST & Tax
+                        gst_certificate=request.FILES.get('gst_certificate'),
+                        
+                        # Business Proof
+                        business_proof=request.FILES.get('business_proof'),
+                        business_proof_remarks=request.data.get('business_proof_remarks', ''),
+                        
+                        # Non-GST Declaration Consent
+                        non_gst_declaration_accepted=non_gst_accepted,
+                        non_gst_declaration_accepted_at=timezone.now() if non_gst_accepted else None,
+                        non_gst_declaration_ip=get_client_ip(request) if non_gst_accepted else None,
                         
                         # Bank Details
                         bank_account_holder_name=request.data.get('bank_account_holder_name', ''),

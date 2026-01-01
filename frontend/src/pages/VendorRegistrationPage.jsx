@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Store, Mail, Phone, MapPin, FileText, Hash } from 'lucide-react';
+import { Store, Mail, Phone, MapPin, FileText, Hash, Upload, Shield, Building2, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import SpiritualLoader from '../components/ui/spiritual-loader';
@@ -18,7 +18,6 @@ const VendorRegistrationPage = () => {
         business_name: '',
         business_email: '',
         business_phone: '',
-        business_phone: '',
         business_address: '',
         city: '',
         state: '',
@@ -29,6 +28,16 @@ const VendorRegistrationPage = () => {
         is_food_vendor: false,
         food_license_number: '',
         food_license_certificate: null,
+        // ID Proof Documents
+        pan_card: null,
+        aadhar_card: null,
+        // GST & Tax
+        gst_certificate: null,
+        // Business Proof
+        business_proof: null,
+        business_proof_remarks: '',
+        // Non-GST Declaration
+        non_gst_declaration_accepted: false,
         // Bank Details
         bank_account_holder_name: '',
         bank_name: '',
@@ -40,6 +49,7 @@ const VendorRegistrationPage = () => {
     const [loading, setLoading] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [isAddressLocked, setIsAddressLocked] = useState(false);
+    const [showDeclaration, setShowDeclaration] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -119,6 +129,28 @@ const VendorRegistrationPage = () => {
                     submitData.append('food_license_certificate', formData.food_license_certificate);
                 }
             }
+
+            // ID Proof Documents
+            if (formData.pan_card) {
+                submitData.append('pan_card', formData.pan_card);
+            }
+            if (formData.aadhar_card) {
+                submitData.append('aadhar_card', formData.aadhar_card);
+            }
+
+            // GST & Tax
+            if (formData.gst_certificate) {
+                submitData.append('gst_certificate', formData.gst_certificate);
+            }
+
+            // Business Proof
+            if (formData.business_proof) {
+                submitData.append('business_proof', formData.business_proof);
+            }
+            submitData.append('business_proof_remarks', formData.business_proof_remarks || '');
+
+            // Non-GST Declaration
+            submitData.append('non_gst_declaration_accepted', formData.non_gst_declaration_accepted);
 
             // Bank details
             submitData.append('bank_account_holder_name', formData.bank_account_holder_name);
@@ -413,6 +445,131 @@ const VendorRegistrationPage = () => {
                                                 </div>
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+
+                                {/* ID Proof Documents */}
+                                <div className="border-t pt-6">
+                                    <h3 className="text-lg font-semibold mb-4 text-slate-900 flex items-center gap-2">
+                                        <Shield className="h-5 w-5 text-blue-500" />
+                                        Identity Documents
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">PAN Card (Firm or Individual) *</label>
+                                            <Input
+                                                type="file"
+                                                name="pan_card"
+                                                onChange={handleChange}
+                                                accept=".jpg,.jpeg,.png,.pdf"
+                                                required
+                                            />
+                                            <p className="text-xs text-slate-500 mt-1">As per billing requirement</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Aadhar Card (Address Proof) *</label>
+                                            <Input
+                                                type="file"
+                                                name="aadhar_card"
+                                                onChange={handleChange}
+                                                accept=".jpg,.jpeg,.png,.pdf"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* GST & Tax Section */}
+                                <div className="border-t pt-6">
+                                    <h3 className="text-lg font-semibold mb-4 text-slate-900 flex items-center gap-2">
+                                        <Hash className="h-5 w-5 text-green-500" />
+                                        GST & Tax Information
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">GST Certificate (Optional)</label>
+                                            <Input
+                                                type="file"
+                                                name="gst_certificate"
+                                                onChange={handleChange}
+                                                accept=".jpg,.jpeg,.png,.pdf"
+                                            />
+                                            <p className="text-xs text-slate-500 mt-1">Upload if you have GST registration</p>
+                                        </div>
+
+                                        {/* Non-GST Declaration */}
+                                        {!formData.gst_certificate && (
+                                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                                <div
+                                                    className="flex items-center justify-between cursor-pointer"
+                                                    onClick={() => setShowDeclaration(!showDeclaration)}
+                                                >
+                                                    <span className="font-medium text-amber-800">Non-GST Declaration & Consent</span>
+                                                    {showDeclaration ? <ChevronUp className="h-5 w-5 text-amber-600" /> : <ChevronDown className="h-5 w-5 text-amber-600" />}
+                                                </div>
+
+                                                {showDeclaration && (
+                                                    <div className="mt-4 text-sm text-amber-900 space-y-3">
+                                                        <p>I hereby declare that I am registering as a vendor on uparwala.in, a marketplace operated by Uparwala Traders LLP, and confirm the following:</p>
+                                                        <ol className="list-decimal pl-5 space-y-2">
+                                                            <li>I do not possess a valid GST Registration Number as on the date of acceptance of this declaration.</li>
+                                                            <li>I confirm that my business turnover is below the threshold prescribed under the GST laws, or that my business is not mandatorily required to be registered under GST at present.</li>
+                                                            <li>I understand that I am solely responsible for compliance with all applicable tax laws, rules, and regulations.</li>
+                                                            <li>I undertake to immediately update my GST details on uparwala.in if I become liable to obtain GST registration or obtain GST registration at any future date.</li>
+                                                            <li>I agree that uparwala.in / Uparwala Traders LLP shall not be responsible for any tax liability, penalty, interest, or legal consequences arising due to my non-GST status.</li>
+                                                            <li>I acknowledge that providing false, incorrect, or misleading information may result in suspension or termination of my vendor account without prior notice.</li>
+                                                            <li>I agree that this declaration is given electronically and shall be considered valid and legally binding.</li>
+                                                        </ol>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex items-start mt-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="non_gst_declaration_accepted"
+                                                        name="non_gst_declaration_accepted"
+                                                        checked={formData.non_gst_declaration_accepted}
+                                                        onChange={handleChange}
+                                                        className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                                                    />
+                                                    <label htmlFor="non_gst_declaration_accepted" className="ml-2 block text-sm text-amber-800">
+                                                        I have read and understood the above declaration and agree to the same.
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Business Proof */}
+                                <div className="border-t pt-6">
+                                    <h3 className="text-lg font-semibold mb-4 text-slate-900 flex items-center gap-2">
+                                        <Building2 className="h-5 w-5 text-purple-500" />
+                                        Business Proof (Optional)
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">
+                                                Shop & Establishment Certificate / Udham Registration / Trade License
+                                            </label>
+                                            <Input
+                                                type="file"
+                                                name="business_proof"
+                                                onChange={handleChange}
+                                                accept=".jpg,.jpeg,.png,.pdf"
+                                            />
+                                            <p className="text-xs text-slate-500 mt-1">Any one of the above documents</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Remarks (if document not available)</label>
+                                            <textarea
+                                                name="business_proof_remarks"
+                                                value={formData.business_proof_remarks}
+                                                onChange={handleChange}
+                                                placeholder="Explain why business proof is not available..."
+                                                className="w-full p-2 border rounded-lg min-h-[60px] text-sm"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 

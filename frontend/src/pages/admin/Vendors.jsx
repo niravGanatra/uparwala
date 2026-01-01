@@ -324,6 +324,55 @@ const AdminVendors = () => {
                                                     <FileText className="w-5 h-5 text-purple-500" /> Documents & Licenses
                                                 </h3>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    {/* ID Proof Documents */}
+                                                    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+                                                        <div>
+                                                            <p className="font-medium text-slate-900">PAN Card</p>
+                                                            <p className="text-xs text-slate-500">ID Proof (Required)</p>
+                                                        </div>
+                                                        {p.pan_card ? (
+                                                            <a href={p.pan_card} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
+                                                        ) : (
+                                                            <span className="text-red-400 text-xs font-medium">Missing</span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+                                                        <div>
+                                                            <p className="font-medium text-slate-900">Aadhar Card</p>
+                                                            <p className="text-xs text-slate-500">Address Proof (Required)</p>
+                                                        </div>
+                                                        {p.aadhar_card ? (
+                                                            <a href={p.aadhar_card} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
+                                                        ) : (
+                                                            <span className="text-red-400 text-xs font-medium">Missing</span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+                                                        <div>
+                                                            <p className="font-medium text-slate-900">GST Certificate</p>
+                                                            <p className="text-xs text-slate-500">Tax Registration (Optional)</p>
+                                                        </div>
+                                                        {p.gst_certificate ? (
+                                                            <a href={p.gst_certificate} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
+                                                        ) : (
+                                                            <span className="text-slate-400 text-xs italic">Not Provided</span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+                                                        <div>
+                                                            <p className="font-medium text-slate-900">Business Proof</p>
+                                                            <p className="text-xs text-slate-500">Shop Est./Udham/Trade (Optional)</p>
+                                                        </div>
+                                                        {p.business_proof ? (
+                                                            <a href={p.business_proof} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
+                                                        ) : (
+                                                            <span className="text-slate-400 text-xs italic">Not Provided</span>
+                                                        )}
+                                                    </div>
+
                                                     <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
                                                         <div>
                                                             <p className="font-medium text-slate-900">Cancelled Cheque</p>
@@ -332,7 +381,7 @@ const AdminVendors = () => {
                                                         {p.cancelled_cheque ? (
                                                             <a href={p.cancelled_cheque} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
                                                         ) : (
-                                                            <span className="text-slate-400 text-xs italic">Not Uploaded</span>
+                                                            <span className="text-red-400 text-xs font-medium">Missing</span>
                                                         )}
                                                     </div>
 
@@ -348,6 +397,25 @@ const AdminVendors = () => {
                                                         )}
                                                     </div>
                                                 </div>
+
+                                                {/* Non-GST Declaration Status */}
+                                                {!p.gst_certificate && (
+                                                    <div className={`p-3 rounded-lg text-sm ${p.non_gst_declaration_accepted ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
+                                                        <p className={p.non_gst_declaration_accepted ? 'text-green-800' : 'text-amber-800'}>
+                                                            <strong>Non-GST Declaration:</strong> {p.non_gst_declaration_accepted ? '✓ Accepted' : '⚠ Not Accepted'}
+                                                            {p.non_gst_declaration_accepted_at && (
+                                                                <span className="ml-2 text-xs">({new Date(p.non_gst_declaration_accepted_at).toLocaleString()})</span>
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {/* Business Proof Remarks */}
+                                                {p.business_proof_remarks && (
+                                                    <div className="bg-slate-50 p-3 rounded-lg text-sm">
+                                                        <p className="text-slate-700"><strong>Business Proof Remarks:</strong> {p.business_proof_remarks}</p>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* System & SEO */}

@@ -69,6 +69,22 @@ class VendorProfile(models.Model):
     food_license_number = models.CharField(max_length=50, blank=True)
     food_license_certificate = models.FileField(upload_to='vendor_docs/food_license/', blank=True, null=True, help_text="Upload FSSAI license")
 
+    # ID Proof Documents (Required)
+    pan_card = models.FileField(upload_to='vendor_docs/pan/', blank=True, null=True, help_text="PAN Card (Firm or Individual)")
+    aadhar_card = models.FileField(upload_to='vendor_docs/aadhar/', blank=True, null=True, help_text="Aadhar Card (Address Proof)")
+    
+    # GST & Tax (Optional)
+    gst_certificate = models.FileField(upload_to='vendor_docs/gst/', blank=True, null=True, help_text="GST Certificate (Optional)")
+    
+    # Business Proof (Optional)
+    business_proof = models.FileField(upload_to='vendor_docs/business/', blank=True, null=True, help_text="Shop & Establishment / Udham / Trade License")
+    business_proof_remarks = models.TextField(blank=True, help_text="Remarks if business proof not available")
+    
+    # Non-GST Declaration Consent
+    non_gst_declaration_accepted = models.BooleanField(default=False, help_text="Vendor accepted Non-GST declaration")
+    non_gst_declaration_accepted_at = models.DateTimeField(null=True, blank=True)
+    non_gst_declaration_ip = models.GenericIPAddressField(null=True, blank=True)
+
     # Bank Details
     bank_account_holder_name = models.CharField(max_length=255, blank=True)
     bank_name = models.CharField(max_length=255, blank=True)
@@ -76,6 +92,7 @@ class VendorProfile(models.Model):
     bank_account_number = models.CharField(max_length=50, blank=True)
     bank_ifsc_code = models.CharField(max_length=20, blank=True)
     cancelled_cheque = models.FileField(upload_to='vendor_docs/bank/', blank=True, null=True, help_text="Upload cancelled cheque or passbook copy")
+
 
     # Serviceability
     serviceable_pincodes = models.TextField(blank=True, help_text="Comma-separated list of pincodes. Leave empty to serve all (subject to global restrictions).")
