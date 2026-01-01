@@ -252,10 +252,6 @@ const AdminVendors = () => {
                                                             <Globe className="w-4 h-4" />
                                                             {p.store_slug || 'No slug'}
                                                         </div>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <Info className="w-4 h-4" />
-                                                            Commission: {p.commission_rate}% ({p.commission_type})
-                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

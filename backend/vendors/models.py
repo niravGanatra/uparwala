@@ -52,9 +52,8 @@ class VendorProfile(models.Model):
     approved_at = models.DateTimeField(null=True, blank=True, help_text='When the vendor was approved')
     rejection_reason = models.TextField(blank=True, help_text='Reason for rejection if status is rejected')
     
-    # Commission
-    commission_type = models.CharField(max_length=20, choices=[('percentage', 'Percentage'), ('flat', 'Flat')], default='percentage')
-    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('10.00'))  # Default 10%
+    # Commission - DEPRECATED/REMOVED
+    # Commission is now strictly calculated based on Product Category
     
     # Ratings
     average_rating = models.DecimalField(
@@ -207,25 +206,6 @@ class Withdrawal(models.Model):
         return f"{self.vendor.store_name} - ₹{self.amount} ({self.status})"
 
 
-class CommissionSettings(models.Model):
-    """Global and vendor-specific commission settings"""
-    vendor = models.OneToOneField(VendorProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='commission_settings')
-    
-    commission_type = models.CharField(max_length=20, choices=[
-        ('percentage', 'Percentage'),
-        ('fixed', 'Fixed Amount')
-    ], default='percentage')
-    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=10)
-    min_payout_amount = models.DecimalField(max_digits=10, decimal_places=2, default=1000)
-    is_active = models.BooleanField(default=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    def __str__(self):
-        if self.vendor:
-            return f"{self.vendor.store_name} - {self.commission_rate}%"
-        return f"Global - {self.commission_rate}%"
 
 
 class PayoutRequest(models.Model):
