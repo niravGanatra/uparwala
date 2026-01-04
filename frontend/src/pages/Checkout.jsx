@@ -92,13 +92,13 @@ const Checkout = () => {
     }, [user, navigate]);
 
     useEffect(() => {
-        // Trigger total calculation whenever address, gift options, or step changes
+        // Trigger total calculation whenever address, gift options, payment method, or step changes
         // Now runs on Step 1 (Address) as well, immediately after selection
         if (selectedShippingAddress) {
             calculateTotals();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedShippingAddress, giftData, addresses]);
+    }, [selectedShippingAddress, giftData, addresses, paymentMethod]);
 
     // Separate effect for COD check to ensure orderSummary is ready
     useEffect(() => {
@@ -183,7 +183,9 @@ const Checkout = () => {
 
         try {
             const payload = {
-                state_code: stateCode
+                state_code: stateCode,
+                pincode: address.pincode,  // For live Delhivery shipping rates
+                payment_mode: paymentMethod === 'cod' ? 'COD' : 'Prepaid'  // For COD charge calculation
             };
 
             // Add selected item IDs for selective checkout
