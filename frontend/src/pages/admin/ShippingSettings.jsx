@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import {
-    Truck, Plus, Edit2, Trash2, X, Check, Save, Package, Settings
+    Truck, Plus, Edit2, Trash2, X, Check, Save, Package, Settings, Gift, DollarSign
 } from 'lucide-react';
 
 // Sub-component: Shipping Zones Manager
@@ -288,8 +288,153 @@ const ShiprocketManager = () => {
     );
 };
 
+// Sub-component: Global Shipping Settings (Free Shipping Threshold)
+const GlobalShippingSettings = () => {
+    const [settings, setSettings] = useState({
+        free_shipping_threshold: ''
+    });
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        fetchSettings();
+    }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const response = await api.get('/payments/shipping-settings/');
+            setSettings({
+                free_shipping_threshold: response.data.free_shipping_threshold || ''
+            });
+        } catch (error) {
+            console.error('Failed to load shipping settings:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            await api.put('/payments/shipping-settings/', {
+                free_shipping_threshold: settings.free_shipping_threshold || null
+            });
+            toast.success('Shipping settings saved successfully!');
+        } catch (error) {
+            toast.error('Failed to save settings');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleClearThreshold = async () => {
+        setSettings({ free_shipping_threshold: '' });
+        setSaving(true);
+        try {
+            await api.put('/payments/shipping-settings/', {
+                free_shipping_threshold: null
+            });
+            toast.success('Free shipping disabled - will always charge shipping');
+        } catch (error) {
+            toast.error('Failed to update settings');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="max-w-2xl">
+            <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <Gift className="w-5 h-5 text-green-600" />
+                    Free Shipping Configuration
+                </h2>
+                <p className="text-sm text-gray-500 mb-6">
+                    Set a minimum order amount for free shipping. Leave empty to always charge shipping.
+                </p>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Free Shipping Threshold (₹)
+                        </label>
+                        <div className="relative">
+                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={settings.free_shipping_threshold}
+                                onChange={e => setSettings({ free_shipping_threshold: e.target.value })}
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                                placeholder="e.g. 2000 (leave empty to always charge)"
+                            />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                            Orders above this amount will get free shipping. Set to empty to disable free shipping.
+                        </p>
+                    </div>
+
+                    {/* Current Status */}
+                    <div className={`p-4 rounded-lg ${settings.free_shipping_threshold ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
+                        <div className="flex items-center gap-3">
+                            {settings.free_shipping_threshold ? (
+                                <>
+                                    <Check className="w-5 h-5 text-green-600" />
+                                    <div>
+                                        <p className="font-medium text-green-800">Free shipping enabled</p>
+                                        <p className="text-sm text-green-600">Orders above ₹{settings.free_shipping_threshold} get free shipping</p>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <Truck className="w-5 h-5 text-gray-600" />
+                                    <div>
+                                        <p className="font-medium text-gray-800">Always charge shipping</p>
+                                        <p className="text-sm text-gray-600">Shipping fees apply to all orders</p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
+                        >
+                            <Save className="w-4 h-4" />
+                            {saving ? 'Saving...' : 'Save Settings'}
+                        </button>
+                        {settings.free_shipping_threshold && (
+                            <button
+                                type="button"
+                                onClick={handleClearThreshold}
+                                disabled={saving}
+                                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700"
+                            >
+                                Disable Free Shipping
+                            </button>
+                        )}
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 const ShippingSettings = () => {
-    const [activeTab, setActiveTab] = useState('zones');
+    const [activeTab, setActiveTab] = useState('global');
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -306,6 +451,12 @@ const ShippingSettings = () => {
                 {/* Tabs */}
                 <div className="flex gap-4 border-b mb-6">
                     <button
+                        className={`pb-2 px-4 font-medium ${activeTab === 'global' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+                        onClick={() => setActiveTab('global')}
+                    >
+                        Global Settings
+                    </button>
+                    <button
                         className={`pb-2 px-4 font-medium ${activeTab === 'zones' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
                         onClick={() => setActiveTab('zones')}
                     >
@@ -319,7 +470,9 @@ const ShippingSettings = () => {
                     </button>
                 </div>
 
-                {activeTab === 'zones' ? <ShippingZonesManager /> : <ShiprocketManager />}
+                {activeTab === 'global' && <GlobalShippingSettings />}
+                {activeTab === 'zones' && <ShippingZonesManager />}
+                {activeTab === 'shiprocket' && <ShiprocketManager />}
             </div>
         </div>
     );
