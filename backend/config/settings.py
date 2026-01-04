@@ -431,6 +431,11 @@ SHIPROCKET_PASSWORD = os.getenv('SHIPROCKET_PASSWORD')
 # Delhivery Settings
 DELHIVERY_TOKEN = os.getenv('DELHIVERY_TOKEN', '')
 
+# GST/Tax Settings
+# State code where the business is registered (affects CGST/SGST vs IGST)
+# MH = Maharashtra, DL = Delhi, GJ = Gujarat, etc.
+BUSINESS_STATE = os.getenv('BUSINESS_STATE', 'MH')
+
 # Twilio Configuration
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')

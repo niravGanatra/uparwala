@@ -1,18 +1,20 @@
 from decimal import Decimal
+from django.conf import settings as django_settings
 from payments.models import TaxRate
 
 
 class TaxCalculator:
     """Calculate GST (Goods and Services Tax) for India"""
     
-    def __init__(self, business_state='DL'):  # Default: Delhi
+    def __init__(self, business_state=None):
         """
         Initialize tax calculator
         
         Args:
-            business_state: State code where business is registered
+            business_state: State code where business is registered.
+                           Defaults to settings.BUSINESS_STATE or 'MH' (Maharashtra)
         """
-        self.business_state = business_state
+        self.business_state = business_state or getattr(django_settings, 'BUSINESS_STATE', 'MH')
     
     def calculate_gst(self, amount, customer_state):
         """
