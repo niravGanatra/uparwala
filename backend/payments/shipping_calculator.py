@@ -111,10 +111,17 @@ class ShippingCalculator:
                 # If any vendor fails, return None to trigger fallback
                 return None
         
-        # Check free shipping threshold
+        # Check free shipping threshold from settings (not hardcoded)
         free_shipping = False
-        if subtotal:
-            threshold = Decimal('2000')  # Free shipping above ₹2000
+        threshold = None
+        try:
+            from payments.models import ShippingSettings
+            settings_obj = ShippingSettings.get_settings()
+            threshold = settings_obj.free_shipping_threshold
+        except Exception:
+            pass  # If settings not available, no free shipping
+        
+        if threshold and subtotal:
             if Decimal(str(subtotal)) >= threshold:
                 total_shipping = Decimal('0')
                 free_shipping = True
@@ -128,7 +135,7 @@ class ShippingCalculator:
             'total_weight_kg': float(total_weight),
             'total_shipping': float(total_shipping),
             'free_shipping': free_shipping,
-            'threshold': 2000 if free_shipping else None,
+            'threshold': float(threshold) if free_shipping and threshold else None,
             'vendor_breakdown': vendor_breakdown
         }
     

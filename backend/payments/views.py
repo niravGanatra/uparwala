@@ -389,3 +389,31 @@ class PaymentWebhookView(APIView):
                 pass
         
         return Response({'status': 'ok'})
+
+
+class ShippingSettingsView(APIView):
+    """
+    GET/PUT endpoint for global shipping settings (admin only).
+    Controls free shipping threshold.
+    """
+    permission_classes = [permissions.IsAdminUser]
+    
+    def get(self, request):
+        from .models import ShippingSettings
+        from .serializers import ShippingSettingsSerializer
+        
+        settings_obj = ShippingSettings.get_settings()
+        serializer = ShippingSettingsSerializer(settings_obj)
+        return Response(serializer.data)
+    
+    def put(self, request):
+        from .models import ShippingSettings
+        from .serializers import ShippingSettingsSerializer
+        
+        settings_obj = ShippingSettings.get_settings()
+        serializer = ShippingSettingsSerializer(settings_obj, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

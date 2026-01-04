@@ -63,3 +63,37 @@ class TaxRate(models.Model):
     
     def __str__(self):
         return f"{self.state_name} - GST {self.cgst_rate + self.sgst_rate}%"
+
+
+class ShippingSettings(models.Model):
+    """
+    Singleton model for global shipping configuration.
+    Only one instance should exist.
+    """
+    free_shipping_threshold = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        help_text="Minimum order amount for free shipping. Leave empty to always charge shipping."
+    )
+    
+    class Meta:
+        verbose_name = "Shipping Settings"
+        verbose_name_plural = "Shipping Settings"
+    
+    def __str__(self):
+        if self.free_shipping_threshold:
+            return f"Free shipping above ₹{self.free_shipping_threshold}"
+        return "Always charge shipping"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        self.pk = 1
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_settings(cls):
+        """Get or create the singleton settings instance."""
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj

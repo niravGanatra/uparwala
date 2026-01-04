@@ -7,6 +7,7 @@ from .views import (
     ShippingZoneViewSet,
     TaxRateListView,
     PaymentWebhookView,
+    ShippingSettingsView,
 )
 
 router = DefaultRouter()
@@ -17,7 +18,7 @@ urlpatterns = [
     path('create-order/', CreatePaymentOrderView.as_view(), name='create-payment-order'),
     path('verify/', VerifyPaymentView.as_view(), name='verify-payment'),
     path('calculate-totals/', CalculateTotalsView.as_view(), name='calculate-totals'),
-    # path('shipping-zones/', ...) # Removed in favor of router
+    path('shipping-settings/', ShippingSettingsView.as_view(), name='shipping-settings'),
     path('tax-rates/', TaxRateListView.as_view(), name='tax-rates'),
     path('webhook/', PaymentWebhookView.as_view(), name='payment-webhook'),
 ]

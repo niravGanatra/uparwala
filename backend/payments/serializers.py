@@ -42,3 +42,11 @@ class TaxRateSerializer(serializers.ModelSerializer):
     
     def get_total_gst(self, obj):
         return float(obj.cgst_rate + obj.sgst_rate)
+
+
+class ShippingSettingsSerializer(serializers.ModelSerializer):
+    """Serializer for global shipping settings"""
+    class Meta:
+        from .models import ShippingSettings
+        model = ShippingSettings
+        fields = ['free_shipping_threshold']
