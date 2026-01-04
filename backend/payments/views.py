@@ -175,15 +175,23 @@ class VerifyPaymentView(APIView):
                 logger.error(traceback.format_exc())
             
             
-            # Auto-create Shiprocket shipments if enabled
+            # Auto-create Delhivery shipments if enabled (replaces Shiprocket)
             if getattr(settings, "SHIPROCKET_AUTO_CREATE", True):
                 try:
-                    from orders.shiprocket_service import ShiprocketService
-                    service = ShiprocketService()
-                    shipments = service.create_orders(order)
-                    logger.info(f"Auto-created {len(shipments)} shipments for order {order.id}")
+                    from orders.delhivery_service import DelhiveryService
+                    service = DelhiveryService()
+                    shipments = service.create_shipments_for_order(order)
+                    
+                    # Save AWB codes to order for tracking
+                    successful = [s for s in shipments if s.get('success')]
+                    if successful:
+                        # Store first AWB in order for quick reference
+                        order.awb_code = successful[0].get('awb', '')
+                        order.save()
+                        
+                    logger.info(f"Auto-created {len(successful)} Delhivery shipments for order {order.id}")
                 except Exception as e:
-                    logger.error(f"Failed to auto-create shipments for order {order.id}: {e}")
+                    logger.error(f"Failed to auto-create Delhivery shipments for order {order.id}: {e}")
             return Response({
                 'success': True,
                 'message': 'Payment verified successfully',

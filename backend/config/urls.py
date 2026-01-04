@@ -36,6 +36,9 @@ urlpatterns = [
     # Webhooks
     path('api/webhooks/', include('orders.shiprocket_urls')),
     
+    # Delhivery API
+    path('api/delhivery/', include('orders.delhivery_urls')),
+    
     # Authentication URLs
     path('api/auth/', include('dj_rest_auth.urls')),
     path('api/auth/registration/', include('dj_rest_auth.registration.urls')),

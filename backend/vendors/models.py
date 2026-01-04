@@ -311,16 +311,16 @@ from django.dispatch import receiver
 from .models import VendorProfile
 
 @receiver(post_save, sender=VendorProfile)
-def sync_shiprocket_pickup(sender, instance, created, **kwargs):
-    """Sync Vendor Address to Shiprocket as Pickup Location"""
-    # Only sync if address fields are present
+def sync_delhivery_warehouse(sender, instance, created, **kwargs):
+    """Sync Vendor Address to Delhivery as Warehouse (replaces Shiprocket)"""
+    # Only sync if address fields are present and vendor is verified
     if instance.address and instance.city and instance.zip_code:
-        # We perform this asynchronously in production (Celery), 
-        # but for now we do it synchronously or try/except to avoid blocking
-        try:
-            from orders.shiprocket_service import ShiprocketService
-            service = ShiprocketService()
-            service.sync_vendor_pickup_location(instance)
-        except Exception as e:
-            # Don't break the save if SR fails (e.g. invalid config)
-            print(f"Auto-sync Shiprocket failed: {e}")
+        # Only sync verified vendors to avoid API calls for incomplete registrations
+        if instance.verification_status == 'verified':
+            try:
+                from orders.delhivery_service import DelhiveryService
+                service = DelhiveryService()
+                service.register_vendor_warehouse(instance)
+            except Exception as e:
+                # Don't break the save if Delhivery fails
+                print(f"Auto-sync Delhivery failed: {e}")
