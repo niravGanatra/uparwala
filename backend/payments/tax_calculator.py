@@ -35,8 +35,16 @@ class TaxCalculator:
         
         amount = Decimal(str(amount))
         
+        # Normalize state codes to uppercase for comparison
+        customer_state_normalized = customer_state.upper().strip() if customer_state else ''
+        business_state_normalized = self.business_state.upper().strip() if self.business_state else ''
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"GST Calculation: customer_state='{customer_state_normalized}', business_state='{business_state_normalized}'")
+        
         # Same state: CGST + SGST
-        if customer_state == self.business_state:
+        if customer_state_normalized == business_state_normalized:
             cgst = (amount * Decimal(str(tax_rate.cgst_rate))) / Decimal('100')
             sgst = (amount * Decimal(str(tax_rate.sgst_rate))) / Decimal('100')
             
@@ -114,7 +122,15 @@ class TaxCalculator:
         total_igst = Decimal('0')
         items_breakdown = []
         
-        is_intra_state = (customer_state == self.business_state)
+        # Normalize state codes for comparison
+        customer_state_normalized = customer_state.upper().strip() if customer_state else ''
+        business_state_normalized = self.business_state.upper().strip() if self.business_state else ''
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"GST Slab Calculation: customer_state='{customer_state_normalized}', business_state='{business_state_normalized}'")
+        
+        is_intra_state = (customer_state_normalized == business_state_normalized)
         
         for item in cart_items:
             product = item.product
