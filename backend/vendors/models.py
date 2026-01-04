@@ -106,6 +106,9 @@ class VendorProfile(models.Model):
     # Shiprocket Integration
     shiprocket_pickup_location_name = models.CharField(max_length=100, blank=True, help_text="Unique Pickup Location Name in Shiprocket")
 
+    # Delhivery Integration
+    delhivery_warehouse_name = models.CharField(max_length=100, blank=True, help_text="Registered Warehouse Name in Delhivery")
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

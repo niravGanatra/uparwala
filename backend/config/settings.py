@@ -428,6 +428,9 @@ SHIPROCKET_AUTO_AWB = os.getenv('SHIPROCKET_AUTO_AWB', 'False') == 'True'
 SHIPROCKET_EMAIL = os.getenv('SHIPROCKET_EMAIL')
 SHIPROCKET_PASSWORD = os.getenv('SHIPROCKET_PASSWORD')
 
+# Delhivery Settings
+DELHIVERY_TOKEN = os.getenv('DELHIVERY_TOKEN', '')
+
 # Twilio Configuration
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
