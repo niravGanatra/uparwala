@@ -222,8 +222,10 @@ class CalculateTotalsView(APIView):
         cart_id = request.data.get('cart_id')
         gift_option_id = request.data.get('gift_option_id')
         selected_item_ids = request.data.get('selected_item_ids', [])  # For selective checkout
+        destination_pincode = request.data.get('pincode')  # For live Delhivery rates
+        payment_mode = request.data.get('payment_mode', 'Prepaid')  # 'Prepaid' or 'COD'
         
-        print(f"DEBUG: state_code = '{state_code}', cart_id = '{cart_id}'")
+        print(f"DEBUG: state_code = '{state_code}', pincode = '{destination_pincode}'")
         
         if not state_code:
             print(f"DEBUG: State code validation failed - state_code is: '{state_code}'")
@@ -267,9 +269,15 @@ class CalculateTotalsView(APIView):
             subtotal += final_price * quantity
             discount_total += Decimal(str(price_info['discount_amount'])) * quantity
         
-        # Calculate shipping
+        # Calculate shipping (use Delhivery live rates if pincode provided)
         shipping_calc = ShippingCalculator()
-        shipping_data = shipping_calc.calculate_shipping(cart_items, state_code, subtotal)
+        shipping_data = shipping_calc.calculate_shipping(
+            cart_items, 
+            state_code, 
+            subtotal,
+            destination_pincode=destination_pincode,
+            payment_mode=payment_mode
+        )
         shipping_cost = Decimal(str(shipping_data['total_shipping']))
         
         # Ensure shipping data values are floats for JSON

@@ -495,3 +495,153 @@ class DelhiveryService:
         except requests.RequestException as e:
             logger.error(f"Cancel request failed: {e}")
             return {"success": False, "error": str(e)}
+
+    # -------------------------------------------------------------------------
+    # Shipping Rate Calculation
+    # -------------------------------------------------------------------------
+    def calculate_shipping_rate(
+        self, 
+        origin_pincode: str, 
+        destination_pincode: str, 
+        weight: float = 0.5,
+        payment_mode: str = 'Prepaid',
+        cod_amount: float = 0
+    ) -> dict:
+        """
+        Calculate shipping rate from Delhivery API.
+        
+        Args:
+            origin_pincode: Pickup/origin pincode
+            destination_pincode: Delivery pincode
+            weight: Package weight in kg (default 0.5)
+            payment_mode: 'Prepaid' or 'COD'
+            cod_amount: COD amount if payment_mode is 'COD'
+            
+        Returns:
+            dict with shipping cost breakdown
+        """
+        url = f"{self.BASE_URL}/api/kinko/v1/invoice/charges/.json"
+        
+        params = {
+            "md": "S",  # Surface mode (ground transport)
+            "ss": "Delivered",  # Shipment status
+            "d_pin": destination_pincode,
+            "o_pin": origin_pincode,
+            "cgm": int(weight * 1000),  # Weight in grams
+            "pt": "Pre-paid" if payment_mode == 'Prepaid' else "COD",
+            "cod": cod_amount if payment_mode == 'COD' else 0,
+        }
+        
+        try:
+            response = requests.get(
+                url,
+                params=params,
+                headers=self.get_headers(),
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Parse Delhivery response
+                # The response contains an array with charge breakdown
+                if isinstance(data, list) and len(data) > 0:
+                    charges = data[0]
+                    
+                    # Extract charge components
+                    freight_charge = float(charges.get('total_amount', 0))
+                    cod_charge = float(charges.get('cod_charges', 0)) if payment_mode == 'COD' else 0
+                    
+                    return {
+                        'success': True,
+                        'total_shipping': freight_charge + cod_charge,
+                        'freight_charge': freight_charge,
+                        'cod_charge': cod_charge,
+                        'zone': charges.get('zone', 'Unknown'),
+                        'charged_weight_grams': charges.get('charged_weight', weight * 1000),
+                        'origin_pincode': origin_pincode,
+                        'destination_pincode': destination_pincode,
+                        'payment_mode': payment_mode,
+                        'raw_response': charges
+                    }
+                else:
+                    # Fallback if response format unexpected
+                    logger.warning(f"Unexpected Delhivery rate response: {data}")
+                    return {
+                        'success': False,
+                        'error': 'Unexpected API response format',
+                        'raw_response': data
+                    }
+            else:
+                logger.error(f"Delhivery rate API error: {response.status_code} - {response.text}")
+                return {
+                    'success': False,
+                    'error': f'API error: {response.status_code}'
+                }
+                
+        except requests.RequestException as e:
+            logger.error(f"Delhivery rate calculation failed: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
+    def check_pincode_serviceability(self, pincode: str) -> dict:
+        """
+        Check if a pincode is serviceable by Delhivery.
+        
+        Args:
+            pincode: Pincode to check
+            
+        Returns:
+            dict with serviceability info
+        """
+        url = f"{self.BASE_URL}/c/api/pin-codes/json/"
+        params = {"filter_codes": pincode}
+        
+        try:
+            response = requests.get(
+                url,
+                params=params,
+                headers=self.get_headers(),
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                delivery_codes = data.get('delivery_codes', [])
+                
+                if delivery_codes:
+                    postal = delivery_codes[0].get('postal_code', {})
+                    return {
+                        'serviceable': True,
+                        'pincode': pincode,
+                        'city': postal.get('city', ''),
+                        'state': postal.get('state_name', ''),
+                        'district': postal.get('district', ''),
+                        'cod_available': postal.get('cod', 'N') == 'Y',
+                        'prepaid_available': postal.get('pre_paid', 'N') == 'Y',
+                        'pickup_available': postal.get('pickup', 'N') == 'Y',
+                        'max_weight': postal.get('max_weight', 10),
+                        'max_amount': postal.get('max_amount', 50000),
+                    }
+                else:
+                    return {
+                        'serviceable': False,
+                        'pincode': pincode,
+                        'error': 'Pincode not serviceable'
+                    }
+            else:
+                return {
+                    'serviceable': False,
+                    'pincode': pincode,
+                    'error': f'API error: {response.status_code}'
+                }
+                
+        except requests.RequestException as e:
+            logger.error(f"Pincode check failed: {e}")
+            return {
+                'serviceable': False,
+                'pincode': pincode,
+                'error': str(e)
+            }
