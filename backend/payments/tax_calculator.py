@@ -3,6 +3,72 @@ from django.conf import settings as django_settings
 from payments.models import TaxRate
 
 
+# Indian state name to code mapping
+STATE_NAME_TO_CODE = {
+    'andhra pradesh': 'AP',
+    'arunachal pradesh': 'AR',
+    'assam': 'AS',
+    'bihar': 'BR',
+    'chhattisgarh': 'CG',
+    'goa': 'GA',
+    'gujarat': 'GJ',
+    'haryana': 'HR',
+    'himachal pradesh': 'HP',
+    'jharkhand': 'JH',
+    'karnataka': 'KA',
+    'kerala': 'KL',
+    'madhya pradesh': 'MP',
+    'maharashtra': 'MH',
+    'manipur': 'MN',
+    'meghalaya': 'ML',
+    'mizoram': 'MZ',
+    'nagaland': 'NL',
+    'odisha': 'OR',
+    'punjab': 'PB',
+    'rajasthan': 'RJ',
+    'sikkim': 'SK',
+    'tamil nadu': 'TN',
+    'telangana': 'TG',
+    'tripura': 'TR',
+    'uttar pradesh': 'UP',
+    'uttarakhand': 'UK',
+    'west bengal': 'WB',
+    'delhi': 'DL',
+    'new delhi': 'DL',
+    'jammu and kashmir': 'JK',
+    'ladakh': 'LA',
+    'puducherry': 'PY',
+    'chandigarh': 'CH',
+    'andaman and nicobar islands': 'AN',
+    'dadra and nagar haveli': 'DN',
+    'daman and diu': 'DD',
+    'lakshadweep': 'LD',
+}
+
+
+def normalize_state_code(state_input):
+    """
+    Convert state name or code to standardized 2-letter code.
+    Handles: 'Maharashtra', 'mh', 'MH', '  MH  ' etc.
+    """
+    if not state_input:
+        return ''
+    
+    cleaned = state_input.strip().upper()
+    
+    # If it's already a 2-3 letter code, return uppercase
+    if len(cleaned) <= 3:
+        return cleaned
+    
+    # Try to find in state name mapping
+    lower_name = state_input.strip().lower()
+    if lower_name in STATE_NAME_TO_CODE:
+        return STATE_NAME_TO_CODE[lower_name]
+    
+    # Return original if not found
+    return cleaned
+
+
 class TaxCalculator:
     """Calculate GST (Goods and Services Tax) for India"""
     
@@ -14,7 +80,9 @@ class TaxCalculator:
             business_state: State code where business is registered.
                            Defaults to settings.BUSINESS_STATE or 'MH' (Maharashtra)
         """
-        self.business_state = business_state or getattr(django_settings, 'BUSINESS_STATE', 'MH')
+        self.business_state = normalize_state_code(
+            business_state or getattr(django_settings, 'BUSINESS_STATE', 'MH')
+        )
     
     def calculate_gst(self, amount, customer_state):
         """
@@ -35,9 +103,9 @@ class TaxCalculator:
         
         amount = Decimal(str(amount))
         
-        # Normalize state codes to uppercase for comparison
-        customer_state_normalized = customer_state.upper().strip() if customer_state else ''
-        business_state_normalized = self.business_state.upper().strip() if self.business_state else ''
+        # Normalize state codes (handles 'Maharashtra' -> 'MH' conversion)
+        customer_state_normalized = normalize_state_code(customer_state)
+        business_state_normalized = self.business_state  # Already normalized in __init__
         
         import logging
         logger = logging.getLogger(__name__)
@@ -122,9 +190,9 @@ class TaxCalculator:
         total_igst = Decimal('0')
         items_breakdown = []
         
-        # Normalize state codes for comparison
-        customer_state_normalized = customer_state.upper().strip() if customer_state else ''
-        business_state_normalized = self.business_state.upper().strip() if self.business_state else ''
+        # Normalize state codes (handles 'Maharashtra' -> 'MH' conversion)
+        customer_state_normalized = normalize_state_code(customer_state)
+        business_state_normalized = self.business_state  # Already normalized in __init__
         
         import logging
         logger = logging.getLogger(__name__)

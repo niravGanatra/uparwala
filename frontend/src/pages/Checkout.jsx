@@ -181,6 +181,14 @@ const Checkout = () => {
 
         const stateCode = address.state_code || address.state;
 
+        // Debug: Log what state code is being used
+        console.log('GST Debug:', {
+            selectedAddress: address,
+            state_code: address.state_code,
+            state: address.state,
+            usingStateCode: stateCode
+        });
+
         try {
             const payload = {
                 state_code: stateCode,
