@@ -6,22 +6,127 @@ def get_email_template(template_name, context):
     """
     templates = {
         'order_confirmation': {
-            'subject': f"Order Confirmation #{context.get('order_id')}",
+            'subject': f"Invoice: Order #{context.get('order_id')}",
             'content': f"""
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #f97316;">Order Confirmed!</h2>
-                    <p>Hi {context.get('customer_name')},</p>
-                    <p>Thank you for your order. We've received it and will notify you once it ships.</p>
-                    
-                    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                        <p><strong>Order ID:</strong> #{context.get('order_id')}</p>
-                        <p><strong>Total Amount:</strong> ₹{context.get('total_amount')}</p>
+                <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #333; font-size: 14px; line-height: 1.5;">
+                    <!-- Header -->
+                    <div style="border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td valign="top">
+                                    <h1 style="color: #f97316; margin: 0; font-size: 24px;">Uparwala</h1>
+                                    <p style="margin: 5px 0 0; color: #666;">Order Invoice</p>
+                                </td>
+                                <td valign="top" style="text-align: right;">
+                                    <h3 style="margin: 0; color: #333;">Order #{context.get('order_id')}</h3>
+                                    <p style="margin: 5px 0 0; color: #666;">Date: {context.get('order_date')}</p>
+                                    <p style="margin: 2px 0 0; color: #666;">Status: <span style="font-weight: bold; text-transform: uppercase;">{context.get('status')}</span></p>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
-                    
-                    <a href="{settings.FRONTEND_URL}/orders/{context.get('order_id')}" 
-                       style="background-color: #f97316; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                        View Order
-                    </a>
+
+                    <!-- Addresses -->
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                        <tr>
+                            <td width="48%" valign="top" style="background: #f9fafb; padding: 15px; border-radius: 8px;">
+                                <h4 style="margin: 0 0 10px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Billing Address</h4>
+                                <p style="margin: 0;"><strong>{context.get('billing_address', {}).get('full_name')}</strong></p>
+                                <p style="margin: 2px 0;">{context.get('billing_address', {}).get('address_line1')}</p>
+                                <p style="margin: 2px 0;">{context.get('billing_address', {}).get('address_line2', '')}</p>
+                                <p style="margin: 2px 0;">{context.get('billing_address', {}).get('city')}, {context.get('billing_address', {}).get('state')} - {context.get('billing_address', {}).get('pincode')}</p>
+                                <p style="margin: 5px 0 0;">Ph: {context.get('billing_address', {}).get('phone')}</p>
+                            </td>
+                            <td width="4%">&nbsp;</td>
+                            <td width="48%" valign="top" style="background: #f9fafb; padding: 15px; border-radius: 8px;">
+                                <h4 style="margin: 0 0 10px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Shipping Address</h4>
+                                <p style="margin: 0;"><strong>{context.get('shipping_address', {}).get('full_name')}</strong></p>
+                                <p style="margin: 2px 0;">{context.get('shipping_address', {}).get('address_line1')}</p>
+                                <p style="margin: 2px 0;">{context.get('shipping_address', {}).get('address_line2', '')}</p>
+                                <p style="margin: 2px 0;">{context.get('shipping_address', {}).get('city')}, {context.get('shipping_address', {}).get('state')} - {context.get('shipping_address', {}).get('pincode')}</p>
+                                <p style="margin: 5px 0 0;">Ph: {context.get('shipping_address', {}).get('phone')}</p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Line Items -->
+                    <table width="100%" cellpadding="10" cellspacing="0" style="border-collapse: collapse; margin-bottom: 30px;">
+                        <thead>
+                            <tr style="background-color: #f3f4f6; text-align: left;">
+                                <th style="border-bottom: 2px solid #ddd;">Product</th>
+                                <th style="border-bottom: 2px solid #ddd; text-align: center;">Qty</th>
+                                <th style="border-bottom: 2px solid #ddd; text-align: right;">Price</th>
+                                <th style="border-bottom: 2px solid #ddd; text-align: right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {''.join([f'''
+                            <tr>
+                                <td style="border-bottom: 1px solid #eee;">
+                                    <strong>{item.product.name}</strong>
+                                    <div style="font-size: 12px; color: #666;">Sold by: {item.product.vendor.business_name}</div>
+                                </td>
+                                <td style="border-bottom: 1px solid #eee; text-align: center;">{item.quantity}</td>
+                                <td style="border-bottom: 1px solid #eee; text-align: right;">₹{item.price:.2f}</td>
+                                <td style="border-bottom: 1px solid #eee; text-align: right;">₹{(item.price * item.quantity):.2f}</td>
+                            </tr>
+                            ''' for item in context.get('items', [])])}
+                        </tbody>
+                    </table>
+
+                    <!-- Summary & Tax Breakdown -->
+                    <div style="display: flex; justify-content: flex-end;">
+                        <table width="40%" cellpadding="5" cellspacing="0" style="margin-left: auto;">
+                            <tr>
+                                <td style="text-align: left; color: #666;">Subtotal:</td>
+                                <td style="text-align: right;">₹{context.get('subtotal'):.2f}</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left; color: #666;">Discount:</td>
+                                <td style="text-align: right; color: #16a34a;">-₹{context.get('discount_amount'):.2f}</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left; color: #666;">Shipping:</td>
+                                <td style="text-align: right;">₹{context.get('shipping_amount'):.2f}</td>
+                            </tr>
+                            
+                            <!-- Tax Section -->
+                            <tr>
+                                <td colspan="2" style="padding: 10px 0;">
+                                    <div style="border-top: 1px dashed #ddd; border-bottom: 1px dashed #ddd; padding: 5px 0;">
+                                        <div style="font-weight: bold; font-size: 12px; margin-bottom: 5px; color: #666;">Tax ({'Inter-State' if context.get('tax_breakdown', {}).get('type') == 'inter_state' else 'Intra-State'})</div>
+                                        
+                                        <table width="100%" style="font-size: 11px; color: #666;">
+                                             <tr>
+                                                <td>CGST:</td>
+                                                <td align="right">₹{context.get('tax_breakdown', {}).get('cgst', 0):.2f}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>SGST:</td>
+                                                <td align="right">₹{context.get('tax_breakdown', {}).get('sgst', 0):.2f}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr style="font-size: 16px; font-weight: bold;">
+                                <td style="border-top: 2px solid #333; padding-top: 10px;">Total:</td>
+                                <td style="border-top: 2px solid #333; padding-top: 10px; text-align: right;">₹{context.get('total_amount'):.2f}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="margin-top: 40px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #eee; padding-top: 20px;">
+                        <p>Thank you for shopping with Uparwala!</p>
+                        <p>Need help? Contact support@uparwala.in</p>
+                        
+                        <a href="{settings.FRONTEND_URL}/orders/{context.get('order_id')}" 
+                           style="background-color: #f97316; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">
+                            View Order Details
+                        </a>
+                    </div>
                 </div>
             """
         },

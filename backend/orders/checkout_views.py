@@ -366,23 +366,10 @@ class CheckoutView(APIView):
                     product.stock = 0
                 product.save()
             
-            # Send Order Confirmation Email (COD)
+            # Send Order Confirmation Email (Invoice)
             try:
-                from notifications.resend_service import send_email_via_resend
-                from notifications.email_templates import get_email_template
-                
-                customer_email = order.guest_email if not order.user else order.user.email
-                customer_name = order.billing_address_data.get('full_name') if order.billing_address_data else (order.user.get_full_name() if order.user else 'Guest')
-                
-                if customer_email:
-                    conf_context = {
-                        'customer_name': customer_name,
-                        'order_id': order.id,
-                        'total_amount': order.total_amount
-                    }
-                    conf_template = get_email_template('order_confirmation', conf_context)
-                    if conf_template:
-                        send_email_via_resend(customer_email, conf_template['subject'], conf_template['content'])
+                from notifications.email_service import EmailService
+                EmailService.send_order_confirmation(order)
             except Exception as e:
                 logger.error(f"Failed to send COD order confirmation for Order {order.id}: {e}")
             
