@@ -500,7 +500,7 @@ class ServiceablePincodeAdminViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def upload_csv(self, request):
         """
-        Upload and import CSV file with serviceable locations.
+        Optimized CSV import using bulk_create for large files (100k+ rows).
         Expected columns: State, City, ZipCode/Pincode, Area (optional)
         """
         import csv
@@ -530,59 +530,76 @@ class ServiceablePincodeAdminViewSet(viewsets.ModelViewSet):
             if not map_pincode:
                 return Response({'error': 'CSV must contain a ZipCode or Pincode column'}, status=status.HTTP_400_BAD_REQUEST)
             
+            # Get existing pincode+area combinations for deduplication
+            existing = set(
+                ServiceablePincode.objects.values_list('pincode', 'area')
+            )
+            
+            records_to_create = []
             total_rows = 0
-            new_records = 0
-            updated_records = 0
             skipped = 0
+            BATCH_SIZE = 5000
+            total_created = 0
             
             for row in reader:
                 total_rows += 1
                 
                 pincode = row.get(map_pincode, '').strip()
-                city = row.get(map_city, '').strip() if map_city else ''
-                state = row.get(map_state, '').strip() if map_state else ''
+                city = row.get(map_city, '').strip() if map_city else 'Unknown'
+                state = row.get(map_state, '').strip() if map_state else 'Unknown'
                 area = row.get(map_area, '').strip() if map_area else None
                 
                 if not pincode:
                     skipped += 1
                     continue
                 
-                # Create or update
-                defaults = {
-                    'city': city or 'Unknown',
-                    'state': state or 'Unknown',
-                    'is_active': True
-                }
+                # Check for duplicates
+                key = (pincode, area)
+                if key in existing:
+                    skipped += 1
+                    continue
                 
-                # Lookup by pincode + area (if area provided)
-                if area:
-                    obj, created = ServiceablePincode.objects.update_or_create(
+                existing.add(key)  # Track within this import
+                
+                records_to_create.append(
+                    ServiceablePincode(
                         pincode=pincode,
+                        city=city or 'Unknown',
+                        state=state or 'Unknown',
                         area=area,
-                        defaults=defaults
+                        is_active=True
                     )
-                else:
-                    obj, created = ServiceablePincode.objects.update_or_create(
-                        pincode=pincode,
-                        area__isnull=True,
-                        defaults=defaults
-                    )
+                )
                 
-                if created:
-                    new_records += 1
-                else:
-                    updated_records += 1
+                # Bulk insert in batches
+                if len(records_to_create) >= BATCH_SIZE:
+                    ServiceablePincode.objects.bulk_create(
+                        records_to_create, 
+                        ignore_conflicts=True
+                    )
+                    total_created += len(records_to_create)
+                    records_to_create = []
+            
+            # Insert remaining records
+            if records_to_create:
+                ServiceablePincode.objects.bulk_create(
+                    records_to_create, 
+                    ignore_conflicts=True
+                )
+                total_created += len(records_to_create)
             
             return Response({
-                'message': f'Processed {total_rows} rows. Created {new_records}, Updated {updated_records}, Skipped {skipped}.',
-                'created': new_records,
-                'updated': updated_records,
+                'message': f'Imported {total_created:,} locations. Skipped {skipped:,} duplicates/invalid.',
+                'created': total_created,
                 'skipped': skipped,
+                'total_rows': total_rows,
                 'total_in_db': ServiceablePincode.objects.count()
             })
             
         except Exception as e:
+            import traceback
             print(f"CSV Import Error: {e}")
+            traceback.print_exc()
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['post'])
@@ -632,9 +649,81 @@ class ServiceablePincodeAdminViewSet(viewsets.ModelViewSet):
             count=Count('id')
         ).order_by('-count')[:10]
         
+        # Count unique cities
+        city_count = ServiceablePincode.objects.values('state', 'city').distinct().count()
+        
         return Response({
             'total': total,
             'active': active,
             'inactive': inactive,
+            'city_count': city_count,
             'by_state': list(by_state)
         })
+    
+    @action(detail=False, methods=['get'])
+    def hierarchy(self, request):
+        """
+        Get hierarchical view: States -> Cities with counts and active status.
+        """
+        from django.db.models import Count, Q
+        
+        # Get states with aggregated data
+        states = ServiceablePincode.objects.values('state').annotate(
+            total=Count('id'),
+            active=Count('id', filter=Q(is_active=True))
+        ).order_by('state')
+        
+        result = []
+        for state_data in states:
+            state_name = state_data['state']
+            
+            # Get cities for this state
+            cities = ServiceablePincode.objects.filter(state=state_name).values('city').annotate(
+                total=Count('id'),
+                active=Count('id', filter=Q(is_active=True))
+            ).order_by('city')
+            
+            result.append({
+                'state': state_name,
+                'total': state_data['total'],
+                'active': state_data['active'],
+                'cities': list(cities)
+            })
+        
+        return Response(result)
+    
+    @action(detail=False, methods=['post'])
+    def toggle_state(self, request):
+        """
+        Enable/disable all pincodes in a state.
+        Payload: { "state": "Gujarat", "is_active": true }
+        """
+        state = request.data.get('state')
+        is_active = request.data.get('is_active')
+        
+        if not state or is_active is None:
+            return Response({'error': 'state and is_active are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        count = ServiceablePincode.objects.filter(state=state).update(is_active=is_active)
+        
+        action_text = "enabled" if is_active else "disabled"
+        return Response({'message': f'{action_text.capitalize()} {count:,} pincodes in {state}'})
+    
+    @action(detail=False, methods=['post'])
+    def toggle_city(self, request):
+        """
+        Enable/disable all pincodes in a city.
+        Payload: { "state": "Gujarat", "city": "Ahmedabad", "is_active": true }
+        """
+        state = request.data.get('state')
+        city = request.data.get('city')
+        is_active = request.data.get('is_active')
+        
+        if not state or not city or is_active is None:
+            return Response({'error': 'state, city, and is_active are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        count = ServiceablePincode.objects.filter(state=state, city=city).update(is_active=is_active)
+        
+        action_text = "enabled" if is_active else "disabled"
+        return Response({'message': f'{action_text.capitalize()} {count:,} pincodes in {city}, {state}'})
+
