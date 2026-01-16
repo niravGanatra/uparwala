@@ -470,3 +470,171 @@ class PublicPostcodeDetailsView(APIView):
         except Exception as e:
              print(f"Postcode Details Error: {e}")
              return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ========== ServiceablePincode Admin (Whitelist Management) ==========
+
+from .models import ServiceablePincode
+
+class ServiceablePincodeSerializer(serializers.ModelSerializer):
+    """Serializer for our own Serviceable Pincode whitelist"""
+    class Meta:
+        model = ServiceablePincode
+        fields = ['id', 'pincode', 'city', 'state', 'area', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class ServiceablePincodeAdminViewSet(viewsets.ModelViewSet):
+    """
+    Admin API to manage Serviceable Pincodes (Whitelist).
+    This is the master list of locations where we accept orders.
+    """
+    queryset = ServiceablePincode.objects.all().order_by('state', 'city', 'pincode')
+    serializer_class = ServiceablePincodeSerializer
+    permission_classes = [permissions.IsAdminUser]
+    pagination_class = ServiceabilityPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['state', 'city', 'is_active']
+    search_fields = ['pincode', 'city', 'state', 'area']
+    
+    @action(detail=False, methods=['post'])
+    def upload_csv(self, request):
+        """
+        Upload and import CSV file with serviceable locations.
+        Expected columns: State, City, ZipCode/Pincode, Area (optional)
+        """
+        import csv
+        import io
+        
+        csv_file = request.FILES.get('file')
+        
+        if not csv_file:
+            return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not csv_file.name.endswith('.csv'):
+            return Response({'error': 'File must be CSV format'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Read and decode CSV
+            file_data = csv_file.read().decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(file_data))
+            
+            headers = reader.fieldnames
+            
+            # Flexible column mapping
+            map_pincode = next((h for h in headers if 'zip' in h.lower() or 'pin' in h.lower()), None)
+            map_city = next((h for h in headers if 'city' in h.lower() or 'district' in h.lower()), None)
+            map_state = next((h for h in headers if 'state' in h.lower()), None)
+            map_area = next((h for h in headers if 'area' in h.lower() or 'locality' in h.lower()), None)
+            
+            if not map_pincode:
+                return Response({'error': 'CSV must contain a ZipCode or Pincode column'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            total_rows = 0
+            new_records = 0
+            updated_records = 0
+            skipped = 0
+            
+            for row in reader:
+                total_rows += 1
+                
+                pincode = row.get(map_pincode, '').strip()
+                city = row.get(map_city, '').strip() if map_city else ''
+                state = row.get(map_state, '').strip() if map_state else ''
+                area = row.get(map_area, '').strip() if map_area else None
+                
+                if not pincode:
+                    skipped += 1
+                    continue
+                
+                # Create or update
+                defaults = {
+                    'city': city or 'Unknown',
+                    'state': state or 'Unknown',
+                    'is_active': True
+                }
+                
+                # Lookup by pincode + area (if area provided)
+                if area:
+                    obj, created = ServiceablePincode.objects.update_or_create(
+                        pincode=pincode,
+                        area=area,
+                        defaults=defaults
+                    )
+                else:
+                    obj, created = ServiceablePincode.objects.update_or_create(
+                        pincode=pincode,
+                        area__isnull=True,
+                        defaults=defaults
+                    )
+                
+                if created:
+                    new_records += 1
+                else:
+                    updated_records += 1
+            
+            return Response({
+                'message': f'Processed {total_rows} rows. Created {new_records}, Updated {updated_records}, Skipped {skipped}.',
+                'created': new_records,
+                'updated': updated_records,
+                'skipped': skipped,
+                'total_in_db': ServiceablePincode.objects.count()
+            })
+            
+        except Exception as e:
+            print(f"CSV Import Error: {e}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['post'])
+    def bulk_toggle(self, request):
+        """
+        Bulk enable/disable serviceability for selected IDs.
+        Payload: { "ids": [1, 2, 3], "is_active": true }
+        """
+        ids = request.data.get('ids', [])
+        is_active = request.data.get('is_active')
+        
+        if not ids or is_active is None:
+            return Response({'error': 'ids and is_active are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        count = ServiceablePincode.objects.filter(id__in=ids).update(is_active=is_active)
+        
+        action_text = "enabled" if is_active else "disabled"
+        return Response({'message': f'{action_text.capitalize()} {count} locations'})
+    
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        """
+        Delete multiple serviceable locations by IDs.
+        """
+        ids = request.data.get('ids', [])
+        
+        if not ids:
+            return Response({'error': 'No IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        count, _ = ServiceablePincode.objects.filter(id__in=ids).delete()
+        
+        return Response({'message': f'Deleted {count} locations', 'deleted': count})
+    
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """
+        Get statistics about serviceable locations.
+        """
+        from django.db.models import Count
+        
+        total = ServiceablePincode.objects.count()
+        active = ServiceablePincode.objects.filter(is_active=True).count()
+        inactive = total - active
+        
+        # Group by state
+        by_state = ServiceablePincode.objects.values('state').annotate(
+            count=Count('id')
+        ).order_by('-count')[:10]
+        
+        return Response({
+            'total': total,
+            'active': active,
+            'inactive': inactive,
+            'by_state': list(by_state)
+        })

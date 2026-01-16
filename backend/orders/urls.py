@@ -7,7 +7,7 @@ from .views import (
 )
 from .checkout_views import CheckoutView
 from .logistics_views import CODPincodeViewSet, GiftOptionViewSet
-from .serviceability_views import AdminServiceabilityViewSet, PublicServiceabilityCheckView, PublicPostcodeDetailsView
+from .serviceability_views import AdminServiceabilityViewSet, PublicServiceabilityCheckView, PublicPostcodeDetailsView, ServiceablePincodeAdminViewSet
 from .return_views import request_return
 from rest_framework.routers import DefaultRouter
 
@@ -17,6 +17,7 @@ router.register(r'shiprocket-config', ShiprocketConfigViewSet, basename='shiproc
 router.register(r'admin/cod-pincodes', CODPincodeViewSet, basename='admin-cod-pincodes')
 router.register(r'admin/gift-options', GiftOptionViewSet, basename='admin-gift-options')
 router.register(r'admin/serviceability', AdminServiceabilityViewSet, basename='admin-serviceability')
+router.register(r'admin/serviceable-areas', ServiceablePincodeAdminViewSet, basename='admin-serviceable-areas')
 
 urlpatterns = [
     path('manage/', include(router.urls)), # /api/orders/manage/notes/
