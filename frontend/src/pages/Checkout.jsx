@@ -58,6 +58,11 @@ const Checkout = () => {
     const [giftData, setGiftData] = useState(null);
     const [isAddressLocked, setIsAddressLocked] = useState(false);
 
+    // Serviceability check state
+    const [isServiceable, setIsServiceable] = useState(true);
+    const [serviceabilityMessage, setServiceabilityMessage] = useState('');
+    const [checkingServiceability, setCheckingServiceability] = useState(false);
+
     const setGiftOption = (option) => {
         setGiftData(option);
         if (option) {
@@ -99,6 +104,41 @@ const Checkout = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedShippingAddress, giftData, addresses, paymentMethod]);
+
+    // Check serviceability when address is selected
+    useEffect(() => {
+        const checkServiceability = async () => {
+            if (!selectedShippingAddress) {
+                setIsServiceable(true);
+                setServiceabilityMessage('');
+                return;
+            }
+
+            const address = addresses.find(a => a.id === selectedShippingAddress);
+            if (!address || !address.pincode) return;
+
+            setCheckingServiceability(true);
+            try {
+                const response = await api.get(`/orders/serviceability/check/${address.pincode}/`);
+                if (response.data.serviceable) {
+                    setIsServiceable(true);
+                    setServiceabilityMessage('');
+                } else {
+                    setIsServiceable(false);
+                    setServiceabilityMessage(response.data.message || 'We do not deliver to this location.');
+                    toast.error('We do not deliver to this location.');
+                }
+            } catch (error) {
+                console.error('Serviceability check failed:', error);
+                setIsServiceable(false);
+                setServiceabilityMessage('Unable to verify delivery availability.');
+            } finally {
+                setCheckingServiceability(false);
+            }
+        };
+
+        checkServiceability();
+    }, [selectedShippingAddress, addresses]);
 
     // Separate effect for COD check to ensure orderSummary is ready
     useEffect(() => {
@@ -854,6 +894,18 @@ const Checkout = () => {
                         <p className="text-sm text-gray-400">Add a new address to continue</p>
                     </div>
                 )}
+                {/* Serviceability Error Message */}
+                {selectedShippingAddress && !isServiceable && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 mt-4">
+                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                            <Truck className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div>
+                            <p className="font-semibold text-red-700">Delivery Not Available</p>
+                            <p className="text-sm text-red-600">{serviceabilityMessage}</p>
+                        </div>
+                    </div>
+                )}
 
                 <button
                     onClick={() => {
@@ -861,13 +913,20 @@ const Checkout = () => {
                             toast.error('Please select a delivery address');
                             return;
                         }
+                        if (!isServiceable) {
+                            toast.error('We do not deliver to this location. Please select a different address.');
+                            return;
+                        }
                         setStep(2);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    disabled={!selectedShippingAddress}
-                    className="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg shadow-lg hover:shadow-blue-500/25 transition-all mt-8"
+                    disabled={!selectedShippingAddress || !isServiceable || checkingServiceability}
+                    className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all mt-8 ${!isServiceable && selectedShippingAddress
+                            ? 'bg-red-400 text-white cursor-not-allowed'
+                            : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed'
+                        }`}
                 >
-                    Continue to Payment
+                    {checkingServiceability ? 'Checking delivery...' : !isServiceable && selectedShippingAddress ? 'Delivery Not Available' : 'Continue to Payment'}
                 </button>
             </div>
         );
