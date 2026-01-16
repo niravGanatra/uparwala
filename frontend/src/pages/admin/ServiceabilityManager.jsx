@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/input';
 import toast from 'react-hot-toast';
 
 const ServiceabilityManager = () => {
-    const [activeTab, setActiveTab] = useState('hierarchy'); // 'hierarchy' or 'pincodes'
+    const [activeTab, setActiveTab] = useState('hierarchy');
     const [locations, setLocations] = useState([]);
     const [hierarchy, setHierarchy] = useState([]);
     const [expandedStates, setExpandedStates] = useState({});
@@ -98,7 +98,7 @@ const ServiceabilityManager = () => {
         try {
             const response = await api.post('/orders/admin/serviceable-areas/upload_csv/', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                timeout: 300000 // 5 minutes for large files
+                timeout: 300000
             });
             toast.success(response.data.message);
             fetchStats();
@@ -114,18 +114,12 @@ const ServiceabilityManager = () => {
     };
 
     const toggleStateExpand = (stateName) => {
-        setExpandedStates(prev => ({
-            ...prev,
-            [stateName]: !prev[stateName]
-        }));
+        setExpandedStates(prev => ({ ...prev, [stateName]: !prev[stateName] }));
     };
 
     const handleToggleState = async (stateName, setActive) => {
         try {
-            await api.post('/orders/admin/serviceable-areas/toggle_state/', {
-                state: stateName,
-                is_active: setActive
-            });
+            await api.post('/orders/admin/serviceable-areas/toggle_state/', { state: stateName, is_active: setActive });
             toast.success(`${setActive ? 'Enabled' : 'Disabled'} all pincodes in ${stateName}`);
             fetchHierarchy();
             fetchStats();
@@ -136,11 +130,7 @@ const ServiceabilityManager = () => {
 
     const handleToggleCity = async (stateName, cityName, setActive) => {
         try {
-            await api.post('/orders/admin/serviceable-areas/toggle_city/', {
-                state: stateName,
-                city: cityName,
-                is_active: setActive
-            });
+            await api.post('/orders/admin/serviceable-areas/toggle_city/', { state: stateName, city: cityName, is_active: setActive });
             toast.success(`${setActive ? 'Enabled' : 'Disabled'} ${cityName}`);
             fetchHierarchy();
             fetchStats();
@@ -189,9 +179,7 @@ const ServiceabilityManager = () => {
     };
 
     const toggleStatus = async (id, currentValue) => {
-        const updatedList = locations.map(item =>
-            item.id === id ? { ...item, is_active: !currentValue } : item
-        );
+        const updatedList = locations.map(item => item.id === id ? { ...item, is_active: !currentValue } : item);
         setLocations(updatedList);
 
         try {
@@ -204,12 +192,8 @@ const ServiceabilityManager = () => {
         }
     };
 
-    // Filter hierarchy based on search
     const filteredHierarchy = search
-        ? hierarchy.filter(s =>
-            s.state.toLowerCase().includes(search.toLowerCase()) ||
-            s.cities.some(c => c.city.toLowerCase().includes(search.toLowerCase()))
-        )
+        ? hierarchy.filter(s => s.state.toLowerCase().includes(search.toLowerCase()) || s.cities.some(c => c.city.toLowerCase().includes(search.toLowerCase())))
         : hierarchy;
 
     return (
@@ -275,15 +259,13 @@ const ServiceabilityManager = () => {
             <div className="flex gap-2 border-b border-slate-200">
                 <button
                     onClick={() => setActiveTab('hierarchy')}
-                    className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === 'hierarchy' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
+                    className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === 'hierarchy' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
                 >
                     By Location
                 </button>
                 <button
                     onClick={() => setActiveTab('pincodes')}
-                    className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === 'pincodes' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
+                    className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === 'pincodes' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
                 >
                     By Pincode
                 </button>
@@ -316,36 +298,18 @@ const ServiceabilityManager = () => {
                         filteredHierarchy.map((stateData) => (
                             <div key={stateData.state} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                                 {/* State Header */}
-                                <div
-                                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50"
-                                    onClick={() => toggleStateExpand(stateData.state)}
-                                >
+                                <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50" onClick={() => toggleStateExpand(stateData.state)}>
                                     <div className="flex items-center gap-3">
-                                        {expandedStates[stateData.state] ? (
-                                            <ChevronDown className="h-5 w-5 text-slate-400" />
-                                        ) : (
-                                            <ChevronRight className="h-5 w-5 text-slate-400" />
-                                        )}
+                                        {expandedStates[stateData.state] ? <ChevronDown className="h-5 w-5 text-slate-400" /> : <ChevronRight className="h-5 w-5 text-slate-400" />}
                                         <span className="font-semibold text-slate-800">{stateData.state}</span>
-                                        <span className="text-sm text-slate-500">
-                                            {stateData.active}/{stateData.total} active • {stateData.cities?.length} cities
-                                        </span>
+                                        <span className="text-sm text-slate-500">{stateData.active}/{stateData.total} active • {stateData.cities?.length} cities</span>
                                     </div>
-                                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                                        <Button
-                                            size="sm"
-                                            onClick={() => handleToggleState(stateData.state, true)}
-                                            className="bg-green-600 hover:bg-green-700 text-white text-xs"
-                                        >
-                                            Enable All
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            onClick={() => handleToggleState(stateData.state, false)}
-                                            className="bg-slate-500 hover:bg-slate-600 text-white text-xs"
-                                        >
-                                            Disable All
-                                        </Button>
+                                    <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                                        <span className="text-xs text-slate-500">All</span>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" className="sr-only peer" checked={stateData.active === stateData.total && stateData.total > 0} onChange={() => handleToggleState(stateData.state, stateData.active !== stateData.total)} />
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                        </label>
                                     </div>
                                 </div>
 
@@ -356,29 +320,14 @@ const ServiceabilityManager = () => {
                                             <div key={cityData.city} className="flex items-center justify-between px-6 py-3 pl-12 hover:bg-slate-50">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-slate-700">{cityData.city}</span>
-                                                    <span className={`text-xs px-2 py-0.5 rounded-full ${cityData.active === cityData.total
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : cityData.active === 0
-                                                                ? 'bg-red-100 text-red-700'
-                                                                : 'bg-yellow-100 text-yellow-700'
-                                                        }`}>
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full ${cityData.active === cityData.total ? 'bg-green-100 text-green-700' : cityData.active === 0 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
                                                         {cityData.active}/{cityData.total}
                                                     </span>
                                                 </div>
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => handleToggleCity(stateData.state, cityData.city, true)}
-                                                        className="text-xs text-green-600 hover:text-green-700 font-medium"
-                                                    >
-                                                        Enable
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleToggleCity(stateData.state, cityData.city, false)}
-                                                        className="text-xs text-slate-500 hover:text-slate-700 font-medium"
-                                                    >
-                                                        Disable
-                                                    </button>
-                                                </div>
+                                                <label className="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" className="sr-only peer" checked={cityData.active === cityData.total && cityData.total > 0} onChange={() => handleToggleCity(stateData.state, cityData.city, cityData.active !== cityData.total)} />
+                                                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                                                </label>
                                             </div>
                                         ))}
                                     </div>
@@ -435,8 +384,7 @@ const ServiceabilityManager = () => {
                                                 <td className="px-6 py-4 text-center">
                                                     <button
                                                         onClick={() => toggleStatus(loc.id, loc.is_active)}
-                                                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${loc.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                            }`}
+                                                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${loc.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
                                                     >
                                                         {loc.is_active ? <><CheckCircle className="w-3 h-3 mr-1" /> Active</> : <><XCircle className="w-3 h-3 mr-1" /> Inactive</>}
                                                     </button>
@@ -463,7 +411,7 @@ const ServiceabilityManager = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <h3 className="text-sm font-semibold text-blue-800 mb-2">CSV Format Guide</h3>
                 <p className="text-sm text-blue-700">
-                    Columns: <code className="bg-blue-100 px-1 rounded">State</code>, <code className="bg-blue-100 px-1 rounded">City</code>, <code className="bg-blue-100 px-1 rounded">ZipCode</code>/<code className="bg-blue-100 px-1 rounded">Pincode</code>, <code className="bg-blue-100 px-1 rounded">Area</code> (optional)
+                    Columns: <code className="bg-blue-100 px-1 rounded">State</code>, <code className="bg-blue-100 px-1 rounded">City</code>, <code className="bg-blue-100 px-1 rounded">ZipCode/Pincode</code>, <code className="bg-blue-100 px-1 rounded">Area</code> (optional)
                 </p>
             </div>
         </div>
