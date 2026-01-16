@@ -285,9 +285,10 @@ class CODPincode(models.Model):
 
 class ServiceablePincode(models.Model):
     """Global list of serviceable pincodes for the platform"""
-    pincode = models.CharField(max_length=10, unique=True, db_index=True)
+    pincode = models.CharField(max_length=10, db_index=True)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
+    area = models.CharField(max_length=100, blank=True, null=True, db_index=True, help_text="Area/Locality")
     is_active = models.BooleanField(default=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -296,8 +297,14 @@ class ServiceablePincode(models.Model):
     class Meta:
         verbose_name = 'Serviceable Pincode'
         verbose_name_plural = 'Serviceable Pincodes'
+        unique_together = ('pincode', 'area')
+        indexes = [
+            models.Index(fields=['pincode', 'area']),
+        ]
     
     def __str__(self):
+        if self.area:
+            return f"{self.pincode} - {self.area}, {self.city}"
         return f"{self.pincode} - {self.city}"
 
 

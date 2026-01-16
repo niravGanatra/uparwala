@@ -401,93 +401,40 @@ class PublicServiceabilityCheckView(APIView):
     permission_classes = [permissions.AllowAny]
     
     def get(self, request, pincode):
-        from .shiprocket_service import ShiprocketService
-        from .shiprocket_models import ShiprocketConfig
+        from .models import ServiceablePincode
+
+        # Check ServiceablePincode (Whitelist)
+        queryset = ServiceablePincode.objects.filter(pincode=pincode, is_active=True)
         
-        # 1. Check Local DB Override
-        pincode_obj = ShiprocketPincode.objects.filter(pincode=pincode).first()
+        # Optional Area/Locality Check
+        area = request.query_params.get('area')
+        if area:
+            # Case-insensitive partial match or exact? User said "validates if we serve that location".
+            # Using iexact for stricter matching on locality if provided. 
+            # Or use icontains if fuzzy? iexact is safer for "Reference Data".
+            queryset = queryset.filter(area__iexact=area)
         
-        if pincode_obj:
-            if not pincode_obj.is_serviceable:
-                return Response({
-                    'serviceable': False,
-                    'message': 'We currently do not ship to this location.'
-                })
-            
+        if queryset.exists():
+            # Get details from the first match
+            obj = queryset.first()
             return Response({
                 'serviceable': True,
-                'cod_available': pincode_obj.is_cod_available,
-                'city': pincode_obj.city,
-                'state': pincode_obj.state,
+                'pincode': obj.pincode,
+                'area': obj.area,
+                'city': obj.city,
+                'state': obj.state,
                 'message': 'Delivery available.'
             })
             
-        # 2. Not in DB? Check Live Shiprocket API
-        try:
-            service = ShiprocketService()
-            config = ShiprocketConfig.objects.first()
-            
-            if not config or not config.pickup_pincode:
-                # If config missing, fail closed? Or fail open?
-                # Fail closed for safety.
-                return Response({
-                    'serviceable': False,
-                    'message': 'Shipping configuration missing.'
-                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            # Check serviceability (assume 0.5kg standard)
-            # This returns a list of couriers if serviceable
-            couriers = service.check_serviceability(
-                pickup_pincode=config.pickup_pincode,
-                delivery_pincode=pincode,
-                weight=0.5,
-                cod=1
-            )
-            
-            is_serviceable = False
-            is_cod_available = False
-            
-            if couriers and len(couriers) > 0:
-                is_serviceable = True
-                # Check for COD support in any courier
-                for c in couriers:
-                    if str(c.get('cod', '0')) == '1':
-                        is_cod_available = True
-                        break
-            
-            # 3. Cache Result to DB (So Admin can block it later)
-            # Where to get City/State? 
-            # Ideally verify with Postcode API, but for now use "Unknown" or infer?
-            # We will save it as serviceable, Admin can filter/block in UI.
-            
-            ShiprocketPincode.objects.create(
-                pincode=pincode,
-                city="Unknown", # Metadata update can happen via sync script later
-                state="Unknown",
-                is_serviceable=is_serviceable,
-                is_cod_available=is_cod_available
-            )
-            
-            if not is_serviceable:
-                 return Response({
-                    'serviceable': False,
-                    'message': 'Courier service not available for this pincode.'
-                })
-
-            return Response({
-                'serviceable': True,
-                'cod_available': is_cod_available,
-                'city': "Unknown",
-                'state': "Unknown",
-                'message': 'Delivery available.'
-            })
-
-        except Exception as e:
-            print(f"Live Serviceability Check Failed: {e}")
-            return Response({
-                'serviceable': False,
-                'message': 'Unable to verify pincode.'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # If not found in whitelist
+        error_msg = 'We currently do not serve this location.'
+        if area:
+             error_msg = f'We do not serve the area "{area}" in pincode {pincode}.'
+             
+        return Response({
+            'serviceable': False,
+            'message': error_msg
+        })
 
 
 class PublicPostcodeDetailsView(APIView):
