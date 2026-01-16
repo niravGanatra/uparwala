@@ -97,13 +97,17 @@ const Checkout = () => {
     }, [user, navigate]);
 
     useEffect(() => {
-        // Trigger total calculation whenever address, gift options, payment method, or step changes
-        // Now runs on Step 1 (Address) as well, immediately after selection
+        // Trigger total calculation whenever address, gift options, payment method changes
+        // Reset order summary first to show loading state
         if (selectedShippingAddress) {
+            setOrderSummary(null); // Clear previous to show loading
+            setCalculationError(null);
             calculateTotals();
+        } else {
+            setOrderSummary(null);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedShippingAddress, giftData, addresses, paymentMethod]);
+    }, [selectedShippingAddress, giftData, paymentMethod]);
 
     // Check serviceability when address is selected
     useEffect(() => {
