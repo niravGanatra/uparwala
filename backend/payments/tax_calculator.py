@@ -125,16 +125,18 @@ class TaxCalculator:
                 'tax_rate': float(tax_rate.cgst_rate + tax_rate.sgst_rate)
             }
         
-        # Different state: IGST
+        # Different state: Show as CGST + SGST (split IGST equally)
         else:
-            igst = (amount * Decimal(str(tax_rate.igst_rate))) / Decimal('100')
+            total_tax = (amount * Decimal(str(tax_rate.igst_rate))) / Decimal('100')
+            cgst = total_tax / Decimal('2')
+            sgst = total_tax / Decimal('2')
             
             return {
-                'type': 'inter_state',
-                'cgst': 0.0,
-                'sgst': 0.0,
-                'igst': float(round(igst, 2)),
-                'total_tax': float(round(igst, 2)),
+                'type': 'intra_state',  # Always show as intra_state for consistent CGST/SGST display
+                'cgst': float(round(cgst, 2)),
+                'sgst': float(round(sgst, 2)),
+                'igst': 0.0,
+                'total_tax': float(round(total_tax, 2)),
                 'tax_rate': float(tax_rate.igst_rate)
             }
     
@@ -224,26 +226,23 @@ class TaxCalculator:
                     tax_slab.sgst_rate = Decimal('9.00')
                     tax_slab.igst_rate = Decimal('18.00')
             
-            # Calculate tax for this item
+            # Calculate tax for this item - Always show as CGST + SGST
             if is_intra_state:
                 # CGST + SGST
                 item_cgst = (item_subtotal * tax_slab.cgst_rate) / Decimal('100')
                 item_sgst = (item_subtotal * tax_slab.sgst_rate) / Decimal('100')
-                item_igst = Decimal('0')
                 item_tax = item_cgst + item_sgst
             else:
-                # IGST
-                item_cgst = Decimal('0')
-                item_sgst = Decimal('0')
-                item_igst = (item_subtotal * tax_slab.igst_rate) / Decimal('100')
-                item_tax = item_igst
+                # Split IGST into CGST + SGST for display
+                item_tax = (item_subtotal * tax_slab.igst_rate) / Decimal('100')
+                item_cgst = item_tax / Decimal('2')
+                item_sgst = item_tax / Decimal('2')
             
             # Add to totals
             total_cgst += item_cgst
             total_sgst += item_sgst
-            total_igst += item_igst
             
-            # Store item breakdown
+            # Store item breakdown - always show CGST/SGST
             items_breakdown.append({
                 'product_id': product.id,
                 'product_name': product.name,
@@ -251,22 +250,22 @@ class TaxCalculator:
                 'price': float(price),
                 'subtotal': float(item_subtotal),
                 'tax_rate': float(tax_slab.rate),
-                'cgst_rate': float(tax_slab.cgst_rate) if is_intra_state else 0.0,
-                'sgst_rate': float(tax_slab.sgst_rate) if is_intra_state else 0.0,
-                'igst_rate': float(tax_slab.igst_rate) if not is_intra_state else 0.0,
+                'cgst_rate': float(tax_slab.cgst_rate) if is_intra_state else float(tax_slab.igst_rate / 2),
+                'sgst_rate': float(tax_slab.sgst_rate) if is_intra_state else float(tax_slab.igst_rate / 2),
+                'igst_rate': 0.0,
                 'cgst_amount': float(round(item_cgst, 2)),
                 'sgst_amount': float(round(item_sgst, 2)),
-                'igst_amount': float(round(item_igst, 2)),
+                'igst_amount': 0.0,
                 'tax_amount': float(round(item_tax, 2)),
             })
         
-        total_tax = total_cgst + total_sgst + total_igst
+        total_tax = total_cgst + total_sgst
         
         return {
-            'type': 'intra_state' if is_intra_state else 'inter_state',
+            'type': 'intra_state',  # Always intra_state for consistent CGST/SGST display
             'cgst': float(round(total_cgst, 2)),
             'sgst': float(round(total_sgst, 2)),
-            'igst': float(round(total_igst, 2)),
+            'igst': 0.0,
             'total_tax': float(round(total_tax, 2)),
             'items': items_breakdown
         }
