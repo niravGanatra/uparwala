@@ -55,8 +55,52 @@ const CheckoutPage = () => {
                 return false;
             }
         }
+        // Check if pincode is serviceable
+        if (!isServiceable) {
+            toast.error('We do not deliver to this location. Please use a different address.');
+            return false;
+        }
         return true;
     };
+
+    // Serviceability check state
+    const [isServiceable, setIsServiceable] = useState(true);
+    const [serviceabilityMessage, setServiceabilityMessage] = useState('');
+    const [checkingServiceability, setCheckingServiceability] = useState(false);
+
+    // Check serviceability when pincode changes
+    useEffect(() => {
+        const checkServiceability = async () => {
+            const pincode = shippingAddress.postal_code;
+            if (!pincode || pincode.length < 6) {
+                setIsServiceable(true);
+                setServiceabilityMessage('');
+                return;
+            }
+
+            setCheckingServiceability(true);
+            try {
+                const response = await api.get(`/orders/serviceability/check/${pincode}/`);
+                if (response.data.serviceable) {
+                    setIsServiceable(true);
+                    setServiceabilityMessage('✅ ' + response.data.message);
+                } else {
+                    setIsServiceable(false);
+                    setServiceabilityMessage('❌ ' + response.data.message);
+                }
+            } catch (error) {
+                console.error('Serviceability check failed:', error);
+                setIsServiceable(false);
+                setServiceabilityMessage('❌ Unable to verify delivery. Please try again.');
+            } finally {
+                setCheckingServiceability(false);
+            }
+        };
+
+        // Debounce the check
+        const timer = setTimeout(checkServiceability, 500);
+        return () => clearTimeout(timer);
+    }, [shippingAddress.postal_code]);
 
     const loadRazorpay = () => {
         return new Promise((resolve) => {
@@ -292,8 +336,14 @@ const CheckoutPage = () => {
                                             value={shippingAddress.postal_code}
                                             onChange={handleInputChange}
                                             placeholder="400001"
-                                            className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                                            maxLength={6}
+                                            className={`bg-slate-50 border-slate-200 focus:bg-white transition-colors ${!isServiceable && shippingAddress.postal_code?.length >= 6 ? 'border-red-500' : ''}`}
                                         />
+                                        {shippingAddress.postal_code?.length >= 6 && (
+                                            <p className={`text-sm font-medium ${isServiceable ? 'text-green-600' : 'text-red-600'}`}>
+                                                {checkingServiceability ? 'Checking...' : serviceabilityMessage}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -389,12 +439,12 @@ const CheckoutPage = () => {
                                 </div>
 
                                 <Button
-                                    className="w-full bg-orange-600 hover:bg-orange-700"
+                                    className={`w-full ${!isServiceable && shippingAddress.postal_code?.length >= 6 ? 'bg-slate-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}
                                     size="lg"
                                     onClick={handlePlaceOrder}
-                                    disabled={loading}
+                                    disabled={loading || checkingServiceability || (!isServiceable && shippingAddress.postal_code?.length >= 6)}
                                 >
-                                    {loading ? 'Processing...' : 'Place Order'}
+                                    {loading ? 'Processing...' : checkingServiceability ? 'Checking delivery...' : !isServiceable && shippingAddress.postal_code?.length >= 6 ? 'Delivery not available' : 'Place Order'}
                                 </Button>
 
                                 <p className="text-xs text-center text-muted-foreground">
