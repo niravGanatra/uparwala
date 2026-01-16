@@ -40,6 +40,42 @@ const CheckoutPage = () => {
         return cart.items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
     };
 
+    // Order summary with GST
+    const [orderSummary, setOrderSummary] = useState(null);
+    const [calculatingTotals, setCalculatingTotals] = useState(false);
+
+    // Calculate totals when pincode changes
+    useEffect(() => {
+        const fetchTotals = async () => {
+            if (!shippingAddress.postal_code || shippingAddress.postal_code.length < 6) {
+                setOrderSummary(null);
+                return;
+            }
+            if (!shippingAddress.state) {
+                return;
+            }
+
+            setCalculatingTotals(true);
+            try {
+                const response = await api.post('/payments/calculate-totals/', {
+                    state_code: shippingAddress.state,
+                    pincode: shippingAddress.postal_code,
+                    payment_mode: paymentMethod === 'cod' ? 'COD' : 'Prepaid'
+                });
+                setOrderSummary(response.data);
+            } catch (error) {
+                console.error('Failed to calculate totals:', error);
+                // Fall back to simple calculation
+                setOrderSummary(null);
+            } finally {
+                setCalculatingTotals(false);
+            }
+        };
+
+        const timer = setTimeout(fetchTotals, 500);
+        return () => clearTimeout(timer);
+    }, [shippingAddress.postal_code, shippingAddress.state, paymentMethod]);
+
     const handleInputChange = (e) => {
         setShippingAddress({
             ...shippingAddress,
@@ -426,15 +462,49 @@ const CheckoutPage = () => {
                                 <div className="border-t pt-4 space-y-2">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-muted-foreground">Subtotal</span>
-                                        <span>₹{calculateTotal().toFixed(2)}</span>
+                                        <span>₹{orderSummary ? Number(orderSummary.subtotal).toFixed(2) : calculateTotal().toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-muted-foreground">Shipping</span>
-                                        <span className="text-green-600 font-medium">Free</span>
+                                        <span className={orderSummary?.shipping?.free_shipping ? 'text-green-600 font-medium' : ''}>
+                                            {orderSummary?.shipping?.free_shipping ? 'Free' : orderSummary?.shipping ? `₹${Number(orderSummary.shipping.total_shipping).toFixed(2)}` : 'Free'}
+                                        </span>
                                     </div>
+                                    {orderSummary?.tax && (
+                                        <div className="border-t pt-2 space-y-1">
+                                            <div className="flex justify-between text-sm font-medium">
+                                                <span className="text-muted-foreground">Tax (GST)</span>
+                                                <span>₹{Number(orderSummary.tax_amount).toFixed(2)}</span>
+                                            </div>
+                                            <div className="ml-4 space-y-1 text-xs text-muted-foreground">
+                                                {orderSummary.tax.type === 'intra_state' ? (
+                                                    <>
+                                                        <div className="flex justify-between">
+                                                            <span>CGST</span>
+                                                            <span>₹{Number(orderSummary.tax.cgst).toFixed(2)}</span>
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <span>SGST</span>
+                                                            <span>₹{Number(orderSummary.tax.sgst).toFixed(2)}</span>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="flex justify-between">
+                                                        <span>IGST</span>
+                                                        <span>₹{Number(orderSummary.tax.igst).toFixed(2)}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {!orderSummary && shippingAddress.postal_code?.length >= 6 && calculatingTotals && (
+                                        <div className="flex justify-between text-sm text-muted-foreground">
+                                            <span>Calculating taxes...</span>
+                                        </div>
+                                    )}
                                     <div className="border-t pt-2 flex justify-between font-bold text-lg">
                                         <span>Total</span>
-                                        <span>₹{calculateTotal().toFixed(2)}</span>
+                                        <span>₹{orderSummary ? Number(orderSummary.total).toFixed(2) : calculateTotal().toFixed(2)}</span>
                                     </div>
                                 </div>
 
