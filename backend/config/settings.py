@@ -338,6 +338,23 @@ if os.getenv('CORS_ALLOWED_ORIGINS'):
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Allow all standard headers plus custom ones for file uploads
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_EXPOSE_HEADERS = [
+    'content-disposition',
+]
+
 # DRF Settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
