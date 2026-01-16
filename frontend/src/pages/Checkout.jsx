@@ -98,16 +98,58 @@ const Checkout = () => {
 
     useEffect(() => {
         // Trigger total calculation whenever address, gift options, payment method changes
-        // Reset order summary first to show loading state
-        if (selectedShippingAddress) {
-            setOrderSummary(null); // Clear previous to show loading
-            setCalculationError(null);
-            calculateTotals();
-        } else {
-            setOrderSummary(null);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedShippingAddress, giftData, paymentMethod]);
+        const doCalculation = async () => {
+            if (!selectedShippingAddress) {
+                setOrderSummary(null);
+                return;
+            }
+
+            const address = addresses.find(a => a.id === selectedShippingAddress);
+            if (!address) {
+                setOrderSummary(null);
+                return;
+            }
+
+            const stateCode = address.state_code || address.state;
+
+            console.log('Calculating totals for address:', {
+                addressId: selectedShippingAddress,
+                pincode: address.pincode,
+                stateCode: stateCode
+            });
+
+            try {
+                const payload = {
+                    state_code: stateCode,
+                    pincode: address.pincode,
+                    payment_mode: paymentMethod === 'cod' ? 'COD' : 'Prepaid'
+                };
+
+                if (selectedItemIds && selectedItemIds.length > 0) {
+                    payload.selected_item_ids = selectedItemIds;
+                }
+
+                if (giftData) {
+                    payload.gift_option_id = giftData.gift_option_id;
+                }
+
+                setCalculating(true);
+                setCalculationError(null);
+                setOrderSummary(null); // Clear previous
+
+                const response = await api.post('/payments/calculate-totals/', payload);
+                setOrderSummary(response.data);
+            } catch (error) {
+                console.error('Failed to calculate totals:', error);
+                setCalculationError(error.response?.data?.error || 'Failed to calculate order totals.');
+                setOrderSummary(null);
+            } finally {
+                setCalculating(false);
+            }
+        };
+
+        doCalculation();
+    }, [selectedShippingAddress, addresses, giftData, paymentMethod, selectedItemIds]);
 
     // Check serviceability when address is selected
     useEffect(() => {
