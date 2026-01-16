@@ -107,16 +107,22 @@ const Checkout = () => {
 
     // Check serviceability when address is selected
     useEffect(() => {
+        // Reset state immediately when address changes
+        setIsServiceable(true);
+        setServiceabilityMessage('');
+
+        if (!selectedShippingAddress) {
+            setCheckingServiceability(false);
+            return;
+        }
+
+        const address = addresses.find(a => a.id === selectedShippingAddress);
+        if (!address || !address.pincode) {
+            setCheckingServiceability(false);
+            return;
+        }
+
         const checkServiceability = async () => {
-            if (!selectedShippingAddress) {
-                setIsServiceable(true);
-                setServiceabilityMessage('');
-                return;
-            }
-
-            const address = addresses.find(a => a.id === selectedShippingAddress);
-            if (!address || !address.pincode) return;
-
             setCheckingServiceability(true);
             try {
                 const response = await api.get(`/orders/serviceability/check/${address.pincode}/`);
@@ -922,8 +928,8 @@ const Checkout = () => {
                     }}
                     disabled={!selectedShippingAddress || !isServiceable || checkingServiceability}
                     className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all mt-8 ${!isServiceable && selectedShippingAddress
-                            ? 'bg-red-400 text-white cursor-not-allowed'
-                            : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed'
+                        ? 'bg-red-400 text-white cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed'
                         }`}
                 >
                     {checkingServiceability ? 'Checking delivery...' : !isServiceable && selectedShippingAddress ? 'Delivery Not Available' : 'Continue to Payment'}
