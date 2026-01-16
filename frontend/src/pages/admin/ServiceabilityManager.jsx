@@ -85,7 +85,8 @@ const ServiceabilityManager = () => {
 
         try {
             const response = await api.post('/orders/admin/serviceable-areas/upload_csv/', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' },
+                timeout: 60000 // 60 seconds for file uploads
             });
             toast.success(response.data.message);
             fetchLocations();

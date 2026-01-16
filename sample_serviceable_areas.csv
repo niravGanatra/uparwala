@@ -1,0 +1,130 @@
+State,City,ZipCode,Area
+Gujarat,Ahmedabad,380001,Navrangpura
+Gujarat,Ahmedabad,380002,Relief Road
+Gujarat,Ahmedabad,380004,Kalupur
+Gujarat,Ahmedabad,380005,Dariapur
+Gujarat,Ahmedabad,380006,Shahpur
+Gujarat,Ahmedabad,380007,Raipur
+Gujarat,Ahmedabad,380008,Old City
+Gujarat,Ahmedabad,380009,Sabarmati
+Gujarat,Ahmedabad,380013,Naroda
+Gujarat,Ahmedabad,380015,Satellite
+Gujarat,Ahmedabad,380016,Bodakdev
+Gujarat,Ahmedabad,380054,Gota
+Gujarat,Ahmedabad,380058,Chandkheda
+Gujarat,Ahmedabad,380059,Motera
+Gujarat,Ahmedabad,380060,Tragad
+Gujarat,Surat,395001,Ring Road
+Gujarat,Surat,395002,Udhna
+Gujarat,Surat,395003,Varachha
+Gujarat,Surat,395004,Adajan
+Gujarat,Surat,395005,Athwa
+Gujarat,Surat,395006,Katargam
+Gujarat,Surat,395007,Rander
+Gujarat,Vadodara,390001,Alkapuri
+Gujarat,Vadodara,390002,Karelibaug
+Gujarat,Vadodara,390003,Gotri
+Gujarat,Vadodara,390004,Manjalpur
+Gujarat,Vadodara,390005,Waghodia Road
+Gujarat,Vadodara,390006,Fatehgunj
+Gujarat,Vadodara,390007,Nizampura
+Gujarat,Vadodara,390008,Race Course
+Gujarat,Rajkot,360001,Rajkot City
+Gujarat,Rajkot,360002,Kalavad Road
+Gujarat,Rajkot,360003,Mavdi
+Gujarat,Rajkot,360004,Yagnik Road
+Gujarat,Rajkot,360005,University Road
+Maharashtra,Mumbai,400001,Fort
+Maharashtra,Mumbai,400002,Kalbadevi
+Maharashtra,Mumbai,400003,Mandvi
+Maharashtra,Mumbai,400004,Girgaon
+Maharashtra,Mumbai,400005,Colaba
+Maharashtra,Mumbai,400006,Malabar Hill
+Maharashtra,Mumbai,400007,Grant Road
+Maharashtra,Mumbai,400008,Mumbai Central
+Maharashtra,Mumbai,400050,Bandra West
+Maharashtra,Mumbai,400051,Bandra East
+Maharashtra,Mumbai,400053,Andheri West
+Maharashtra,Mumbai,400058,Andheri East
+Maharashtra,Mumbai,400076,Powai
+Maharashtra,Mumbai,400093,Mulund
+Maharashtra,Pune,411001,Camp
+Maharashtra,Pune,411002,Kasba Peth
+Maharashtra,Pune,411004,Shivajinagar
+Maharashtra,Pune,411006,Deccan
+Maharashtra,Pune,411007,Shukrawar Peth
+Maharashtra,Pune,411014,Hadapsar
+Maharashtra,Pune,411021,Aundh
+Maharashtra,Pune,411027,Pimpri
+Maharashtra,Pune,411028,Chinchwad
+Maharashtra,Pune,411045,Wakad
+Delhi,New Delhi,110001,Connaught Place
+Delhi,New Delhi,110002,Lodhi Road
+Delhi,New Delhi,110003,Chanakyapuri
+Delhi,New Delhi,110005,Karol Bagh
+Delhi,New Delhi,110006,Rajendra Place
+Delhi,New Delhi,110007,Civil Lines
+Delhi,New Delhi,110008,Patel Nagar
+Delhi,New Delhi,110009,Daryaganj
+Delhi,New Delhi,110010,ITO
+Delhi,New Delhi,110011,Lajpat Nagar
+Delhi,New Delhi,110017,Hauz Khas
+Delhi,New Delhi,110019,Saket
+Delhi,New Delhi,110020,Okhla
+Delhi,New Delhi,110024,Defence Colony
+Delhi,New Delhi,110025,Kailash Colony
+Delhi,New Delhi,110029,Vasant Vihar
+Karnataka,Bangalore,560001,MG Road
+Karnataka,Bangalore,560002,Cunningham Road
+Karnataka,Bangalore,560003,Richmond Town
+Karnataka,Bangalore,560004,Vidhana Soudha
+Karnataka,Bangalore,560005,Fraser Town
+Karnataka,Bangalore,560008,Shivajinagar
+Karnataka,Bangalore,560010,Basavanagudi
+Karnataka,Bangalore,560011,Malleswaram
+Karnataka,Bangalore,560025,Jayanagar
+Karnataka,Bangalore,560034,Koramangala
+Karnataka,Bangalore,560037,BTM Layout
+Karnataka,Bangalore,560038,Indiranagar
+Karnataka,Bangalore,560066,Whitefield
+Karnataka,Bangalore,560068,Electronic City
+Karnataka,Bangalore,560076,HSR Layout
+Karnataka,Bangalore,560102,Marathahalli
+Tamil Nadu,Chennai,600001,George Town
+Tamil Nadu,Chennai,600002,Parrys
+Tamil Nadu,Chennai,600003,Park Town
+Tamil Nadu,Chennai,600004,Royapettah
+Tamil Nadu,Chennai,600005,Triplicane
+Tamil Nadu,Chennai,600006,Mylapore
+Tamil Nadu,Chennai,600008,Egmore
+Tamil Nadu,Chennai,600010,Kilpauk
+Tamil Nadu,Chennai,600017,T. Nagar
+Tamil Nadu,Chennai,600018,Adyar
+Tamil Nadu,Chennai,600020,Besant Nagar
+Tamil Nadu,Chennai,600028,Velachery
+Tamil Nadu,Chennai,600040,Anna Nagar
+Tamil Nadu,Chennai,600042,Vadapalani
+Telangana,Hyderabad,500001,Abids
+Telangana,Hyderabad,500003,Koti
+Telangana,Hyderabad,500004,Sultan Bazaar
+Telangana,Hyderabad,500016,Ameerpet
+Telangana,Hyderabad,500018,Secunderabad
+Telangana,Hyderabad,500020,Banjara Hills
+Telangana,Hyderabad,500032,Jubilee Hills
+Telangana,Hyderabad,500033,Madhapur
+Telangana,Hyderabad,500034,Gachibowli
+Telangana,Hyderabad,500081,Kondapur
+Telangana,Hyderabad,500084,Hitec City
+West Bengal,Kolkata,700001,BBD Bagh
+West Bengal,Kolkata,700002,Bowbazar
+West Bengal,Kolkata,700003,Fairlie Place
+West Bengal,Kolkata,700004,Burrabazar
+West Bengal,Kolkata,700006,Chandni Chowk
+West Bengal,Kolkata,700007,Jorasanko
+West Bengal,Kolkata,700016,Alipore
+West Bengal,Kolkata,700017,Kalighat
+West Bengal,Kolkata,700019,Ballygunge
+West Bengal,Kolkata,700020,Park Street
+West Bengal,Kolkata,700026,Gariahat
+West Bengal,Kolkata,700029,Saltlake
+West Bengal,Kolkata,700064,New Town
