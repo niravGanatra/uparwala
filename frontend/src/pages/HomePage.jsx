@@ -9,6 +9,7 @@ import { withRetry } from '../utils/retry';
 import RecentlyViewed from '../components/RecentlyViewed';
 import ProductRecommendations from '../components/ProductRecommendations';
 import ProductCard from '../components/ProductCard';
+import ServicePromoBanner from '../components/home/ServicePromoBanner';
 
 // Sanskrit Shlokas for loading screen
 const SANSKRIT_SHLOKAS = [
@@ -355,6 +356,9 @@ const HomePage = () => {
                     </motion.div>
                 </div>
             </section>
+
+            {/* Service Promo Banner - Value Break after Hero */}
+            <ServicePromoBanner />
 
             {/* Category Grid - Mobile Optimized */}
             <section className="py-8 md:py-12 bg-slate-50">
