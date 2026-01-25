@@ -28,10 +28,9 @@ const ServicesPage = () => {
         fetchServices();
     }, []);
 
-    const handleBookService = (slug) => {
-        // Navigate to booking page or open modal
-        // For now, let's navigate to a booking route we will create next
-        navigate(`/services/book/${slug}`);
+    const handleBookService = (service) => {
+        // Navigate to the new 3-step booking wizard with service implementation
+        navigate('/book-puja', { state: { selectedService: service } });
     };
 
     if (loading) return <SpiritualLoader message="Loading Sacred Services..." />;
@@ -130,7 +129,7 @@ const ServicesPage = () => {
                                 )}
 
                                 <Button
-                                    onClick={() => handleBookService(service.slug)}
+                                    onClick={() => handleBookService(service)}
                                     className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-medium py-6 rounded-xl shadow-md hover:shadow-lg transition-all"
                                 >
                                     Book Now

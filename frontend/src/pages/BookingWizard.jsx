@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookingProvider, useBooking } from '../context/BookingContext';
 import PoojaSelection from '../components/booking/PoojaSelection';
@@ -28,10 +30,10 @@ const ProgressBar = () => {
                         <div key={s.number} className="flex flex-col items-center bg-slate-50 px-2">
                             <div
                                 className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isCompleted
-                                        ? 'bg-green-500 border-green-500 text-white'
-                                        : isCurrent
-                                            ? 'bg-orange-600 border-orange-600 text-white shadow-lg scale-110'
-                                            : 'bg-white border-slate-300 text-slate-400'
+                                    ? 'bg-green-500 border-green-500 text-white'
+                                    : isCurrent
+                                        ? 'bg-orange-600 border-orange-600 text-white shadow-lg scale-110'
+                                        : 'bg-white border-slate-300 text-slate-400'
                                     }`}
                             >
                                 {isCompleted ? <Check className="w-6 h-6" /> : <span className="font-bold">{s.number}</span>}
@@ -80,6 +82,19 @@ const WizardContent = () => {
     );
 };
 
+const WizardInitializer = () => {
+    const { state } = useLocation();
+    const { selectPooja, bookingData } = useBooking();
+
+    useEffect(() => {
+        if (state?.selectedService && !bookingData.pooja) {
+            selectPooja(state.selectedService);
+        }
+    }, [state, selectPooja, bookingData.pooja]);
+
+    return null;
+};
+
 const BookingWizard = () => {
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
@@ -90,6 +105,7 @@ const BookingWizard = () => {
             </div>
 
             <BookingProvider>
+                <WizardInitializer />
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
                     <div className="bg-white rounded-3xl shadow-xl p-6 md:p-10 min-h-[600px]">
                         <ProgressBar />
