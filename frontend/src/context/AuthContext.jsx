@@ -43,10 +43,17 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (username, password) => {
-        // Backend key exchange (sets cookies)
+        // Backend key exchange
         const data = await apiLogin(username, password);
-        // data might contain tokens, but we ignore them and fetch user profile
-        // forcing a profile fetch to verify the cookie was actually set
+
+        // Store tokens if present
+        if (data.access) {
+            localStorage.setItem('access_token', data.access);
+        }
+        if (data.refresh) {
+            localStorage.setItem('refresh_token', data.refresh);
+        }
+
         const userData = await getCurrentUser();
         setUser(userData);
         return userData;
@@ -54,6 +61,8 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         await apiLogout();
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         setUser(null);
         window.location.href = '/';
     };
