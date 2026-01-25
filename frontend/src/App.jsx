@@ -17,6 +17,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import ProductListingPage from './pages/ProductListingPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CategoryPage from './pages/CategoryPage';
+import ServicesPage from './pages/ServicesPage';
+import BookingPage from './pages/BookingPage';
 
 // Cart and Checkout
 import CartPage from './pages/CartPage';
@@ -128,6 +130,10 @@ function App() {
 
                 {/* Cart & Checkout */}
                 <Route path="cart" element={<CartPage />} />
+
+                {/* Services */}
+                <Route path="services" element={<ServicesPage />} />
+                <Route path="services/book/:slug" element={<BookingPage />} />
 
                 {/* CMS Pages */}
                 <Route path="about-us" element={<AboutPage />} />
