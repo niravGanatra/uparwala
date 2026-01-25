@@ -2,7 +2,13 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SpiritualLoader from './SpiritualLoader';
 
-export const ProtectedRoute = ({ children, requireVendor = false, requireAdmin = false }) => {
+export const ProtectedRoute = ({
+    children,
+    requireVendor = false,
+    requireAdmin = false,
+    requireManager = false,
+    requireProvider = false
+}) => {
     const { user, loading } = useAuth();
 
     if (loading) {
@@ -18,6 +24,14 @@ export const ProtectedRoute = ({ children, requireVendor = false, requireAdmin =
     }
 
     if (requireAdmin && !user.is_staff && !user.is_superuser) {
+        return <Navigate to="/" replace />;
+    }
+
+    if (requireManager && !user.is_manager && !user.is_superuser) {
+        return <Navigate to="/" replace />;
+    }
+
+    if (requireProvider && !user.is_provider) {
         return <Navigate to="/" replace />;
     }
 

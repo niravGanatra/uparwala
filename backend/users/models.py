@@ -7,6 +7,7 @@ class User(AbstractUser):
     address = models.TextField(blank=True)
     is_vendor = models.BooleanField(default=False)
     is_manager = models.BooleanField(default=False, help_text="Manager role - can only add/approve vendors")
+    is_provider = models.BooleanField(default=False, help_text="Pandit/Service Provider role")
     
     # Profile enhancements
     date_of_birth = models.DateField(null=True, blank=True, help_text="Date of birth")

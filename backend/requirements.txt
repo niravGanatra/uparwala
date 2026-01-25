@@ -53,4 +53,9 @@ boto3==1.42.7
 twilio==9.9.0
 python-dotenv==1.0.1
 resend==2.19.0
-resend==2.19.0
+# Django Channels for WebSocket support
+channels==4.0.0
+channels-redis==4.2.0
+daphne==4.1.0
+whitenoise==6.7.0
+dj-database-url==2.3.0

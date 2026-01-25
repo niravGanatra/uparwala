@@ -103,6 +103,10 @@ INSTALLED_APPS = [
     'notifications',
     'homepage',
     'promotions',  # New app for coupons and promotions
+    'services',   # Pandit Booking & Tracking module
+    
+    # Channels for WebSocket support
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -137,7 +141,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
+# Django Channels Configuration for WebSocket support
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -470,4 +484,5 @@ REST_AUTH = {
     'JWT_AUTH_SECURE': not DEBUG,  # False for local, True for prod
     'PASSWORD_RESET_SERIALIZER': 'users.serializers.CustomPasswordResetSerializer',
     'REGISTER_SERIALIZER': 'users.serializers.RegisterSerializer',
+    'USER_DETAILS_SERIALIZER': 'users.serializers.UserSerializer',  # Include is_provider in login response
 }

@@ -26,6 +26,10 @@ const LoginPage = () => {
             // Redirect based on user role
             if (user.is_staff || user.is_superuser) {
                 navigate('/admin/dashboard');
+            } else if (user.is_manager) {
+                navigate('/manager/dashboard');
+            } else if (user.is_provider) {
+                navigate('/pandit/dashboard');
             } else if (user.is_vendor) {
                 navigate('/vendor/dashboard');
             } else {
@@ -55,6 +59,10 @@ const LoginPage = () => {
                 const user = response.data.user;
                 if (user.is_staff || user.is_superuser) {
                     window.location.href = '/admin/dashboard';
+                } else if (user.is_manager) {
+                    window.location.href = '/manager/dashboard';
+                } else if (user.is_provider) {
+                    window.location.href = '/pandit/dashboard';
                 } else if (user.is_vendor) {
                     window.location.href = '/vendor/dashboard';
                 } else {

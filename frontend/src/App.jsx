@@ -94,6 +94,9 @@ import ScrollToTop from './components/ScrollToTop';
 import ManagerLayout from './layouts/ManagerLayout';
 import ManagerDashboard from './pages/ManagerDashboard';
 
+// Pandit (Service Provider) Pages
+import PanditDashboard from './pages/pandit/PanditDashboard';
+
 function App() {
   // Track UTM parameters on mount (Phase 8)
   useEffect(() => {
@@ -175,8 +178,14 @@ function App() {
               {/* Manager Routes (Limited access - vendor management only) */}
               <Route path="/manager" element={<ManagerLayout />}>
                 <Route index element={<ManagerDashboard />} />
+                <Route path="dashboard" element={<ManagerDashboard />} />
                 <Route path="vendors" element={<AdminVendors />} />
                 <Route path="vendor-applications" element={<VendorApplications />} />
+              </Route>
+
+              {/* Pandit (Service Provider) Routes */}
+              <Route path="/pandit" element={<ProtectedRoute />}>
+                <Route path="dashboard" element={<PanditDashboard />} />
               </Route>
 
               {/* Admin Routes (Old Structure + New Dashboard) */}

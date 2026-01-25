@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/promotions/', include('promotions.urls')),
     path('api/analytics/', include('analytics.urls')),  # Phase 7
     path('api/marketing/', include('marketing.urls')),  # Phase 8
+    path('api/services/', include('services.urls')),   # Pandit Booking & Tracking
     
     # Webhooks
     path('api/webhooks/', include('orders.shiprocket_urls')),
