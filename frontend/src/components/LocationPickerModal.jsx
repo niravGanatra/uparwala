@@ -3,11 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Navigation, Search, Star, Clock, ChevronRight } from 'lucide-react';
 import { useLocation } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
+import { useGoogleMapsLoader } from '../hooks/useGoogleMapsLoader';
 import api from '../services/api';
 
 const LocationPickerModal = () => {
     const { isLocationModalOpen, closeLocationModal, updateLocation } = useLocation();
     const { user } = useAuth();
+    const { isLoaded: isGoogleMapsLoaded, loadError: googleMapsError } = useGoogleMapsLoader();
+
     const [activeTab, setActiveTab] = useState('new');
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -30,15 +33,15 @@ const LocationPickerModal = () => {
         }
     }, [user, isLocationModalOpen]);
 
-    // Initialize Google Places services
+    // Initialize Google Places services when API is loaded
     useEffect(() => {
-        if (window.google && window.google.maps && window.google.maps.places) {
+        if (isGoogleMapsLoaded && window.google?.maps?.places) {
             autocompleteService.current = new window.google.maps.places.AutocompleteService();
             placesService.current = new window.google.maps.places.PlacesService(
                 document.createElement('div')
             );
         }
-    }, [isLocationModalOpen]);
+    }, [isGoogleMapsLoaded, isLocationModalOpen]);
 
     const fetchSavedAddresses = async () => {
         try {
@@ -267,8 +270,8 @@ const LocationPickerModal = () => {
                             <button
                                 onClick={() => setActiveTab('saved')}
                                 className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'saved'
-                                        ? 'text-orange-600 border-b-2 border-orange-600'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                    ? 'text-orange-600 border-b-2 border-orange-600'
+                                    : 'text-slate-500 hover:text-slate-700'
                                     }`}
                             >
                                 Saved Addresses
@@ -276,8 +279,8 @@ const LocationPickerModal = () => {
                             <button
                                 onClick={() => setActiveTab('new')}
                                 className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'new'
-                                        ? 'text-orange-600 border-b-2 border-orange-600'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                    ? 'text-orange-600 border-b-2 border-orange-600'
+                                    : 'text-slate-500 hover:text-slate-700'
                                     }`}
                             >
                                 New Location
