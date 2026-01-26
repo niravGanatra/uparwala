@@ -6,12 +6,37 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import NotifyMeModal from './NotifyMeModal';
+import { useLocation } from '../context/LocationContext';
+import deliveryService from '../services/deliveryService';
+import { Truck } from 'lucide-react';
 
 const ProductCard = ({ product }) => {
     const navigate = useNavigate();
     const { addToCart, loading: cartLoading } = useCart();
     const { user } = useAuth();
     const [showNotifyModal, setShowNotifyModal] = useState(false);
+
+    // Delivery Estimate
+    const { location } = useLocation();
+    const [deliveryEstimate, setDeliveryEstimate] = useState(null);
+
+    useEffect(() => {
+        let isMounted = true;
+        const checkDelivery = async () => {
+            if (location?.pincode && product.id) {
+                try {
+                    const data = await deliveryService.checkEstimate(location.pincode, product.id);
+                    if (isMounted && data.success) {
+                        setDeliveryEstimate(data);
+                    }
+                } catch (err) {
+                    // Fail silently for cards to avoid clutter
+                }
+            }
+        };
+        checkDelivery();
+        return () => { isMounted = false; };
+    }, [location?.pincode, product.id]);
 
     const isOutOfStock = product.stock_status === 'outofstock' || (product.stock !== undefined && product.stock === 0);
 
@@ -143,6 +168,16 @@ const ProductCard = ({ product }) => {
                                 </span>
                             )}
                         </div>
+
+                        {/* Delivery Estimate */}
+                        {deliveryEstimate && (
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 px-2 py-1.5 rounded mb-3 w-fit">
+                                <Truck className="w-3.5 h-3.5" />
+                                <span>
+                                    Get it by {new Date(deliveryEstimate.estimated_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                </span>
+                            </div>
+                        )}
 
                         {/* Dual Action Buttons - Vertically Stacked */}
                         <div className="mt-auto">
