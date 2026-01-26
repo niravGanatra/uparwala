@@ -12,6 +12,8 @@ import ProductReviews from '../components/ProductReviews';
 import ProductRecommendations from '../components/ProductRecommendations';
 import NotifyMeModal from '../components/NotifyMeModal';
 import SpiritualLoader from '../components/SpiritualLoader';
+import { useLocation } from '../context/LocationContext';
+import deliveryService from '../services/deliveryService';
 
 import ImageGallery from '../components/ImageGallery';
 
@@ -27,6 +29,53 @@ const ProductDetailPage = () => {
     const { user } = useAuth();
     const { addToCart, loading: cartLoading } = useCart();
     const { trackEvent } = useAnalytics();
+
+    // Delivery Estimate State
+    const { location } = useLocation();
+    const [pincode, setPincode] = useState('');
+    const [deliveryEstimate, setDeliveryEstimate] = useState(null);
+    const [deliveryError, setDeliveryError] = useState(null);
+    const [checkingDelivery, setCheckingDelivery] = useState(false);
+
+    // Auto-fill pincode from user location
+    useEffect(() => {
+        if (location?.pincode) {
+            setPincode(location.pincode);
+        }
+    }, [location]);
+
+    // Check delivery handler
+    const checkDelivery = async () => {
+        if (!pincode || pincode.length !== 6) return;
+
+        setCheckingDelivery(true);
+        setDeliveryError(null);
+        setDeliveryEstimate(null);
+
+        try {
+            const data = await deliveryService.checkEstimate(pincode, product.id);
+            if (data.success) {
+                setDeliveryEstimate({
+                    estimated_date: data.estimated_date,
+                    days: data.days
+                });
+            } else {
+                setDeliveryError(data.error || 'Delivery not available for this pincode');
+            }
+        } catch (error) {
+            setDeliveryError('Could not fetch delivery estimate');
+        } finally {
+            setCheckingDelivery(false);
+        }
+    };
+
+    // Auto-check on load if location exists
+    useEffect(() => {
+        if (product && location?.pincode) {
+            checkDelivery();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [product, location?.pincode]);
 
     useEffect(() => {
         // ... existing fetch logic ...
@@ -204,48 +253,66 @@ const ProductDetailPage = () => {
                             </div>
                         </div>
 
-                        {/* Pincode Checker - Mobile Optimized */}
+                        {/* Delivery Estimate - Delhivery Integration */}
                         <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
-                            <h3 className="font-semibold mb-3 text-base">Delivery Availability</h3>
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <div className="flex-1">
-                                    <input
-                                        type="text"
-                                        placeholder="Enter Pincode"
-                                        className="flex h-14 w-full rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500"
-                                        maxLength={6}
-                                        id="pincode-input"
-                                    />
-                                    <p id="pincode-message" className="text-sm mt-2"></p>
+                            <h3 className="font-semibold mb-3 text-base">Delivery Estimate</h3>
+                            <div className="flex flex-col gap-3">
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <div className="flex-1 relative">
+                                        <input
+                                            type="text"
+                                            placeholder="Enter Pincode"
+                                            className="flex h-12 w-full rounded-lg border-2 border-slate-300 bg-white px-4 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 transition-all"
+                                            maxLength={6}
+                                            value={pincode}
+                                            onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                                        />
+                                        {/* Auto-detected location indicator */}
+                                        {location?.pincode && pincode === location.pincode && (
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded">
+                                                My Location
+                                            </span>
+                                        )}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="lg"
+                                        className="min-w-[100px]"
+                                        onClick={checkDelivery}
+                                        disabled={checkingDelivery || pincode.length !== 6}
+                                    >
+                                        {checkingDelivery ? 'Checking...' : 'Check'}
+                                    </Button>
                                 </div>
-                                <Button
-                                    variant="outline"
-                                    size="lg"
-                                    className="w-full sm:w-auto sm:min-w-[100px]"
-                                    onClick={async () => {
-                                        const code = document.getElementById('pincode-input').value;
-                                        const msgEl = document.getElementById('pincode-message');
-                                        if (!code || code.length < 6) {
-                                            toast.error("Please enter valid pincode");
-                                            return;
-                                        }
-                                        try {
-                                            const res = await api.get(`/products/${product.slug}/check-pincode/?pincode=${code}`);
-                                            if (res.data.available) {
-                                                msgEl.textContent = "✅ " + res.data.message;
-                                                msgEl.className = "text-sm mt-2 text-green-600 font-medium";
-                                            } else {
-                                                msgEl.textContent = "❌ " + res.data.message;
-                                                msgEl.className = "text-sm mt-2 text-red-600 font-medium";
-                                            }
-                                        } catch (err) {
-                                            msgEl.textContent = "Error checking availability";
-                                            msgEl.className = "text-sm mt-2 text-red-600";
-                                        }
-                                    }}
-                                >
-                                    Check
-                                </Button>
+
+                                {/* Estimate Result */}
+                                {deliveryEstimate && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-3"
+                                    >
+                                        <div className="bg-green-100 p-2 rounded-full">
+                                            <svg className="w-5 h-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-green-800">
+                                                Delivery by {new Date(deliveryEstimate.estimated_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                            </p>
+                                            <p className="text-sm text-green-700">
+                                                Expected in {deliveryEstimate.days} days
+                                            </p>
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                {deliveryError && (
+                                    <p className="text-sm text-red-600 font-medium px-1">
+                                        ❌ {deliveryError}
+                                    </p>
+                                )}
                             </div>
                         </div>
 

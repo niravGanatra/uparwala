@@ -261,3 +261,56 @@ def register_vendor_warehouse(request, vendor_id):
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def check_delivery_estimate(request):
+    """
+    Check estimated delivery date for a product to a pincode.
+    Query Params: pincode, product_id
+    """
+    pincode = request.query_params.get('pincode')
+    product_id = request.query_params.get('product_id')
+    
+    if not pincode or not product_id:
+        return Response(
+            {'error': 'pincode and product_id are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        
+    try:
+        from products.models import Product
+        product = get_object_or_404(Product, id=product_id)
+        vendor = product.vendor
+        
+        # Get vendor's pickup pincode
+        # Ideally this should be from vendor.shiprocket_pickup_location_name or address
+        # For now, we use vendor.zip_code
+        origin_pincode = vendor.zip_code
+        
+        if not origin_pincode:
+            # Fallback to default if vendor has no pincode (shouldn't happen)
+            return Response(
+                {'error': 'Vendor location not available'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        service = DelhiveryService()
+        result = service.get_delivery_estimate(origin_pincode, pincode)
+        
+        if result.get('success'):
+            return Response(result)
+        else:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+            
+    except Exception as e:
+        logger.error(f"Delivery estimate failed: {e}")
+        return Response(
+            {'error': 'Could not fetch delivery estimate'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

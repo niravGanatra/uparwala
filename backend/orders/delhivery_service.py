@@ -579,12 +579,63 @@ class DelhiveryService:
                     'error': f'API error: {response.status_code}'
                 }
                 
-        except requests.RequestException as e:
-            logger.error(f"Delhivery rate calculation failed: {e}")
-            return {
-                'success': False,
-                'error': str(e)
             }
+
+    def get_delivery_estimate(self, origin_pincode: str, destination_pincode: str) -> dict:
+        """
+        Get estimated delivery date between two pincodes.
+        Uses the calculate rates API which returns EDD.
+        """
+        # Reuse rate calculation logic as it returns the date too
+        # Defaulting to 0.5kg Prepaid for estimation
+        rate_data = self.calculate_shipping_rate(
+            origin_pincode=origin_pincode,
+            destination_pincode=destination_pincode,
+            weight=0.5,
+            payment_mode='Prepaid'
+        )
+        
+        if rate_data.get('success'):
+            raw = rate_data.get('raw_response', {})
+            # Delhivery API returns 'date' or 'etd' usually
+            # Example response: [{"date":"2023-10-25T00:00:00", ...}]
+            
+            edd = raw.get('date') or raw.get('etd')
+            
+            if edd:
+                # Calculate days from now
+                try:
+                    from django.utils import timezone
+                    import datetime
+                    
+                    # Parse date (handle ISO or YYYY-MM-DD)
+                    if 'T' in edd:
+                        estimated_date = timezone.datetime.fromisoformat(edd).date()
+                    else:
+                        estimated_date = timezone.datetime.strptime(edd, "%Y-%m-%d").date()
+                        
+                    today = timezone.now().date()
+                    days = (estimated_date - today).days
+                    
+                    return {
+                        'success': True,
+                        'estimated_date': estimated_date.strftime('%Y-%m-%d'),
+                        'days': max(1, days)
+                    }
+                except Exception as e:
+                    logger.warning(f"Failed to parse EDD date {edd}: {e}")
+            
+            # Fallback if no specific date but success (rare)
+            return {
+                'success': True,
+                'days': 3, # Fallback assumption
+                'estimated_date': None
+            }
+            
+        return {
+            'success': False,
+            'error': rate_data.get('error')
+        }
 
     def check_pincode_serviceability(self, pincode: str) -> dict:
         """

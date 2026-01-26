@@ -13,4 +13,7 @@ urlpatterns = [
     
     # Vendor warehouse registration
     path('warehouse/<int:vendor_id>/register/', delhivery_views.register_vendor_warehouse, name='delhivery-register-warehouse'),
+    
+    # Delivery Estimate
+    path('check/', delhivery_views.check_delivery_estimate, name='delhivery-check'),
 ]
