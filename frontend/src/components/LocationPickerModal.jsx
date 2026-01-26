@@ -28,7 +28,7 @@ const LocationPickerModal = () => {
     const fetchSavedAddresses = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/api/users/addresses/');
+            const response = await api.get('/users/addresses/');
             setSavedAddresses(response.data || []);
         } catch (error) {
             console.error('Failed to fetch addresses:', error);

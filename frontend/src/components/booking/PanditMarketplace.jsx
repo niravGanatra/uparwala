@@ -120,13 +120,13 @@ const PanditMarketplace = () => {
                 // Include offline pandits for demo
                 params.append('online_only', 'false');
 
-                const response = await api.get(`/api/services/pandits/search/?${params.toString()}`);
+                const response = await api.get(`/services/pandits/search/?${params.toString()}`);
                 setPandits(response.data.results || []);
             } catch (error) {
                 console.error('Failed to fetch pandits:', error);
                 // Fallback to all verified pandits
                 try {
-                    const fallbackResponse = await api.get('/api/services/pandits/');
+                    const fallbackResponse = await api.get('/services/pandits/');
                     setPandits(fallbackResponse.data || []);
                 } catch (e) {
                     setPandits([]);
