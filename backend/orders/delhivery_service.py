@@ -579,6 +579,11 @@ class DelhiveryService:
                     'error': f'API error: {response.status_code}'
                 }
                 
+        except requests.RequestException as e:
+            logger.error(f"Delhivery rate calculation failed: {e}")
+            return {
+                'success': False,
+                'error': str(e)
             }
 
     def get_delivery_estimate(self, origin_pincode: str, destination_pincode: str) -> dict:
