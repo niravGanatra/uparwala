@@ -341,6 +341,7 @@ CORS_ALLOWED_ORIGINS = [
     clean_cors_origin(os.getenv('FRONTEND_URL', 'http://localhost:5173')),
     "https://uparwala.in",
     "https://www.uparwala.in",
+    "http://127.0.0.1:5173",
 ]
 
 # Allow adding more origins via comma-separated env var
