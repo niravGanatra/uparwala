@@ -1,15 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Navigation, Search, Star, Clock, ChevronRight } from 'lucide-react';
+import { X, MapPin, Navigation, ChevronRight, Loader2 } from 'lucide-react';
 import { useLocation } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
-import { useGoogleMapsLoader } from '../hooks/useGoogleMapsLoader';
+import MapplsAddressSearch from './MapplsAddressSearch';
 import api from '../services/api';
 
 const LocationPickerModal = () => {
     const { isLocationModalOpen, closeLocationModal, updateLocation } = useLocation();
     const { user } = useAuth();
-    const { isLoaded: isGoogleMapsLoaded, loadError: googleMapsError } = useGoogleMapsLoader();
 
     const [activeTab, setActiveTab] = useState('new');
     const [savedAddresses, setSavedAddresses] = useState([]);
@@ -19,29 +18,12 @@ const LocationPickerModal = () => {
     const [pincode, setPincode] = useState('');
     const [pincodeError, setPincodeError] = useState('');
 
-    // Google Places Autocomplete
-    const [searchQuery, setSearchQuery] = useState('');
-    const [suggestions, setSuggestions] = useState([]);
-    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-    const autocompleteService = useRef(null);
-    const placesService = useRef(null);
-
     // Fetch saved addresses for logged-in users
     useEffect(() => {
         if (user && isLocationModalOpen) {
             fetchSavedAddresses();
         }
     }, [user, isLocationModalOpen]);
-
-    // Initialize Google Places services when API is loaded
-    useEffect(() => {
-        if (isGoogleMapsLoaded && window.google?.maps?.places) {
-            autocompleteService.current = new window.google.maps.places.AutocompleteService();
-            placesService.current = new window.google.maps.places.PlacesService(
-                document.createElement('div')
-            );
-        }
-    }, [isGoogleMapsLoaded, isLocationModalOpen]);
 
     const fetchSavedAddresses = async () => {
         try {
@@ -83,81 +65,22 @@ const LocationPickerModal = () => {
         });
     };
 
-    const handleSearchChange = async (query) => {
-        setSearchQuery(query);
-        if (!query || query.length < 3) {
-            setSuggestions([]);
-            return;
-        }
+    // Handle Mappls address selection
+    const handleMapplsSelect = (normalizedPlace) => {
+        if (!normalizedPlace) return;
 
-        if (!autocompleteService.current) {
-            console.warn('Google Places API not loaded');
-            return;
-        }
-
-        setLoadingSuggestions(true);
-        try {
-            autocompleteService.current.getPlacePredictions(
-                {
-                    input: query,
-                    componentRestrictions: { country: 'in' },
-                    types: ['geocode']
-                },
-                (predictions, status) => {
-                    if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-                        setSuggestions(predictions);
-                    } else {
-                        setSuggestions([]);
-                    }
-                    setLoadingSuggestions(false);
-                }
-            );
-        } catch (error) {
-            console.error('Autocomplete error:', error);
-            setLoadingSuggestions(false);
-        }
+        updateLocation({
+            lat: normalizedPlace.lat,
+            lng: normalizedPlace.lng,
+            pincode: normalizedPlace.pincode || '',
+            address: normalizedPlace.formattedAddress || normalizedPlace.address || '',
+            city: normalizedPlace.city || '',
+            state: normalizedPlace.state || '',
+            placeId: normalizedPlace.placeId // Mappls eLoc
+        });
     };
 
-    const handleSuggestionSelect = (suggestion) => {
-        if (!placesService.current) return;
-
-        placesService.current.getDetails(
-            {
-                placeId: suggestion.place_id,
-                fields: ['geometry', 'address_components', 'formatted_address']
-            },
-            (place, status) => {
-                if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
-                    // Extract pincode from address components
-                    let pincode = '';
-                    let city = '';
-                    let state = '';
-
-                    place.address_components?.forEach(component => {
-                        if (component.types.includes('postal_code')) {
-                            pincode = component.long_name;
-                        }
-                        if (component.types.includes('locality')) {
-                            city = component.long_name;
-                        }
-                        if (component.types.includes('administrative_area_level_1')) {
-                            state = component.long_name;
-                        }
-                    });
-
-                    updateLocation({
-                        lat: place.geometry.location.lat(),
-                        lng: place.geometry.location.lng(),
-                        pincode: pincode,
-                        address: place.formatted_address,
-                        city: city,
-                        state: state
-                    });
-                }
-            }
-        );
-    };
-
+    // Handle "Use Current Location" - browser geolocation
     const handleUseCurrentLocation = () => {
         if (!navigator.geolocation) {
             alert('Geolocation is not supported by your browser');
@@ -169,54 +92,17 @@ const LocationPickerModal = () => {
             async (position) => {
                 const { latitude, longitude } = position.coords;
 
-                // Reverse geocode to get address
-                try {
-                    const geocoder = new window.google.maps.Geocoder();
-                    geocoder.geocode(
-                        { location: { lat: latitude, lng: longitude } },
-                        (results, status) => {
-                            if (status === 'OK' && results[0]) {
-                                let pincode = '';
-                                let city = '';
-                                let state = '';
-
-                                results[0].address_components?.forEach(component => {
-                                    if (component.types.includes('postal_code')) {
-                                        pincode = component.long_name;
-                                    }
-                                    if (component.types.includes('locality')) {
-                                        city = component.long_name;
-                                    }
-                                    if (component.types.includes('administrative_area_level_1')) {
-                                        state = component.long_name;
-                                    }
-                                });
-
-                                updateLocation({
-                                    lat: latitude,
-                                    lng: longitude,
-                                    pincode: pincode,
-                                    address: results[0].formatted_address,
-                                    city: city,
-                                    state: state
-                                });
-                            }
-                            setLoading(false);
-                        }
-                    );
-                } catch (error) {
-                    console.error('Geocoding error:', error);
-                    // Fallback: use coordinates without address
-                    updateLocation({
-                        lat: latitude,
-                        lng: longitude,
-                        pincode: '',
-                        address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
-                        city: null,
-                        state: null
-                    });
-                    setLoading(false);
-                }
+                // For now, just use coordinates without reverse geocoding
+                // Mappls reverse geocoding can be added later
+                updateLocation({
+                    lat: latitude,
+                    lng: longitude,
+                    pincode: '',
+                    address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+                    city: null,
+                    state: null
+                });
+                setLoading(false);
             },
             (error) => {
                 console.error('Geolocation error:', error);
@@ -294,7 +180,10 @@ const LocationPickerModal = () => {
                         {activeTab === 'saved' && user && (
                             <div className="space-y-3">
                                 {loading ? (
-                                    <div className="text-center py-8 text-slate-400">Loading...</div>
+                                    <div className="text-center py-8 text-slate-400">
+                                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                                        Loading...
+                                    </div>
                                 ) : savedAddresses.length === 0 ? (
                                     <div className="text-center py-8 text-slate-400">
                                         <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -339,7 +228,11 @@ const LocationPickerModal = () => {
                                     disabled={loading}
                                     className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 hover:bg-orange-100 transition-colors text-orange-700 disabled:opacity-50"
                                 >
-                                    <Navigation className="w-5 h-5" />
+                                    {loading ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <Navigation className="w-5 h-5" />
+                                    )}
                                     <span className="font-medium">
                                         {loading ? 'Getting location...' : 'Use my current location'}
                                     </span>
@@ -351,36 +244,15 @@ const LocationPickerModal = () => {
                                     <div className="flex-1 border-t border-slate-200" />
                                 </div>
 
-                                {/* Search Box (Google Places) */}
+                                {/* Mappls Address Search */}
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2">
                                         Search for an area, street name...
                                     </label>
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                        <input
-                                            type="text"
-                                            value={searchQuery}
-                                            onChange={(e) => handleSearchChange(e.target.value)}
-                                            placeholder="e.g. Andheri West, Mumbai"
-                                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
-                                        />
-                                    </div>
-
-                                    {/* Suggestions Dropdown */}
-                                    {suggestions.length > 0 && (
-                                        <div className="mt-2 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                                            {suggestions.map((suggestion) => (
-                                                <button
-                                                    key={suggestion.place_id}
-                                                    onClick={() => handleSuggestionSelect(suggestion)}
-                                                    className="w-full p-3 text-left hover:bg-orange-50 border-b border-slate-100 last:border-b-0"
-                                                >
-                                                    <p className="text-sm text-slate-700">{suggestion.description}</p>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
+                                    <MapplsAddressSearch
+                                        onSelect={handleMapplsSelect}
+                                        placeholder="e.g. Andheri West, Mumbai"
+                                    />
                                 </div>
 
                                 <div className="relative flex items-center">
