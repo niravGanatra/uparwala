@@ -104,6 +104,16 @@ class Address(models.Model):
     pincode = models.CharField(max_length=10)
     country = models.CharField(max_length=100, default='India')
     
+    # Geo-location for distance-based filtering
+    latitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True,
+        help_text="Latitude coordinate for location-based services"
+    )
+    longitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True,
+        help_text="Longitude coordinate for location-based services"
+    )
+    
     # Preferences
     is_default = models.BooleanField(default=False)
     

@@ -10,17 +10,20 @@ from .views import (
     BookingReviewCreateView,
     PanditDashboardView,
 )
+from .search_views import PanditSearchViewSet
 
 router = DefaultRouter()
 router.register('services', ServiceViewSet, basename='services')
 router.register('pandits', PanditProfileViewSet, basename='pandits')
 router.register('kyc-documents', KYCDocumentViewSet, basename='kyc-documents')
 router.register('bookings', ServiceBookingViewSet, basename='bookings')
+router.register('pandits/search', PanditSearchViewSet, basename='pandit-location-search')
 
 urlpatterns = [
     path('', include(router.urls)),
     path('pandit/availability/', PanditAvailabilityView.as_view(), name='pandit-availability'),
     path('pandit/dashboard/', PanditDashboardView.as_view(), name='pandit-dashboard'),
-    path('pandit/search/', PanditSearchView.as_view(), name='pandit-search'),
+    path('pandit/search/', PanditSearchView.as_view(), name='pandit-search'),  # Legacy
     path('reviews/', BookingReviewCreateView.as_view(), name='booking-review-create'),
 ]
+

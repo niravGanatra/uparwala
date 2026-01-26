@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { Button } from '../components/ui/button';
 import api from '../services/api';
 import Footer from '../components/Footer';
+import LocationHeader from '../components/LocationHeader';
 
 const MainLayout = () => {
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -60,6 +61,11 @@ const MainLayout = () => {
                         >
                             Uparwala
                         </Link>
+
+                        {/* Location Header */}
+                        <div className="hidden md:block border-l border-slate-200 pl-4 ml-4">
+                            <LocationHeader />
+                        </div>
 
 
                         <nav className="hidden md:flex items-center space-x-4">

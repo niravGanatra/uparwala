@@ -10,8 +10,10 @@ import VendorRegistrationPage from './pages/VendorRegistrationPage';
 
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { LocationProvider } from './context/LocationContext';
 import { Toaster } from 'react-hot-toast';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import LocationPickerModal from './components/LocationPickerModal';
 
 // Product pages
 import ProductListingPage from './pages/ProductListingPage';
@@ -110,118 +112,121 @@ function App() {
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <AuthProvider>
         <CartProvider>
-          <Router>
-            <ScrollToTop />
-            <AnalyticsTracker />
-            <Toaster position="top-right" />
-            <Routes>
+          <LocationProvider>
+            <Router>
+              <ScrollToTop />
+              <AnalyticsTracker />
+              <Toaster position="top-right" />
+              <LocationPickerModal />
+              <Routes>
 
-              {/* Main App Routes */}
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<HomePage />} />
-                <Route path="login" element={<LoginPage />} />
-                <Route path="register" element={<RegisterPage />} />
-                <Route path="vendor/register" element={<VendorRegistrationPage />} />
+                {/* Main App Routes */}
+                <Route path="/" element={<MainLayout />}>
+                  <Route index element={<HomePage />} />
+                  <Route path="login" element={<LoginPage />} />
+                  <Route path="register" element={<RegisterPage />} />
+                  <Route path="vendor/register" element={<VendorRegistrationPage />} />
 
-                {/* Product Routes */}
-                <Route path="products" element={<ProductListingPage />} />
-                <Route path="products/:slug" element={<ProductDetailPage />} />
-                <Route path="category/:slug" element={<CategoryPage />} />
-                <Route path="compare" element={<ProductComparison />} />
+                  {/* Product Routes */}
+                  <Route path="products" element={<ProductListingPage />} />
+                  <Route path="products/:slug" element={<ProductDetailPage />} />
+                  <Route path="category/:slug" element={<CategoryPage />} />
+                  <Route path="compare" element={<ProductComparison />} />
 
-                {/* Cart & Checkout */}
-                <Route path="cart" element={<CartPage />} />
+                  {/* Cart & Checkout */}
+                  <Route path="cart" element={<CartPage />} />
 
-                {/* Services */}
-                <Route path="services" element={<ServicesPage />} />
-                <Route path="services/book/:slug" element={<BookingPage />} />
-                <Route path="book-puja" element={<BookingWizard />} />
+                  {/* Services */}
+                  <Route path="services" element={<ServicesPage />} />
+                  <Route path="services/book/:slug" element={<BookingPage />} />
+                  <Route path="book-puja" element={<BookingWizard />} />
 
-                {/* CMS Pages */}
-                <Route path="about-us" element={<AboutPage />} />
-                <Route path="careers" element={<CareersPage />} />
-                <Route path="contact" element={<CMSPage slug="contact-us" />} />
-                <Route path="refund-policy" element={<RefundPolicyPage />} />
-                <Route path="security" element={<SecurityPage />} />
-                <Route path="terms-of-use" element={<TermsOfUsePage />} />
-                <Route path="privacy-policy" element={<PrivacyPage />} />
-                <Route path="faq" element={<FAQPage />} />
-                <Route path="faq" element={<FAQPage />} />
-                <Route path="epr-compliance" element={<EPRCompliancePage />} />
-                <Route path="payments" element={<PaymentsPage />} />
-                <Route path="shipping" element={<ShippingPage />} />
-                <Route path="pages/sitemap" element={<SitemapPage />} />
-                <Route path="pages/corporate-information" element={<CorporatePage />} />
-                <Route path="pages/advertise" element={<AdvertisePage />} />
-                <Route path="pages/gift-cards" element={<GiftCardsPage />} />
-                <Route path="pages/help-center" element={<HelpCenterPage />} />
-                <Route path="contact" element={<ContactPage />} />
-                <Route path="pages/contact-us" element={<ContactPage />} />
-                <Route path="pages/:slug" element={<CMSPage />} />
+                  {/* CMS Pages */}
+                  <Route path="about-us" element={<AboutPage />} />
+                  <Route path="careers" element={<CareersPage />} />
+                  <Route path="contact" element={<CMSPage slug="contact-us" />} />
+                  <Route path="refund-policy" element={<RefundPolicyPage />} />
+                  <Route path="security" element={<SecurityPage />} />
+                  <Route path="terms-of-use" element={<TermsOfUsePage />} />
+                  <Route path="privacy-policy" element={<PrivacyPage />} />
+                  <Route path="faq" element={<FAQPage />} />
+                  <Route path="faq" element={<FAQPage />} />
+                  <Route path="epr-compliance" element={<EPRCompliancePage />} />
+                  <Route path="payments" element={<PaymentsPage />} />
+                  <Route path="shipping" element={<ShippingPage />} />
+                  <Route path="pages/sitemap" element={<SitemapPage />} />
+                  <Route path="pages/corporate-information" element={<CorporatePage />} />
+                  <Route path="pages/advertise" element={<AdvertisePage />} />
+                  <Route path="pages/gift-cards" element={<GiftCardsPage />} />
+                  <Route path="pages/help-center" element={<HelpCenterPage />} />
+                  <Route path="contact" element={<ContactPage />} />
+                  <Route path="pages/contact-us" element={<ContactPage />} />
+                  <Route path="pages/:slug" element={<CMSPage />} />
 
-                {/* Protected User Routes */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="checkout" element={<Checkout />} />
-                  <Route path="order-confirmation/:id" element={<OrderConfirmation />} />
-                  <Route path="profile" element={<ProfileSettings />} />
-                  <Route path="orders" element={<OrdersPage />} />
-                  <Route path="orders/:id" element={<OrderDetail />} />
-                  <Route path="tickets" element={<OrderTracking />} />
-                  <Route path="return-request" element={<RequestReturn />} />
-                  <Route path="wishlist" element={<Wishlist />} />
+                  {/* Protected User Routes */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="checkout" element={<Checkout />} />
+                    <Route path="order-confirmation/:id" element={<OrderConfirmation />} />
+                    <Route path="profile" element={<ProfileSettings />} />
+                    <Route path="orders" element={<OrdersPage />} />
+                    <Route path="orders/:id" element={<OrderDetail />} />
+                    <Route path="tickets" element={<OrderTracking />} />
+                    <Route path="return-request" element={<RequestReturn />} />
+                    <Route path="wishlist" element={<Wishlist />} />
+                  </Route>
                 </Route>
-              </Route>
 
-              {/* Vendor Routes */}
-              <Route path="/vendor" element={<VendorLayout />}>
-                <Route path="dashboard" element={<VendorDashboard />} />
-                <Route path="products" element={<VendorProducts />} />
-                <Route path="orders" element={<VendorOrders />} />
-                <Route path="wallet" element={<VendorWalletEnhanced />} /> {/* Updated to Enhanced Wallet */}
-                <Route path="bulk-upload" element={<BulkUpload />} />
-                <Route path="settings" element={<VendorSettings />} />
-                <Route path="analytics" element={<VendorAnalytics />} />
-              </Route>
+                {/* Vendor Routes */}
+                <Route path="/vendor" element={<VendorLayout />}>
+                  <Route path="dashboard" element={<VendorDashboard />} />
+                  <Route path="products" element={<VendorProducts />} />
+                  <Route path="orders" element={<VendorOrders />} />
+                  <Route path="wallet" element={<VendorWalletEnhanced />} /> {/* Updated to Enhanced Wallet */}
+                  <Route path="bulk-upload" element={<BulkUpload />} />
+                  <Route path="settings" element={<VendorSettings />} />
+                  <Route path="analytics" element={<VendorAnalytics />} />
+                </Route>
 
-              {/* Manager Routes (Limited access - vendor management only) */}
-              <Route path="/manager" element={<ManagerLayout />}>
-                <Route index element={<ManagerDashboard />} />
-                <Route path="dashboard" element={<ManagerDashboard />} />
-                <Route path="vendors" element={<AdminVendors />} />
-                <Route path="vendor-applications" element={<VendorApplications />} />
-              </Route>
+                {/* Manager Routes (Limited access - vendor management only) */}
+                <Route path="/manager" element={<ManagerLayout />}>
+                  <Route index element={<ManagerDashboard />} />
+                  <Route path="dashboard" element={<ManagerDashboard />} />
+                  <Route path="vendors" element={<AdminVendors />} />
+                  <Route path="vendor-applications" element={<VendorApplications />} />
+                </Route>
 
-              {/* Pandit (Service Provider) Routes */}
-              <Route path="/pandit" element={<ProtectedRoute />}>
-                <Route path="dashboard" element={<PanditDashboard />} />
-              </Route>
+                {/* Pandit (Service Provider) Routes */}
+                <Route path="/pandit" element={<ProtectedRoute />}>
+                  <Route path="dashboard" element={<PanditDashboard />} />
+                </Route>
 
-              {/* Admin Routes (Old Structure + New Dashboard) */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="analytics" element={<AnalyticsDashboard />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="career-applications" element={<CareerApplications />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="vendors" element={<AdminVendors />} />
-                <Route path="vendor-approvals" element={<VendorApprovals />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="vendor-applications" element={<VendorApplications />} />
-                <Route path="payout-requests" element={<PayoutRequests />} />
-                <Route path="product-moderation" element={<ProductModeration />} />
-                <Route path="review-management" element={<ReviewManagement />} />
-                <Route path="commission-settings" element={<CommissionSettings />} />
-                <Route path="shipping" element={<ShippingSettings />} />
-                <Route path="categories" element={<AdminCategories />} />
-                <Route path="tax-slabs" element={<TaxSlabs />} />
-                <Route path="shipments" element={<ShipmentManager />} />
-                <Route path="serviceability" element={<ServiceabilityManager />} />
-                <Route path="cms-pages" element={<CMSPages />} />
-                <Route path="homepage" element={<HomepageManager />} />
-              </Route>
-            </Routes>
-          </Router>
+                {/* Admin Routes (Old Structure + New Dashboard) */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="analytics" element={<AnalyticsDashboard />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="career-applications" element={<CareerApplications />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="vendors" element={<AdminVendors />} />
+                  <Route path="vendor-approvals" element={<VendorApprovals />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="vendor-applications" element={<VendorApplications />} />
+                  <Route path="payout-requests" element={<PayoutRequests />} />
+                  <Route path="product-moderation" element={<ProductModeration />} />
+                  <Route path="review-management" element={<ReviewManagement />} />
+                  <Route path="commission-settings" element={<CommissionSettings />} />
+                  <Route path="shipping" element={<ShippingSettings />} />
+                  <Route path="categories" element={<AdminCategories />} />
+                  <Route path="tax-slabs" element={<TaxSlabs />} />
+                  <Route path="shipments" element={<ShipmentManager />} />
+                  <Route path="serviceability" element={<ServiceabilityManager />} />
+                  <Route path="cms-pages" element={<CMSPages />} />
+                  <Route path="homepage" element={<HomepageManager />} />
+                </Route>
+              </Routes>
+            </Router>
+          </LocationProvider>
         </CartProvider>
       </AuthProvider>
     </GoogleOAuthProvider>

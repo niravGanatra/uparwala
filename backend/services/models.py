@@ -112,6 +112,10 @@ class PanditProfile(models.Model):
         default=list,
         help_text='Pincodes where this Pandit can provide services, e.g. ["400001", "400002"]'
     )
+    service_radius_km = models.PositiveIntegerField(
+        default=10,
+        help_text="Maximum distance (in km) this Pandit is willing to travel"
+    )
     
     # Ratings
     average_rating = models.DecimalField(
