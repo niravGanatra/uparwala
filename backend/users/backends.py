@@ -12,6 +12,17 @@ class AllowInactiveUserBackend(ModelBackend):
     """
     
     def authenticate(self, request, username=None, password=None, **kwargs):
+        # Support email-based login (dj_rest_auth passes email in kwargs)
+        email = kwargs.get('email')
+        
+        if username is None and email:
+            try:
+                user = User.objects.get(email=email)
+                username = user.username
+            except User.DoesNotExist:
+                print(f"Auth Debug: Email '{email}' not found")
+                return None
+        
         if username is None:
             username = kwargs.get(User.USERNAME_FIELD)
         
@@ -22,7 +33,15 @@ class AllowInactiveUserBackend(ModelBackend):
             return None
         
         try:
-            user = User.objects.get(**{User.USERNAME_FIELD: username})
+            # Check if username is actually an email
+            if '@' in username:
+                 try:
+                     user = User.objects.get(email=username)
+                 except User.DoesNotExist:
+                     # Fallback to username lookup
+                     user = User.objects.get(**{User.USERNAME_FIELD: username})
+            else:
+                user = User.objects.get(**{User.USERNAME_FIELD: username})
             print(f"Auth Debug: User found: {user.username} (ID: {user.id}, Active: {user.is_active})")
         except User.DoesNotExist:
             print(f"Auth Debug: User '{username}' not found in database")
