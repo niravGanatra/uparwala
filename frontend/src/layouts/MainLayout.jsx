@@ -242,6 +242,16 @@ const MainLayout = () => {
                                             </div>
 
                                             <div className="flex-1 overflow-y-auto py-4">
+                                                {/* Location Picker for Mobile */}
+                                                <div className="px-4 pb-4 border-b border-slate-100 mb-4">
+                                                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 px-2">
+                                                        Delivery Location
+                                                    </div>
+                                                    <div onClick={() => setShowMobileMenu(false)}>
+                                                        <LocationHeader />
+                                                    </div>
+                                                </div>
+
                                                 <nav className="flex flex-col space-y-1">
                                                     <Link
                                                         to="/"
