@@ -32,7 +32,6 @@ class RecommendationEngine:
                     category=product.category,
                     is_active=True,
                     vendor__verification_status='verified',
-                    vendor__is_active=True,
                     vendor__user__is_active=True
                 ).exclude(
                     id__in=[p.id for p in similar]
@@ -58,7 +57,6 @@ class RecommendationEngine:
             return Product.objects.filter(
                 category=product.category,
                 is_active=True,
-                vendor__is_active=True,
                 vendor__user__is_active=True
             ).exclude(id=product_id).order_by('?')[:limit]
         except Product.DoesNotExist:
@@ -73,7 +71,6 @@ class RecommendationEngine:
             recommendations = Product.objects.filter(
                 is_active=True,
                 vendor__verification_status='verified',
-                vendor__is_active=True,
                 vendor__user__is_active=True
             ).order_by('-review_count')[:limit]
             return recommendations
@@ -83,7 +80,6 @@ class RecommendationEngine:
         recommendations = Product.objects.filter(
             is_active=True,
             vendor__verification_status='verified',
-            vendor__is_active=True,
             vendor__user__is_active=True
         ).order_by('-review_count', '?')[:limit]
         return recommendations
