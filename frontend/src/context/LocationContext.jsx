@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
 
 const LocationContext = createContext(null);
 
@@ -19,6 +20,42 @@ export const LocationProvider = ({ children }) => {
     });
 
     const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+
+    // Serviceability state
+    const [isServiceable, setIsServiceable] = useState(true);
+    const [checkingServiceability, setCheckingServiceability] = useState(false);
+    const [serviceabilityMessage, setServiceabilityMessage] = useState('');
+
+    // Check serviceability when location changes
+    useEffect(() => {
+        const checkServiceability = async () => {
+            if (!location?.pincode || location.pincode.length !== 6) {
+                setIsServiceable(true); // Assume serviceable if no pincode
+                setServiceabilityMessage('');
+                return;
+            }
+
+            setCheckingServiceability(true);
+            try {
+                const response = await api.get(`/orders/serviceability/check/${location.pincode}/`);
+                if (response.data.serviceable) {
+                    setIsServiceable(true);
+                    setServiceabilityMessage('');
+                } else {
+                    setIsServiceable(false);
+                    setServiceabilityMessage(response.data.message || 'We will soon start operations in your region.');
+                }
+            } catch (error) {
+                console.error('Serviceability check failed:', error);
+                setIsServiceable(true); // Fail open
+                setServiceabilityMessage('');
+            } finally {
+                setCheckingServiceability(false);
+            }
+        };
+
+        checkServiceability();
+    }, [location?.pincode]);
 
     // Persist location to localStorage whenever it changes
     useEffect(() => {
@@ -62,7 +99,11 @@ export const LocationProvider = ({ children }) => {
             isLocationModalOpen,
             openLocationModal,
             closeLocationModal,
-            hasLocation: !!location && (!!location.pincode || (!!location.lat && !!location.lng))
+            hasLocation: !!location && (!!location.pincode || (!!location.lat && !!location.lng)),
+            // Serviceability
+            isServiceable,
+            checkingServiceability,
+            serviceabilityMessage
         }}>
             {children}
         </LocationContext.Provider>

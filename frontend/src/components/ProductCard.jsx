@@ -9,6 +9,7 @@ import NotifyMeModal from './NotifyMeModal';
 import { useLocation } from '../context/LocationContext';
 import deliveryService from '../services/deliveryService';
 import { Truck } from 'lucide-react';
+import ServiceabilityBanner from './ServiceabilityBanner';
 
 const ProductCard = ({ product }) => {
     const navigate = useNavigate();
@@ -17,12 +18,17 @@ const ProductCard = ({ product }) => {
     const [showNotifyModal, setShowNotifyModal] = useState(false);
 
     // Delivery Estimate
-    const { location } = useLocation();
+    const { location, isServiceable } = useLocation();
     const [deliveryEstimate, setDeliveryEstimate] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
         const checkDelivery = async () => {
+            // Skip if not serviceable
+            if (!isServiceable) {
+                setDeliveryEstimate(null);
+                return;
+            }
             if (location?.pincode && product.id) {
                 try {
                     const data = await deliveryService.checkEstimate(location.pincode, product.id);
@@ -36,7 +42,7 @@ const ProductCard = ({ product }) => {
         };
         checkDelivery();
         return () => { isMounted = false; };
-    }, [location?.pincode, product.id]);
+    }, [location?.pincode, product.id, isServiceable]);
 
     const isOutOfStock = product.stock_status === 'outofstock' || (product.stock !== undefined && product.stock === 0);
 
@@ -169,8 +175,10 @@ const ProductCard = ({ product }) => {
                             )}
                         </div>
 
-                        {/* Delivery Estimate */}
-                        {deliveryEstimate && (
+                        {/* Delivery Estimate or Serviceability Banner */}
+                        {!isServiceable ? (
+                            <ServiceabilityBanner variant="compact" />
+                        ) : deliveryEstimate && (
                             <div className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 px-2 py-1.5 rounded mb-3 w-fit">
                                 <Truck className="w-3.5 h-3.5" />
                                 <span>
