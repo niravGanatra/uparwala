@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
@@ -8,9 +8,6 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
-import ProductReviews from '../components/ProductReviews';
-import ProductRecommendations from '../components/ProductRecommendations';
-import NotifyMeModal from '../components/NotifyMeModal';
 import SpiritualLoader from '../components/SpiritualLoader';
 import { useLocation } from '../context/LocationContext';
 import deliveryService from '../services/deliveryService';
@@ -19,6 +16,11 @@ import ServiceabilityBanner from '../components/ServiceabilityBanner';
 import ImageGallery from '../components/ImageGallery';
 
 import { useAnalytics } from '../hooks/useAnalytics';
+
+// Lazy load heavy components
+const ProductReviews = lazy(() => import('../components/ProductReviews'));
+const ProductRecommendations = lazy(() => import('../components/ProductRecommendations'));
+const NotifyMeModal = lazy(() => import('../components/NotifyMeModal'));
 
 const ProductDetailPage = () => {
     const { slug } = useParams();
@@ -419,18 +421,24 @@ const ProductDetailPage = () => {
                     </motion.div>
 
                     {/* Product Reviews Section */}
-                    <ProductReviews productId={product.id} />
+                    <Suspense fallback={<div className="h-40 flex items-center justify-center"><SpiritualLoader text="Loading reviews..." /></div>}>
+                        <ProductReviews productId={product.id} />
+                    </Suspense>
 
 
                     {/* Recommendations */}
-                    <ProductRecommendations currentProductid={product?.id} />
+                    <Suspense fallback={<div className="h-40 flex items-center justify-center"><SpiritualLoader text="Loading recommendations..." /></div>}>
+                        <ProductRecommendations currentProductid={product?.id} />
+                    </Suspense>
 
                     {/* Notify Me Modal */}
-                    <NotifyMeModal
-                        isOpen={showNotifyModal}
-                        onClose={() => setShowNotifyModal(false)}
-                        productId={product.id}
-                    />
+                    <Suspense fallback={null}>
+                        <NotifyMeModal
+                            isOpen={showNotifyModal}
+                            onClose={() => setShowNotifyModal(false)}
+                            productId={product.id}
+                        />
+                    </Suspense>
                 </div>
             </motion.div>
         </div>

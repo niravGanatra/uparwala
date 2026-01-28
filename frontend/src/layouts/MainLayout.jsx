@@ -28,16 +28,24 @@ const MainLayout = () => {
     const fetchCategories = async () => {
         try {
             const response = await api.get('/products/categories/');
-            console.log('All categories:', response.data);
+            // console.log('All categories:', response.data);
+
+            if (!Array.isArray(response.data)) {
+                console.error('Categories response is not an array:', response.data);
+                return;
+            }
+
             // Only show parent categories that have show_in_menu = true (or undefined for old data)
             const filtered = response.data.filter(cat => {
+                // Ensure parent is strictly null or undefined (top-level)
+                // Also handle case where parent might be 0 if backend uses that for root
                 const isParent = !cat.parent;
                 const showInMenu = cat.show_in_menu !== false; // true or undefined = show
                 return isParent && showInMenu;
             });
+
             // Sort by menu_order (lower numbers first)
             const sorted = filtered.sort((a, b) => (a.menu_order || 0) - (b.menu_order || 0));
-            console.log('Filtered and sorted categories for menu:', sorted);
             setCategories(sorted);
         } catch (error) {
             console.error('Failed to fetch categories:', error);
