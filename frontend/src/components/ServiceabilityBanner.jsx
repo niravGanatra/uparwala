@@ -5,19 +5,12 @@ import { useLocation } from '../context/LocationContext';
  * ServiceabilityBanner - Shows when user's location is not serviceable
  * 
  * @param {string} variant - 'compact' for product cards, 'full' for detail pages
- * @param {boolean} forceShow - Force show banner (e.g., when Delhivery API fails)
  */
-const ServiceabilityBanner = ({ variant = 'compact', forceShow = false }) => {
+const ServiceabilityBanner = ({ variant = 'compact' }) => {
     const { location, isServiceable, checkingServiceability, openLocationModal, hasLocation } = useLocation();
 
-    // Don't show if checking or no location set
-    // Skip serviceable check if forceShow is true (e.g., Delhivery failed)
-    if (checkingServiceability || !hasLocation) {
-        return null;
-    }
-
-    // If not forced and location is serviceable, don't show
-    if (!forceShow && isServiceable) {
+    // Don't show if checking, serviceable, or no location set
+    if (checkingServiceability || isServiceable || !hasLocation) {
         return null;
     }
 

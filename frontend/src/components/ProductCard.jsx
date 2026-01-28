@@ -189,8 +189,8 @@ const ProductCard = ({ product }) => {
                         </div>
 
                         {/* Delivery Estimate or Serviceability Banner */}
-                        {(!isServiceable || deliveryFailed) ? (
-                            <ServiceabilityBanner variant="compact" forceShow={deliveryFailed} />
+                        {!isServiceable ? (
+                            <ServiceabilityBanner variant="compact" />
                         ) : deliveryEstimate && (
                             <div className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 px-2 py-1.5 rounded mb-3 w-fit">
                                 <Truck className="w-3.5 h-3.5" />
