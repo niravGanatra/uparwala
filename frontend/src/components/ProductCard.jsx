@@ -18,31 +18,44 @@ const ProductCard = ({ product }) => {
     const [showNotifyModal, setShowNotifyModal] = useState(false);
 
     // Delivery Estimate
-    const { location, isServiceable } = useLocation();
+    const { location, isServiceable, hasLocation } = useLocation();
     const [deliveryEstimate, setDeliveryEstimate] = useState(null);
+    const [deliveryFailed, setDeliveryFailed] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
         const checkDelivery = async () => {
-            // Skip if not serviceable
-            if (!isServiceable) {
+            // Skip if not serviceable or no location
+            if (!isServiceable || !hasLocation) {
                 setDeliveryEstimate(null);
+                setDeliveryFailed(false);
                 return;
             }
             if (location?.pincode && product.id) {
                 try {
                     const data = await deliveryService.checkEstimate(location.pincode, product.id);
-                    if (isMounted && data.success) {
-                        setDeliveryEstimate(data);
+                    if (isMounted) {
+                        if (data.success) {
+                            setDeliveryEstimate(data);
+                            setDeliveryFailed(false);
+                        } else {
+                            // Delhivery says not deliverable
+                            setDeliveryEstimate(null);
+                            setDeliveryFailed(true);
+                        }
                     }
                 } catch (err) {
-                    // Fail silently for cards to avoid clutter
+                    // API failed - treat as not deliverable
+                    if (isMounted) {
+                        setDeliveryEstimate(null);
+                        setDeliveryFailed(true);
+                    }
                 }
             }
         };
         checkDelivery();
         return () => { isMounted = false; };
-    }, [location?.pincode, product.id, isServiceable]);
+    }, [location?.pincode, product.id, isServiceable, hasLocation]);
 
     const isOutOfStock = product.stock_status === 'outofstock' || (product.stock !== undefined && product.stock === 0);
 
@@ -176,7 +189,7 @@ const ProductCard = ({ product }) => {
                         </div>
 
                         {/* Delivery Estimate or Serviceability Banner */}
-                        {!isServiceable ? (
+                        {(!isServiceable || deliveryFailed) ? (
                             <ServiceabilityBanner variant="compact" />
                         ) : deliveryEstimate && (
                             <div className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 px-2 py-1.5 rounded mb-3 w-fit">

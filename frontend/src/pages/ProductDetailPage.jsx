@@ -255,7 +255,7 @@ const ProductDetailPage = () => {
                         </div>
 
                         {/* Delivery Estimate or Serviceability Banner */}
-                        {!isServiceable ? (
+                        {(!isServiceable || deliveryError) ? (
                             <ServiceabilityBanner variant="full" />
                         ) : (
                             <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
