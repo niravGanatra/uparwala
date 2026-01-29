@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-import { ShoppingCart, Heart, Bell, RotateCcw, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Heart, Bell, RotateCcw, RefreshCw, Loader2 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -29,8 +29,13 @@ const ProductDetailPage = () => {
     const [loading, setLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
     const [showNotifyModal, setShowNotifyModal] = useState(false);
+
+    // Separate loading states for precise UI feedback
+    const [addingToCart, setAddingToCart] = useState(false);
+    const [buyingNow, setBuyingNow] = useState(false);
+
     const { user } = useAuth();
-    const { addToCart, loading: cartLoading } = useCart();
+    const { addToCart } = useCart(); // Removed global loading to control locally
     const { trackEvent } = useAnalytics();
 
     // Delivery Estimate State
@@ -117,6 +122,8 @@ const ProductDetailPage = () => {
         }
     }, [product, trackEvent]);
 
+    const isOutOfStock = product?.stock <= 0;
+
     const handleAddToCart = async () => {
         if (!user) {
             toast.error('Please login to add items to cart');
@@ -124,15 +131,56 @@ const ProductDetailPage = () => {
             return;
         }
 
-        // Track Add to Cart
-        trackEvent('add_to_cart', {
-            product_id: product.id,
-            price: product.price,
-            quantity: quantity,
-            name: product.name
-        });
+        if (isOutOfStock) return;
 
-        await addToCart(product.id, quantity);
+        setAddingToCart(true);
+        try {
+            // Track Add to Cart
+            trackEvent('add_to_cart', {
+                product_id: product.id,
+                price: product.price,
+                quantity: quantity,
+                name: product.name
+            });
+
+            await addToCart(product.id, quantity);
+            // Toast is handled by CartContext by default
+        } catch (error) {
+            console.error('Add to cart failed:', error);
+        } finally {
+            setAddingToCart(false);
+        }
+    };
+
+    const handleBuyNow = async () => {
+        if (!user) {
+            toast.error('Please login to buy');
+            navigate('/login');
+            return;
+        }
+
+        if (isOutOfStock) return;
+
+        setBuyingNow(true);
+        try {
+            // Track Buy Now
+            trackEvent('buy_now', {
+                product_id: product.id,
+                price: product.price,
+                quantity: quantity,
+                name: product.name
+            });
+
+            // Suppress toast for Buy Now flow
+            await addToCart(product.id, quantity, { suppressToast: true });
+
+            // Navigate immediately
+            navigate('/checkout');
+            // Do NOT setBuyingNow(false) here to prevent double clicks during navigation
+        } catch (error) {
+            console.error('Buy now failed:', error);
+            setBuyingNow(false); // Only reset on error
+        }
     };
 
     if (loading) {
@@ -361,35 +409,35 @@ const ProductDetailPage = () => {
                                             size="lg"
                                             className="w-full sm:flex-1"
                                             onClick={handleAddToCart}
-                                            disabled={cartLoading}
+                                            disabled={addingToCart || buyingNow || isOutOfStock}
                                         >
-                                            <ShoppingCart className="mr-2 h-5 w-5" />
-                                            {cartLoading ? 'Adding...' : 'Add to Cart'}
+                                            {addingToCart ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                                    Adding...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ShoppingCart className="mr-2 h-5 w-5" />
+                                                    Add to Cart
+                                                </>
+                                            )}
                                         </Button>
                                         <Button
                                             size="lg"
                                             variant="default"
                                             className="w-full sm:flex-1 bg-orange-600 hover:bg-orange-700"
-                                            onClick={async () => {
-                                                if (!user) {
-                                                    toast.error('Please login to buy');
-                                                    navigate('/login');
-                                                    return;
-                                                }
-                                                // Track Buy Now
-                                                trackEvent('buy_now', {
-                                                    product_id: product.id,
-                                                    price: product.price,
-                                                    quantity: quantity,
-                                                    name: product.name
-                                                });
-                                                // Add to cart and navigate to checkout
-                                                await addToCart(product.id, quantity);
-                                                navigate('/checkout');
-                                            }}
-                                            disabled={cartLoading}
+                                            onClick={handleBuyNow}
+                                            disabled={addingToCart || buyingNow || isOutOfStock}
                                         >
-                                            Buy Now
+                                            {buyingNow ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                                    Processing...
+                                                </>
+                                            ) : (
+                                                'Buy Now'
+                                            )}
                                         </Button>
                                         <Button
                                             size="lg"

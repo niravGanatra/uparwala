@@ -21,7 +21,7 @@ export const CartProvider = ({ children }) => {
         }
     };
 
-    const addToCart = async (productId, quantity = 1) => {
+    const addToCart = async (productId, quantity = 1, options = {}) => {
         setLoading(true);
         try {
             const response = await api.post('/orders/cart/add/', {
@@ -29,19 +29,25 @@ export const CartProvider = ({ children }) => {
                 quantity: quantity
             });
             await fetchCart();
-            toast.success('Added to cart!', {
-                duration: 2000,
-                position: 'bottom-right',
-            });
+
+            if (!options.suppressToast) {
+                toast.success('Added to cart!', {
+                    duration: 2000,
+                    position: 'bottom-right',
+                });
+            }
+
             // Return the cart item from the response if available
             // This is used by Buy Now to get the item ID for checkout
             return response.data || { success: true };
         } catch (error) {
             console.error('Failed to add to cart:', error);
-            toast.error('Failed to add to cart', {
-                duration: 3000,
-                position: 'bottom-right',
-            });
+            if (!options.suppressToast) {
+                toast.error('Failed to add to cart', {
+                    duration: 3000,
+                    position: 'bottom-right',
+                });
+            }
             return null;
         } finally {
             setLoading(false);
