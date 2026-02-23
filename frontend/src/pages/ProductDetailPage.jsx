@@ -195,7 +195,7 @@ const ProductDetailPage = () => {
                 className="max-w-7xl mx-auto px-4 py-6 md:py-8 pb-32 md:pb-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.3 }}
             >
                 <div className="grid lg:grid-cols-2 gap-6 md:gap-8 w-full max-w-full overflow-hidden">
 
@@ -204,7 +204,7 @@ const ProductDetailPage = () => {
                         className="space-y-4 min-w-0 max-w-full overflow-hidden"
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
+                        transition={{ duration: 0.4 }}
                     >
                         <ImageGallery images={product.images} productName={product.name} />
                     </motion.div>
@@ -214,7 +214,7 @@ const ProductDetailPage = () => {
                         className="space-y-6 min-w-0 max-w-full overflow-hidden"
                         initial={{ x: 20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
+                        transition={{ duration: 0.4 }}
                     >
                         <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
                             <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">{product.name}</h1>

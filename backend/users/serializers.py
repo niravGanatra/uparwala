@@ -91,6 +91,7 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from allauth.account.utils import user_pk_to_url_str
 from notifications.resend_service import send_email_via_resend
 from notifications.email_templates import get_email_template
 
@@ -111,7 +112,8 @@ class CustomPasswordResetSerializer(PasswordResetSerializer):
                 continue
                 
             # Generate token and uid
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            # dj-rest-auth requires base36 UID when allauth is installed
+            uid = user_pk_to_url_str(user)
             token = default_token_generator.make_token(user)
             
             # Construct reset URL (frontend)

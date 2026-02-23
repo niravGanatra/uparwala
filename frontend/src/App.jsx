@@ -7,7 +7,8 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import VendorRegistrationPage from './pages/VendorRegistrationPage';
-
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { LocationProvider } from './context/LocationContext';
@@ -125,6 +126,8 @@ function App() {
                   <Route index element={<HomePage />} />
                   <Route path="login" element={<LoginPage />} />
                   <Route path="register" element={<RegisterPage />} />
+                  <Route path="forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="password-reset/:uid/:token" element={<ResetPasswordPage />} />
                   <Route path="vendor/register" element={<VendorRegistrationPage />} />
 
                   {/* Product Routes */}

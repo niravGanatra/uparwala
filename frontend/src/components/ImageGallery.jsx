@@ -103,6 +103,7 @@ const ImageGallery = ({ images = [], productName }) => {
                                 src={img.image}
                                 alt={`${productName} ${i + 1}`}
                                 className="w-full h-full object-cover"
+                                loading="lazy"
                             />
                         </button>
                     ))}
