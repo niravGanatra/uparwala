@@ -4,8 +4,8 @@ def get_email_template(template_name, context):
     """
     Returns the subject and HTML content for a given template name
     """
-    templates = {
-        'order_confirmation': {
+    if template_name == 'order_confirmation':
+        return {
             'subject': f"Invoice: Order #{context.get('order_id')}",
             'content': f"""
                 <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #333; font-size: 14px; line-height: 1.5;">
@@ -130,7 +130,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'order_shipped': {
+    if template_name == 'order_shipped':
+        return {
             'subject': f"Your Order #{context.get('order_id')} has Shipped!",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -150,7 +151,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'order_out_for_delivery': {
+    if template_name == 'order_out_for_delivery':
+        return {
             'subject': f"Out for Delivery: Order #{context.get('order_id')}",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -170,7 +172,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'order_delivered': {
+    if template_name == 'order_delivered':
+        return {
             'subject': f"Delivered: Order #{context.get('order_id')}",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -191,7 +194,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'payout_approved': {
+    if template_name == 'payout_approved':
+        return {
             'subject': "Payout Request Approved",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -208,7 +212,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'product_approved': {
+    if template_name == 'product_approved':
+        return {
             'subject': "Product Approved",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -223,7 +228,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'product_rejected': {
+    if template_name == 'product_rejected':
+        return {
             'subject': "Product Review Update",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -239,7 +245,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'vendor_approved': {
+    if template_name == 'vendor_approved':
+        return {
             'subject': "🎉 Your Vendor Application Has Been Approved!",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -281,7 +288,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'vendor_rejected': {
+    if template_name == 'vendor_rejected':
+        return {
             'subject': "Update on Your Vendor Application",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -316,7 +324,8 @@ def get_email_template(template_name, context):
             """
         },
 
-        'welcome_email': {
+    if template_name == 'welcome_email':
+        return {
             'subject': "You're all set! Welcome to the Uparwala community",
             'content': f'''
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -333,7 +342,8 @@ def get_email_template(template_name, context):
                 </div>
             '''
         },
-        'password_reset': {
+    if template_name == 'password_reset':
+        return {
             'subject': "Reset your password",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -350,7 +360,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'payment_received': {
+    if template_name == 'payment_received':
+        return {
             'subject': f"Payment Received: ₹{context.get('amount')}",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -365,7 +376,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'order_cancellation': {
+    if template_name == 'order_cancellation':
+        return {
             'subject': f"Order #{context.get('order_id')} has been cancelled",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -382,7 +394,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'rate_and_review': {
+    if template_name == 'rate_and_review':
+        return {
             'subject': "How did you like your purchase?",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -399,7 +412,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'return_request_received': {
+    if template_name == 'return_request_received':
+        return {
             'subject': f"We received your return request for Order #{context.get('order_id')}",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -415,7 +429,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'refund_processed': {
+    if template_name == 'refund_processed':
+        return {
             'subject': f"Refund of ₹{context.get('amount')} initiated",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -426,7 +441,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'abandoned_cart': {
+    if template_name == 'abandoned_cart':
+        return {
             'subject': "You left something behind...",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -441,7 +457,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'back_in_stock': {
+    if template_name == 'back_in_stock':
+        return {
             'subject': f"Good news! {context.get('product_name')} is back!",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -462,7 +479,8 @@ def get_email_template(template_name, context):
         # --- Vendor Notifications ---
 
         # Phase 1: Onboarding
-        'vendor_registration_received': {
+    if template_name == 'vendor_registration_received':
+        return {
             'subject': "We received your application for Uparwala",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -473,7 +491,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'vendor_account_approved': {
+    if template_name == 'vendor_account_approved':
+        return {
             'subject': "Congratulations! Your Seller Account is Active",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -489,7 +508,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'vendor_account_rejected': {
+    if template_name == 'vendor_account_rejected':
+        return {
             'subject': "Update on your Seller Application",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -505,7 +525,8 @@ def get_email_template(template_name, context):
         },
 
         # Phase 2: Order Management
-        'vendor_new_order': {
+    if template_name == 'vendor_new_order':
+        return {
             'subject': f"New Order #{context.get('order_id')}: Ship by {context.get('ship_by_date')}",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -534,7 +555,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'vendor_order_cancelled': {
+    if template_name == 'vendor_order_cancelled':
+        return {
             'subject': f"CANCELLED: Do not ship Order #{context.get('order_id')}",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -545,7 +567,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'vendor_sla_warning': {
+    if template_name == 'vendor_sla_warning':
+        return {
             'subject': f"Urgent: Order #{context.get('order_id')} is overdue for shipping",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -563,7 +586,8 @@ def get_email_template(template_name, context):
         },
 
         # Phase 3: Product & Inventory
-        'vendor_product_status_update': {
+    if template_name == 'vendor_product_status_update':
+        return {
             'subject': f"Your product {context.get('product_name')} is now {context.get('status')}",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -575,7 +599,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-         'vendor_low_stock': {
+    if template_name == 'vendor_low_stock':
+        return {
             'subject': f"Low Stock Alert: {context.get('product_name')}",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -589,7 +614,8 @@ def get_email_template(template_name, context):
         },
 
         # Phase 4: Financials
-        'vendor_payout_processed': {
+    if template_name == 'vendor_payout_processed':
+        return {
             'subject': f"Payout of ₹{context.get('amount')} has been initiated",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -606,7 +632,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'vendor_commission_invoice': {
+    if template_name == 'vendor_commission_invoice':
+        return {
             'subject': f"Tax Invoice for Platform Fees - {context.get('month')}",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -621,7 +648,8 @@ def get_email_template(template_name, context):
         },
         
         # Phase 5: Returns
-        'vendor_return_requested': {
+    if template_name == 'vendor_return_requested':
+        return {
             'subject': f"Return Requested for Order #{context.get('order_id')}",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -633,7 +661,8 @@ def get_email_template(template_name, context):
                 </div>
             """
         },
-        'vendor_rto_delivered': {
+    if template_name == 'vendor_rto_delivered':
+        return {
             'subject': f"RTO Delivered: Order #{context.get('order_id')} has been returned to you",
             'content': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -644,6 +673,5 @@ def get_email_template(template_name, context):
                 </div>
             """
         }
-    }
     
-    return templates.get(template_name)
+    return None
