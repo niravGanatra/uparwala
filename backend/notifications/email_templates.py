@@ -129,7 +129,7 @@ def get_email_template(template_name, context):
                     </div>
                 </div>
             """
-        },
+        }
     if template_name == 'order_shipped':
         return {
             'subject': f"Your Order #{context.get('order_id')} has Shipped!",
@@ -150,7 +150,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
     if template_name == 'order_out_for_delivery':
         return {
             'subject': f"Out for Delivery: Order #{context.get('order_id')}",
@@ -171,7 +171,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
     if template_name == 'order_delivered':
         return {
             'subject': f"Delivered: Order #{context.get('order_id')}",
@@ -193,7 +193,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
     if template_name == 'payout_approved':
         return {
             'subject': "Payout Request Approved",
@@ -211,7 +211,7 @@ def get_email_template(template_name, context):
                     <p>The funds should reflect in your account within 2-3 business days.</p>
                 </div>
             """
-        },
+        }
     if template_name == 'product_approved':
         return {
             'subject': "Product Approved",
@@ -227,7 +227,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
     if template_name == 'product_rejected':
         return {
             'subject': "Product Review Update",
@@ -244,7 +244,7 @@ def get_email_template(template_name, context):
                     <p>Please update your product details and submit again.</p>
                 </div>
             """
-        },
+        }
     if template_name == 'vendor_approved':
         return {
             'subject': "🎉 Your Vendor Application Has Been Approved!",
@@ -287,7 +287,7 @@ def get_email_template(template_name, context):
                     </div>
                 </div>
             """
-        },
+        }
     if template_name == 'vendor_rejected':
         return {
             'subject': "Update on Your Vendor Application",
@@ -322,7 +322,7 @@ def get_email_template(template_name, context):
                     </div>
                 </div>
             """
-        },
+        }
 
     if template_name == 'welcome_email':
         return {
@@ -341,7 +341,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             '''
-        },
+        }
     if template_name == 'password_reset':
         return {
             'subject': "Reset your password",
@@ -359,7 +359,7 @@ def get_email_template(template_name, context):
                     <p style="font-size: 12px; color: #666;">Or copy and paste this link into your browser:<br>{context.get('reset_url')}</p>
                 </div>
             """
-        },
+        }
     if template_name == 'payment_received':
         return {
             'subject': f"Payment Received: ₹{context.get('amount')}",
@@ -375,7 +375,7 @@ def get_email_template(template_name, context):
                     </div>
                 </div>
             """
-        },
+        }
     if template_name == 'order_cancellation':
         return {
             'subject': f"Order #{context.get('order_id')} has been cancelled",
@@ -393,7 +393,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
     if template_name == 'rate_and_review':
         return {
             'subject': "How did you like your purchase?",
@@ -411,7 +411,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
     if template_name == 'return_request_received':
         return {
             'subject': f"We received your return request for Order #{context.get('order_id')}",
@@ -428,7 +428,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
     if template_name == 'refund_processed':
         return {
             'subject': f"Refund of ₹{context.get('amount')} initiated",
@@ -440,7 +440,7 @@ def get_email_template(template_name, context):
                     <p>It should reflect in your original payment method within 5-7 business days.</p>
                 </div>
             """
-        },
+        }
     if template_name == 'abandoned_cart':
         return {
             'subject': "You left something behind...",
@@ -456,7 +456,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
     if template_name == 'back_in_stock':
         return {
             'subject': f"Good news! {context.get('product_name')} is back!",
@@ -474,7 +474,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
 
         # --- Vendor Notifications ---
 
@@ -490,7 +490,7 @@ def get_email_template(template_name, context):
                     <p>We will verify your GST and PAN details within 48 hours.</p>
                 </div>
             """
-        },
+        }
     if template_name == 'vendor_account_approved':
         return {
             'subject': "Congratulations! Your Seller Account is Active",
@@ -507,7 +507,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
     if template_name == 'vendor_account_rejected':
         return {
             'subject': "Update on your Seller Application",
@@ -522,7 +522,7 @@ def get_email_template(template_name, context):
                     <p>Please update your documents and re-apply.</p>
                 </div>
             """
-        },
+        }
 
         # Phase 2: Order Management
     if template_name == 'vendor_new_order':
@@ -554,7 +554,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
     if template_name == 'vendor_order_cancelled':
         return {
             'subject': f"CANCELLED: Do not ship Order #{context.get('order_id')}",
@@ -566,7 +566,7 @@ def get_email_template(template_name, context):
                     <p>The customer has cancelled this order.</p>
                 </div>
             """
-        },
+        }
     if template_name == 'vendor_sla_warning':
         return {
             'subject': f"Urgent: Order #{context.get('order_id')} is overdue for shipping",
@@ -583,7 +583,7 @@ def get_email_template(template_name, context):
                     </a>
                 </div>
             """
-        },
+        }
 
         # Phase 3: Product & Inventory
     if template_name == 'vendor_product_status_update':
@@ -598,7 +598,7 @@ def get_email_template(template_name, context):
                     {'<p>It is now live on the marketplace.</p>' if context.get('status') == 'Live' else f'<p>It requires changes: {context.get("reason")}</p>'}
                 </div>
             """
-        },
+        }
     if template_name == 'vendor_low_stock':
         return {
             'subject': f"Low Stock Alert: {context.get('product_name')}",
@@ -611,7 +611,7 @@ def get_email_template(template_name, context):
                     <p>Please restock soon to avoid missing sales.</p>
                 </div>
             """
-        },
+        }
 
         # Phase 4: Financials
     if template_name == 'vendor_payout_processed':
@@ -631,7 +631,7 @@ def get_email_template(template_name, context):
                     <p>Funds should reach your bank in 2-3 business days.</p>
                 </div>
             """
-        },
+        }
     if template_name == 'vendor_commission_invoice':
         return {
             'subject': f"Tax Invoice for Platform Fees - {context.get('month')}",
@@ -645,7 +645,7 @@ def get_email_template(template_name, context):
                     </div>
                 </div>
             """
-        },
+        }
         
         # Phase 5: Returns
     if template_name == 'vendor_return_requested':
@@ -660,7 +660,7 @@ def get_email_template(template_name, context):
                     <p>Please review and approve via your dashboard.</p>
                 </div>
             """
-        },
+        }
     if template_name == 'vendor_rto_delivered':
         return {
             'subject': f"RTO Delivered: Order #{context.get('order_id')} has been returned to you",
