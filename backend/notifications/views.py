@@ -31,7 +31,28 @@ class TestEmailView(APIView):
                 'reset_url': 'https://uparwala.com/reset-password/token123'
             },
             'order_confirmation': {
-                'total_amount': '1499.00',
+                'total_amount': 1499.00,
+                'subtotal': 1200.00,
+                'discount_amount': 0.00,
+                'shipping_amount': 299.00,
+                'items': [], # Prevents iteration over missing specific object attributes
+                'tax_breakdown': {'type': 'inter_state', 'cgst': 0, 'sgst': 0, 'igst': 249},
+                'billing_address': {
+                    'full_name': 'Test User',
+                    'address_line1': '123 Test St',
+                    'city': 'Mumbai',
+                    'state': 'MH',
+                    'pincode': '400001',
+                    'phone': '9876543210'
+                },
+                'shipping_address': {
+                    'full_name': 'Test User',
+                    'address_line1': '123 Test St',
+                    'city': 'Mumbai',
+                    'state': 'MH',
+                    'pincode': '400001',
+                    'phone': '9876543210'
+                }
             },
             'order_shipped': {
                 'tracking_number': 'AWB123456789',
