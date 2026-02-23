@@ -297,6 +297,7 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1', 'password2'] # Removed username
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour (in seconds)
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
 
