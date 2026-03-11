@@ -24,6 +24,7 @@ const AdminProducts = () => {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState(null);
     const [imageFiles, setImageFiles] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
         vendor: '',
@@ -269,6 +270,7 @@ const AdminProducts = () => {
             productData.append(`image_${index}`, file);
         });
 
+        setIsSubmitting(true);
         try {
             await api.post('/products/admin/', productData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -286,6 +288,8 @@ const AdminProducts = () => {
             } else {
                 toast.error('Failed to add product');
             }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -304,6 +308,7 @@ const AdminProducts = () => {
             productData.append(`image_${index}`, file);
         });
 
+        setIsSubmitting(true);
         try {
             await api.patch(`/products/admin/${selectedProduct.id}/`, productData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -316,6 +321,8 @@ const AdminProducts = () => {
         } catch (error) {
             console.error('Failed to update product:', error);
             toast.error('Failed to update product');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -663,7 +670,7 @@ const AdminProducts = () => {
                     </Card>
 
                     {/* Add Product Modal */}
-                    <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Product" size="xl">
+                    <Modal isOpen={isAddModalOpen} onClose={() => !isSubmitting && setIsAddModalOpen(false)} title="Add New Product" size="xl">
                         <ProductForm
                             idPrefix="add_product"
                             formData={formData}
@@ -676,11 +683,12 @@ const AdminProducts = () => {
                             taxSlabs={taxSlabs}
                             onSubmit={handleAddProduct}
                             submitText="Add Product"
+                            isSubmitting={isSubmitting}
                         />
                     </Modal>
 
                     {/* Edit Product Modal */}
-                    <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Product" size="xl">
+                    <Modal isOpen={isEditModalOpen} onClose={() => !isSubmitting && setIsEditModalOpen(false)} title="Edit Product" size="xl">
                         <ProductForm
                             idPrefix="edit_product"
                             formData={formData}
@@ -693,6 +701,7 @@ const AdminProducts = () => {
                             taxSlabs={taxSlabs}
                             onSubmit={handleUpdateProduct}
                             submitText="Update Product"
+                            isSubmitting={isSubmitting}
                         />
                     </Modal>
 

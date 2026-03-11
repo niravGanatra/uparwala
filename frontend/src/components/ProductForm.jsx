@@ -1,5 +1,5 @@
 import { Input } from './ui/input';
-import { Upload } from 'lucide-react';
+import { Upload, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 
 // Extracted ProductForm component to prevent re-creation on parent renders
@@ -14,6 +14,7 @@ const ProductForm = ({
     taxSlabs,
     onSubmit,
     submitText,
+    isSubmitting = false,
     idPrefix = 'product_form' // Default prefix to prevent ID collisions
 }) => {
     return (
@@ -298,8 +299,19 @@ const ProductForm = ({
             </div>
 
             <div className="flex justify-end pt-4">
-                <Button type="submit" className="bg-orange-600 hover:bg-orange-700 text-white min-w-[150px]">
-                    {submitText}
+                <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="bg-orange-600 hover:bg-orange-700 text-white min-w-[150px]"
+                >
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {submitText.replace('Add', 'Adding').replace('Update', 'Updating')}...
+                        </>
+                    ) : (
+                        submitText
+                    )}
                 </Button>
             </div>
         </form>
