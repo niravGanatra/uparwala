@@ -248,6 +248,26 @@ const AdminProducts = () => {
     const handleAddProduct = async (e) => {
         e.preventDefault();
 
+        // Frontend Validations
+        if (!formData.vendor || !formData.category || !formData.name.trim() || !formData.regular_price || formData.stock === '') {
+            toast.error("Please fill in all required fields (Vendor, Category, Name, Price, Stock).");
+            return;
+        }
+        if (Number(formData.regular_price) <= 0) {
+            toast.error("Regular price must be greater than 0");
+            return;
+        }
+        if (formData.sale_price && Number(formData.sale_price) > 0) {
+            if (Number(formData.sale_price) >= Number(formData.regular_price)) {
+                toast.error("Sale price must be less than the regular price.");
+                return;
+            }
+        }
+        if (imageFiles.length === 0) {
+            toast.error("Please upload at least one product image.");
+            return;
+        }
+
         const productData = new FormData();
 
         // Compute price field (required by backend)
@@ -295,6 +315,22 @@ const AdminProducts = () => {
 
     const handleUpdateProduct = async (e) => {
         e.preventDefault();
+
+        // Frontend Validations
+        if (!formData.vendor || !formData.category || !formData.name.trim() || !formData.regular_price || formData.stock === '') {
+            toast.error("Please fill in all required fields (Vendor, Category, Name, Price, Stock).");
+            return;
+        }
+        if (Number(formData.regular_price) <= 0) {
+            toast.error("Regular price must be greater than 0");
+            return;
+        }
+        if (formData.sale_price && Number(formData.sale_price) > 0) {
+            if (Number(formData.sale_price) >= Number(formData.regular_price)) {
+                toast.error("Sale price must be less than the regular price.");
+                return;
+            }
+        }
 
         const productData = new FormData();
         Object.keys(formData).forEach(key => {

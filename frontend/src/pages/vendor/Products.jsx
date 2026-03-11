@@ -197,6 +197,27 @@ const VendorProducts = () => {
 
     const handleSubmitProduct = async (e) => {
         e.preventDefault();
+
+        // Frontend Validations
+        if (!formData.name.trim() || !formData.category || !formData.regular_price || formData.stock === '') {
+            toast.error("Please fill in all required fields (Name, Category, Price, Stock).");
+            return;
+        }
+        if (Number(formData.regular_price) <= 0) {
+            toast.error("Regular price must be greater than 0");
+            return;
+        }
+        if (formData.sale_price && Number(formData.sale_price) > 0) {
+            if (Number(formData.sale_price) >= Number(formData.regular_price)) {
+                toast.error("Sale price must be less than the regular price.");
+                return;
+            }
+        }
+        if (imageFiles.length === 0 && !isEditMode && (!selectedProduct || !selectedProduct.images || selectedProduct.images.length === 0)) {
+            toast.error("Please upload at least one product image.");
+            return;
+        }
+
         setIsSubmitting(true);
 
         const productData = new FormData();
@@ -421,7 +442,7 @@ const VendorProducts = () => {
 
                     {/* Add/Edit Product Modal */}
                     <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title={isEditMode ? "Edit Product" : "Add New Product"} size="lg">
-                        <form onSubmit={isEditMode ? handleUpdateProduct : handleAddProduct} className="space-y-4 max-h-[70vh] overflow-y-auto relative">
+                        <form onSubmit={handleSubmitProduct} className="space-y-4 max-h-[70vh] overflow-y-auto relative">
                             {isSubmitting && (
                                 <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-lg">
                                     <div className="flex flex-col items-center gap-3 bg-white p-6 rounded-xl shadow-lg border border-slate-100">
