@@ -18,10 +18,22 @@ const ProductForm = ({
     idPrefix = 'product_form' // Default prefix to prevent ID collisions
 }) => {
     return (
-        <form onSubmit={onSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
+        <form onSubmit={onSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto px-1 relative">
+
+            {/* Loading Overlay */}
+            {isSubmitting && (
+                <div className="absolute inset-x-0 inset-y-0 z-10 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-lg">
+                    <div className="flex flex-col items-center gap-3 bg-white px-8 py-6 rounded-xl shadow-lg border border-slate-100 mt-20">
+                        <Loader2 className="h-10 w-10 text-orange-600 animate-spin" />
+                        <p className="text-slate-700 font-medium text-lg">
+                            {submitText.replace('Add', 'Adding').replace('Update', 'Updating')}...
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* 1. Basic Details Section */}
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">
+            <div className={`bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4 ${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}>
                 <h3 className="font-semibold text-slate-900 border-b pb-2 mb-2">Basic Details</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -121,7 +133,7 @@ const ProductForm = ({
             </div>
 
             {/* 2. Pricing & Inventory Section */}
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">
+            <div className={`bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4 ${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}>
                 <h3 className="font-semibold text-slate-900 border-b pb-2 mb-2">Pricing & Inventory</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -197,7 +209,7 @@ const ProductForm = ({
             </div>
 
             {/* 3. Shipping & Tax Section */}
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">
+            <div className={`bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4 ${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}>
                 <h3 className="font-semibold text-slate-900 border-b pb-2 mb-2">Shipping & Tax</h3>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -268,7 +280,7 @@ const ProductForm = ({
             </div>
 
             {/* 4. Media Section */}
-            <div>
+            <div className={`${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}>
                 <label className="block text-sm font-medium mb-2">Product Images</label>
                 <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:bg-slate-50 transition-colors">
                     <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />

@@ -421,7 +421,18 @@ const VendorProducts = () => {
 
                     {/* Add/Edit Product Modal */}
                     <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title={isEditMode ? "Edit Product" : "Add New Product"} size="lg">
-                        <form onSubmit={handleSubmitProduct} className="space-y-4">
+                        <form onSubmit={isEditMode ? handleUpdateProduct : handleAddProduct} className="space-y-4 max-h-[70vh] overflow-y-auto relative">
+                            {isSubmitting && (
+                                <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-lg">
+                                    <div className="flex flex-col items-center gap-3 bg-white p-6 rounded-xl shadow-lg border border-slate-100">
+                                        <Loader2 className="h-10 w-10 text-orange-600 animate-spin" />
+                                        <p className="text-slate-700 font-medium text-lg">
+                                            {isEditMode ? 'Updating Product...' : 'Adding Product...'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-sm font-medium mb-2">Product Name *</label>
                                 <Input
