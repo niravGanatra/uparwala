@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
-import { Search, Plus, Eye, Trash2, Ban, Package, Upload, Pencil } from 'lucide-react';
+import { Search, Plus, Eye, Trash2, Ban, Package, Upload, Pencil, Loader2 } from 'lucide-react';
 import SpiritualLoader from '../../components/ui/spiritual-loader';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -14,6 +14,7 @@ const VendorProducts = () => {
     const [categories, setCategories] = useState([]);
     const [taxSlabs, setTaxSlabs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -196,6 +197,7 @@ const VendorProducts = () => {
 
     const handleSubmitProduct = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
         const productData = new FormData();
 
@@ -264,6 +266,8 @@ const VendorProducts = () => {
             console.error('Failed to save product:', error);
             const msg = error.response?.data?.detail || error.response?.data?.name?.[0] || 'Failed to save product';
             toast.error(msg);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -669,10 +673,19 @@ const VendorProducts = () => {
                             </div>
 
                             <div className="flex gap-2 justify-end pt-4">
-                                <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                                <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)} disabled={isSubmitting}>
                                     Cancel
                                 </Button>
-                                <Button type="submit">{isEditMode ? 'Update Product' : 'Add Product'}</Button>
+                                <Button type="submit" disabled={isSubmitting}>
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            {isEditMode ? 'Updating...' : 'Adding...'}
+                                        </>
+                                    ) : (
+                                        isEditMode ? 'Update Product' : 'Add Product'
+                                    )}
+                                </Button>
                             </div>
                         </form>
                     </Modal>
